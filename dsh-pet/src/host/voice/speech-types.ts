@@ -62,21 +62,23 @@ function isFilledString(value: unknown): value is string {
  * @throws {TypeError} 任一字段缺失、类型不符或 id 形态非法时。
  */
 export function validateSpeechProvider(def: unknown): asserts def is SpeechProvider {
-  if (!def || typeof def !== 'object') throw new TypeError('语音识别 provider 定义必须是对象');
+  if (!def || typeof def !== 'object') throw new TypeError('speech provider definition must be an object');
   const provider = def as Record<string, unknown>;
 
   if (typeof provider.id !== 'string' || !PROVIDER_ID_PATTERN.test(provider.id)) {
-    throw new TypeError(`provider id 必须是小写 kebab-case，收到 ${JSON.stringify(provider.id)}`);
+    throw new TypeError(`provider id must be lowercase kebab-case, got ${JSON.stringify(provider.id)}`);
   }
   if (!isFilledString(provider.name)) {
-    throw new TypeError(`provider ${provider.id} 的 name 必须是非空字符串`);
+    throw new TypeError(`provider ${provider.id} name must be a non-empty string`);
   }
   if (typeof provider.transcribe !== 'function') {
-    throw new TypeError(`provider ${provider.id} 的 transcribe 必须是函数`);
+    throw new TypeError(`provider ${provider.id} transcribe must be a function`);
   }
 
   const timeoutMs = provider.timeoutMs;
   if (timeoutMs !== undefined && (typeof timeoutMs !== 'number' || !Number.isFinite(timeoutMs) || timeoutMs <= 0)) {
-    throw new TypeError(`provider ${provider.id} 的 timeoutMs 必须是正有限数，收到 ${JSON.stringify(timeoutMs)}`);
+    throw new TypeError(
+      `provider ${provider.id} timeoutMs must be a positive finite number, got ${JSON.stringify(timeoutMs)}`,
+    );
   }
 }
