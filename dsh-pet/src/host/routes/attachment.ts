@@ -58,6 +58,7 @@ function sniffImageType(file: string): string | undefined {
       closeSync(fd);
     }
   } catch {
-    return undefined; // 读的瞬间被清理 / 权限不足：同样按不存在处理
+    // 读的瞬间被清理 / 权限不足：同样按不存在处理
+    return undefined;
   }
 }

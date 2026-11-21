@@ -148,13 +148,19 @@ export async function handleMotionRoutes(deps: PetRouteDeps, input: RouteInput):
       if (!displayCovers('desktop', display)) {
         return failResult(
           'pet-not-displayed',
-          who.petId + ' 的显示模式是 ' + display + '；桌面端实况只对 display 含 desktop 的宠物有',
+          who.petId +
+            ' has display mode ' +
+            display +
+            '; live pose is only available for pets whose display includes desktop',
           { display },
         );
       }
       const snap = pose.get(who.petId);
       if (snap === undefined) {
-        return failResult('pose-unavailable', '还没收到过这只宠物的桌面端实况（桌面端没起来，或刚重启还没来得及上报）');
+        return failResult(
+          'pose-unavailable',
+          'No desktop live pose has been received for this pet yet (the desktop app is not running or has just restarted before reporting)',
+        );
       }
       return okResult({ ok: true, petId: who.petId, ...snap });
     } catch (e) {

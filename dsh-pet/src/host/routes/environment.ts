@@ -58,6 +58,6 @@ export async function handleEnvironmentRoutes(deps: PetRouteDeps, input: RouteIn
     petId,
     ts: Date.now(),
   });
-  deps.log.info(`[dsh-pet] 环境查询 pet=${petId}${fresh ? '（强制刷新）' : ''}`);
+  deps.log.info(`[dsh-pet] environment query pet=${petId}${fresh ? ' (forced refresh)' : ''}`);
   return okResult({ ...body, petId });
 }

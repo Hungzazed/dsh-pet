@@ -35,15 +35,15 @@ export async function handleDesktopRoutes(deps: PetRouteDeps, input: RouteInput)
     if (method !== 'POST') return methodNotAllowed();
     // 失败按动作端点口径回 200 + 结构化结果（与 /pet-display 一致）：不支持退出不是协议层错误。
     if (!canQuit) {
-      return failResult('unsupported', '宿主未提供退出能力（DSH 内请关闭桌面模式）');
+      return failResult('unsupported', 'Quit is not supported by the host (disable desktop mode inside DSH)');
     }
     // 不 await：收尾会先停掉发起请求的这个 Helper，响应不保证送达（与 /reload 同一处境）。
     // 推到下一拍再执行，让本次 200 先写出去。
     setImmediate(() => {
       try {
-        (quit as (reason: string) => void)('托盘退出');
+        (quit as (reason: string) => void)('tray quit');
       } catch (e: unknown) {
-        log.warn(`[dsh-pet] 托盘退出失败：${e instanceof Error ? e.message : String(e)}`);
+        log.warn(`[dsh-pet] tray quit failed: ${e instanceof Error ? e.message : String(e)}`);
       }
     });
     return okResult({ ok: true });

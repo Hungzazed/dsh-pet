@@ -168,7 +168,7 @@ describe('POST /quit —— 把退出交给宿主停机', () => {
     assert.deepEqual(JSON.parse(r.body), { ok: true });
     // setImmediate 里才真正调停机（先让 200 写出去）
     await new Promise((resolve) => setImmediate(resolve));
-    assert.deepEqual(quitReasons, ['托盘退出']);
+    assert.deepEqual(quitReasons, ['tray quit']);
   });
 
   test('没有能力 → 结构化失败，绝不误关宿主', async () => {
