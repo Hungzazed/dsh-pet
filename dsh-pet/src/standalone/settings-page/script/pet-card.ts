@@ -10,17 +10,17 @@ export function petCardScript(): string {
   return `
 function petBar() {
   const list = currentPets();
-  const options = list.map((pet, index) => ({ value: String(index), label: (pet.name || pet.id) + '（' + pet.id + '）' }));
+  const options = list.map((pet, index) => ({ value: String(index), label: (pet.name || pet.id) + ' (' + pet.id + ')' }));
   const picker = createSelect(options, String(state.petIndex), (value) => {
     state.petIndex = Number(value);
     renderPetsPanel();
   });
   picker.root.id = 'pet-picker';
-  picker.root.firstElementChild.setAttribute('aria-label', '选择宠物');
+  picker.root.firstElementChild.setAttribute('aria-label', 'Select pet');
   return make('div', { class: 'petBar' }, [
     picker.root,
-    button('新增', addPet),
-    button('删除', removePet, { danger: true }),
+    button('Add', addPet),
+    button('Delete', removePet, { danger: true }),
   ]);
 }
 
@@ -34,7 +34,7 @@ function addPet() {
   }
   list.push({
     id: id,
-    name: '新宠物',
+    name: 'New pet',
     size: 462,
     display: 'none',
     balanceEnabled: true,
@@ -54,20 +54,20 @@ async function removePet() {
   if (!pet) return;
   if (list.length <= 1) {
     await confirmDialog({
-      title: '不能删除最后一只',
+      title: 'Cannot delete the last pet',
       text:
         state.entry === 'main'
-          ? '默认条目至少要留一只宠物：删到 0 会被宿主按非法拒绝，重开时还会退回内置的默认列表。'
-          : '每个条目至少要留一只宠物：删到 0 会被宿主按非法拒绝。',
-      confirmLabel: '知道了',
+          ? 'The Default entry needs at least one pet: the host rejects a list of 0 as invalid, and reopening the page falls back to the built-in default list.'
+          : 'Every entry needs at least one pet: the host rejects a list of 0 as invalid.',
+      confirmLabel: 'OK',
       cancelLabel: null,
     });
     return;
   }
   const confirmed = await confirmDialog({
-    title: '删除宠物',
-    text: '删除「' + (pet.name || pet.id) + '」？点保存后才会写盘。',
-    confirmLabel: '删除',
+    title: 'Delete pet',
+    text: 'Delete "' + (pet.name || pet.id) + '"? The change is written to disk only after you save.',
+    confirmLabel: 'Delete',
     danger: true,
   });
   if (!confirmed) return;
@@ -81,9 +81,9 @@ function petCard() {
   const list = currentPets();
   const pet = list[state.petIndex];
   if (!pet) {
-    return card('宠物', null, [
-      make('p', { class: 'empty', text: '这个条目下还没有实例，点「新增」加一只。' }),
-      make('div', { class: 'testRow' }, [button('新增', addPet)]),
+    return card('Pet', null, [
+      make('p', { class: 'empty', text: 'This entry has no pets yet. Click "Add" to create one.' }),
+      make('div', { class: 'testRow' }, [button('Add', addPet)]),
     ]);
   }
   if (!pet.position) pet.position = { corner: 'bottom-right', marginX: 40, marginY: 40 };
@@ -91,39 +91,39 @@ function petCard() {
   const children = [
     petBar(),
     avatarRow(pet),
-    textField('pet-name', '显示名', pet.name || '', (value) => { pet.name = value; }),
-    textField('pet-id', '标识（id）', pet.id, (value) => { pet.id = value.trim(); }, { disabled: true, hint: '标识决定素材目录与记忆文件，建好之后不能在这里改。' }),
+    textField('pet-name', 'Display name', pet.name || '', (value) => { pet.name = value; }),
+    textField('pet-id', 'ID', pet.id, (value) => { pet.id = value.trim(); }, { disabled: true, hint: 'The ID determines the asset directory and memory files and cannot be changed here once the pet is created.' }),
     make('div', { class: 'grid2' }, [
-      numberField('pet-size', '画框大小（px）', pet.size, (value) => { pet.size = value; }, { min: 1, step: 1 }),
-      textField('pet-size-percent', '占屏宽度（%）', sizePercent, (value) => {
+      numberField('pet-size', 'Frame size (px)', pet.size, (value) => { pet.size = value; }, { min: 1, step: 1 }),
+      textField('pet-size-percent', 'Screen width (%)', sizePercent, (value) => {
         if (value.trim() === '') delete pet.sizePercent;
         else pet.sizePercent = Number(value);
-      }, { hint: '留空表示按 px 显示。' }),
+      }, { hint: 'Leave empty to size in px.' }),
     ]),
-    selectField('pet-display', '显示位置', pet.display, DISPLAYS.map((value) => ({ value: value, label: displayLabel(value) })), (value) => { pet.display = value; }, 'web=仅浏览器 / desktop=仅桌面 / both=两者都显示 / none=都不显示'),
+    selectField('pet-display', 'Display', pet.display, DISPLAYS.map((value) => ({ value: value, label: displayLabel(value) })), (value) => { pet.display = value; }, 'web = browser only / desktop = desktop only / both = show in both / none = hide in both'),
     make('div', { class: 'grid2' }, [
-      selectField('pet-corner', '停靠角落', pet.position.corner, CORNERS.map((value) => ({ value: value, label: cornerLabel(value) })), (value) => { pet.position.corner = value; }),
-      numberField('pet-margin-x', '水平边距（px）', pet.position.marginX, (value) => { pet.position.marginX = value; }, { step: 1 }),
+      selectField('pet-corner', 'Corner', pet.position.corner, CORNERS.map((value) => ({ value: value, label: cornerLabel(value) })), (value) => { pet.position.corner = value; }),
+      numberField('pet-margin-x', 'Horizontal margin (px)', pet.position.marginX, (value) => { pet.position.marginX = value; }, { step: 1 }),
     ]),
-    numberField('pet-margin-y', '垂直边距（px）', pet.position.marginY, (value) => { pet.position.marginY = value; }, { step: 1 }),
-    toggleRow('pet-balance', '余额功能', '开启后这只宠物会在余额变化时播动画并显示气泡。', pet.balanceEnabled !== false, (value) => { pet.balanceEnabled = value; }),
-    toggleRow('pet-whisper', '碎碎念', '按周期让模型生成一句话并播放；不需要就关掉，省调用额度。', pet.whisperEnabled !== false, (value) => { pet.whisperEnabled = value; }),
-    toggleRow('pet-work', '工作状态联动', '跟随会话状态切换动画与气泡，不调用模型。', pet.workStatusEnabled !== false, (value) => { pet.workStatusEnabled = value; }),
-    toggleRow('pet-fixed', '固定不动', '开启后随机链不再抽转向与移动；手动点播与拖拽照常。', pet.fixedEnabled === true, (value) => { pet.fixedEnabled = value; }),
+    numberField('pet-margin-y', 'Vertical margin (px)', pet.position.marginY, (value) => { pet.position.marginY = value; }, { step: 1 }),
+    toggleRow('pet-balance', 'Balance reactions', 'When on, this pet plays an animation and shows a bubble when the balance changes.', pet.balanceEnabled !== false, (value) => { pet.balanceEnabled = value; }),
+    toggleRow('pet-whisper', 'Whispers', 'Periodically ask the model for one line and play it; turn it off to save API quota.', pet.whisperEnabled !== false, (value) => { pet.whisperEnabled = value; }),
+    toggleRow('pet-work', 'Work status reactions', 'Switch animations and bubbles with the session state; no model calls.', pet.workStatusEnabled !== false, (value) => { pet.workStatusEnabled = value; }),
+    toggleRow('pet-fixed', 'Stay still', 'When on, the random chain no longer picks turn and move; manual playback and dragging still work.', pet.fixedEnabled === true, (value) => { pet.fixedEnabled = value; }),
     make('div', { class: 'field' }, [
-      make('label', { for: 'pet-persona', text: '这只的人设（可选）' }),
+      make('label', { for: 'pet-persona', text: 'Persona for this pet (optional)' }),
       personaWrap(pet),
       make('p', { class: 'fieldHint', text: personaHint() }),
-      make('p', { class: 'fieldHint', text: '发给模型的 system = 这段 + 自动追加的名字与时间背景，别在这里重复写。' }),
+      make('p', { class: 'fieldHint', text: 'The system prompt sent to the model = this text + the name and time context appended automatically; do not repeat those here.' }),
     ]),
   ];
-  return card('宠物', '这里编辑的是 ' + (state.entry === 'main' ? '默认条目' : state.entry) + ' 的实例；改动在点保存后写盘。', children);
+  return card('Pet', 'Editing the pets of ' + (state.entry === 'main' ? 'the Default entry' : 'entry ' + state.entry) + '; changes are written to disk after you save.', children);
 }
 
 /** 条目人设提示：占位符里放的就是条目人设正文，这里只说规则。 */
 function personaHint() {
-  if (state.prompts[state.entry]) return '留空 = 跟随所属条目的人设，输入框里的灰色文字就是那份内容。';
-  return '这个条目还没写人设；留空表示这只宠物没有系统提示词。';
+  if (state.prompts[state.entry]) return 'Leave empty to follow the entry persona; the gray placeholder text in the box is that content.';
+  return 'This entry has no persona yet; leaving the box empty means this pet has no system prompt.';
 }
 
 /** 人设输入框连同右下角的字数统计；占位符用条目人设全文。 */
@@ -134,13 +134,13 @@ function personaWrap(pet) {
   area.maxLength = 4000;
   area.rows = 4;
   const entryPrompt = state.prompts[state.entry] || '';
-  area.placeholder = entryPrompt || '留空则没有系统提示词';
-  const count = make('span', { class: 'personaCount', text: area.value.length + ' 字' });
+  area.placeholder = entryPrompt || 'Leave empty for no system prompt';
+  const count = make('span', { class: 'personaCount', text: area.value.length + ' chars' });
   area.addEventListener('input', () => {
     const text = area.value.trim();
     if (text) pet.whisperPrompt = area.value;
     else delete pet.whisperPrompt;
-    count.textContent = area.value.length + ' 字';
+    count.textContent = area.value.length + ' chars';
     markDirty(true);
   });
   wrap.append(area, count);
