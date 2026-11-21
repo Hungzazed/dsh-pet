@@ -145,9 +145,11 @@ export function createCardAnimation(rt: CardAnimationRuntime) {
       });
       return () => {
         window.removeEventListener('resize', onResize);
-        unregisterPose(); // 卸载即摘除：静默失效比读到陈旧值安全。
+        // 卸载即摘除：静默失效比读到陈旧值安全。
+        unregisterPose();
         unregisterProgress();
-        ownAnim.dispose(); // 中断在途素材请求并释放 blob，之后本实例不可复用。
+        // 中断在途素材请求并释放 blob，之后本实例不可复用。
+        ownAnim.dispose();
         services.stopMove();
         services.drag.stopFollow();
         services.flight.stop();

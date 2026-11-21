@@ -249,7 +249,8 @@ export function createBubbleSlots(rt: BubbleSlotsRuntime, components: BubbleComp
     };
 
     const showBalance = () => {
-      setBalancePage(0); // 新一轮查询从第一页开始。
+      // 新一轮查询从第一页开始。
+      setBalancePage(0);
       setBalanceOn(true);
       armBalanceTimeout();
     };
@@ -274,7 +275,8 @@ export function createBubbleSlots(rt: BubbleSlotsRuntime, components: BubbleComp
     /** 推进说话气泡的收起计划，并按新计划重排计时器。 */
     const applyWhisperHold = (event: BubbleHoldEvent): void => {
       const next = reduceBubbleHold(whisperHoldRef.current, event);
-      if (next === whisperHoldRef.current) return; // 同引用 = 无事发生，别白白重排计时器
+      // 同引用 = 无事发生，别白白重排计时器
+      if (next === whisperHoldRef.current) return;
       whisperHoldRef.current = next;
       setWhisperOn(next.on);
       if (whisperTimerRef.current !== null) window.clearTimeout(whisperTimerRef.current);
@@ -299,7 +301,8 @@ export function createBubbleSlots(rt: BubbleSlotsRuntime, components: BubbleComp
     );
 
     const showWhisper = (text: string, parts: { image?: string; url?: string }, duration?: number) => {
-      if (duration === 0) return; // 只联动动画、不改气泡时走这里。
+      // 只联动动画、不改气泡时走这里。
+      if (duration === 0) return;
       setWhisperText(text);
       whisperTextRef.current = text;
       setWhisperImage(parts.image);

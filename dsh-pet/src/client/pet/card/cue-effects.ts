@@ -71,25 +71,29 @@ export function createCueEffects(rt: CueEffectsRuntime) {
       // 睡觉一票否决：睡着一律不播，手动请求也不打断睡姿（与桌面端同一口径）。
       if (hub.sleeping()) return;
       if (!balance || !balance.ok) return;
-      if (!cfg.balanceEnabled && !balanceManual) return; // 自动轮询受开关门控，手动请求无条件通过。
+      // 自动轮询受开关门控，手动请求无条件通过。
+      if (!cfg.balanceEnabled && !balanceManual) return;
       const percent = balancePercent(balance);
       // 自动轮询的弹出门槛：内置形态要求有百分比；custom 不看百分比，内容由第三方设计。
       if (balanceManual || percent !== undefined || balance.shape === 'custom') hub.bubbles.showBalance();
-      if (!cfg.balanceEnabled) return; // 档位动画只属于启用余额的宠物。
-      if (percent === undefined) return; // 当前数据源没有百分比语义，不触发档位动画。
+      // 档位动画只属于启用余额的宠物。
+      if (!cfg.balanceEnabled) return;
+      // 当前数据源没有百分比语义，不触发档位动画。
+      if (percent === undefined) return;
       const pool = hub.anims().events?.balance;
       if (!pool || pool.length === 0) {
-        console.error('[dsh-pet] 配置缺少 animations.events.balance，无法播放余额事件动画');
+        console.error('[dsh-pet] Missing animations.events.balance in config, cannot play the balance event animation');
         return;
       }
       const idx = balanceEventIndex(percent);
       const slot = pool[idx];
       if (!slot) {
-        console.error('[dsh-pet] balance 档位索引越界：p=' + percent + ' idx=' + idx);
+        console.error('[dsh-pet] balance level index out of range: p=' + percent + ' idx=' + idx);
         return;
       }
-      const name = pickSlot(slot, card.animRef.current); // 档内随机抽 1，并避开当前正播动画。
-      log('balance pet=' + cfg.id + ' p=' + percent.toFixed(1) + '% -> [档' + idx + '] ' + name);
+      // 档内随机抽 1，并避开当前正播动画。
+      const name = pickSlot(slot, card.animRef.current);
+      log('balance pet=' + cfg.id + ' p=' + percent.toFixed(1) + '% -> [level ' + idx + '] ' + name);
       hub.stopMotion();
       card.actions.setOnce(true);
       card.actions.setAnim(name);
@@ -99,7 +103,8 @@ export function createCueEffects(rt: CueEffectsRuntime) {
     // 同一原因只提示一次由容器用 shared 的 decideBalanceNotice 去重，这里只管按 tick 弹。
     const consumeBalanceNotice = (): void => {
       const cfg = hub.cfg();
-      if (!cfg.balanceEnabled && !balanceManual) return; // 自动轮询受开关门控，手动请求无条件通过。
+      // 自动轮询受开关门控，手动请求无条件通过。
+      if (!cfg.balanceEnabled && !balanceManual) return;
       if (balanceNoticeTick === 0 || balanceNoticeTick === prevNoticeRef.current) return;
       prevNoticeRef.current = balanceNoticeTick;
       // 归属过滤：不可用说明也只说给被点的那只（缺省则照旧全员）
@@ -134,7 +139,13 @@ export function createCueEffects(rt: CueEffectsRuntime) {
       // 睡觉：同样不响应工作状态（不换动画、不弹文案）；醒来后由下一次状态变化重新对齐
       if (hub.sleeping()) return;
       if (!workStatus || workStatus.state === null) {
-        log('pet=' + cfg.id + ' ' + (prevWorkStateRef.current ?? 'null') + '->null    播完即停（回待机，收起气泡）');
+        log(
+          'pet=' +
+            cfg.id +
+            ' ' +
+            (prevWorkStateRef.current ?? 'null') +
+            '->null    play once then stop (back to idle, hide bubble)',
+        );
         prevWorkStateRef.current = null;
         // 回空闲时把循环中的工作动画改成「播完即停」：否则 ended 永不触发，动画链拿不到
         // 推进信号，宠物会一直卡在工作动画上。
@@ -144,16 +155,19 @@ export function createCueEffects(rt: CueEffectsRuntime) {
       }
       const pool = hub.anims().events?.workStatus;
       if (!pool || pool.length === 0) {
-        console.error('[dsh-pet] 配置缺少 animations.events.workStatus，无法播放工作状态动画');
+        console.error(
+          '[dsh-pet] Missing animations.events.workStatus in config, cannot play the work status animation',
+        );
         return;
       }
       const idx = WORK_STATUS_INDEX[workStatus.state];
       const slot = pool[idx];
       if (slot === undefined) {
-        console.error('[dsh-pet] work-status 档位索引越界：state=' + workStatus.state + ' idx=' + idx);
+        console.error('[dsh-pet] work-status level index out of range: state=' + workStatus.state + ' idx=' + idx);
         return;
       }
-      const name = pickSlot(slot, card.animRef.current); // 档内随机抽 1，并避开当前正播动画。
+      // 档内随机抽 1，并避开当前正播动画。
+      const name = pickSlot(slot, card.animRef.current);
       log('pet=' + cfg.id + ' ' + (prevWorkStateRef.current ?? 'null') + '->' + workStatus.state + '    ' + name);
       const stateChanged = prevWorkStateRef.current !== workStatus.state;
       prevWorkStateRef.current = workStatus.state;
@@ -206,7 +220,8 @@ export function createCueEffects(rt: CueEffectsRuntime) {
         hub.stopMotion();
         hub.ownAnim.setCueUrl(animCue.url);
         card.actions.setOnce(true);
-        card.actions.bumpSeq(); // 同一地址连播两次时状态不变，递增序号强制再走一遍换源。
+        // 同一地址连播两次时状态不变，递增序号强制再走一遍换源。
+        card.actions.bumpSeq();
         card.actions.setAnim(animCue.url);
         card.actions.setCuePlayback(animCue.playbackId ?? null);
         return;

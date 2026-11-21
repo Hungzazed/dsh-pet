@@ -287,7 +287,8 @@ export function createCardMotion(rt: CardMotionRuntime) {
      *  下游物理全部复用，不设死区。
      */
     const applyThrow = (angleDeg: number, power: number): void => {
-      if (live.current.drag.isActive()) return; // 用户交互优先。
+      // 用户交互优先。
+      if (live.current.drag.isActive()) return;
       const { vx, vy } = throwVelocity(angleDeg, power);
       const box = boxRef.current ?? {
         x: currentCenterX() - motionRef.current.halfW,

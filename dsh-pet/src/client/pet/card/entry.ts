@@ -153,7 +153,7 @@ export function createCardEntry(rt: CardEntryRuntime) {
         capture: captureDisplayFrame,
         onSent: () => {
           // 发送成功：回复已写进 /state，长轮询会立刻返回并弹气泡。
-          console.info('[dsh-pet] 对话已发送 pet=' + cfgRef.current.id);
+          console.info('[dsh-pet] chat message sent pet=' + cfgRef.current.id);
         },
         onClose: () => {
           chatRef.current = null;
@@ -202,7 +202,7 @@ export function createCardEntry(rt: CardEntryRuntime) {
       try {
         encoded = await captureDisplayFrame();
       } catch (error) {
-        const reason = '截屏失败：' + (error instanceof Error ? error.message : String(error));
+        const reason = 'Screenshot failed: ' + (error instanceof Error ? error.message : String(error));
         const opened = chatRef.current;
         if (opened !== null) {
           opened.flash(reason);
@@ -240,12 +240,12 @@ export function createCardEntry(rt: CardEntryRuntime) {
     const toggleSleepRef = useRef<() => void>(() => {});
     toggleSleepRef.current = () => {
       const asleep = live.current.flow?.sleeping() ?? false;
-      runMenuAction(asleep ? { label: '起来', action: 'wake' } : { label: '睡觉', action: 'sleep' });
+      runMenuAction(asleep ? { label: 'Wake up', action: 'wake' } : { label: 'Sleep', action: 'sleep' });
     };
     // 数字键切显示位置：与右键「显示位置」子菜单同一条动作派发（写 display 配置，宿主重启生效）。
     const switchDisplayRef = useRef<(display: PetDisplay) => void>(() => {});
     switchDisplayRef.current = (display) => {
-      runMenuAction({ label: '显示位置', action: 'set-display', display });
+      runMenuAction({ label: 'Display position', action: 'set-display', display });
     };
     // 按住说话的按下/松开同样每次渲染都新建闭包；状态机只建一次，只能经 ref 取最新的那两个。
     const startChatHearRef = useRef<() => void>(startChatHear);
@@ -349,23 +349,23 @@ export function createCardEntry(rt: CardEntryRuntime) {
       const asleep = live.current.flow?.sleeping() ?? false;
       const canSleep = (cfgRef.current.animations.sleep ?? []).length > 0;
       const sleepItem: MenuNode = asleep
-        ? { label: '起来', action: 'wake', hint: SLEEP_HOTKEY_HINT }
-        : { label: '睡觉', action: 'sleep', hint: SLEEP_HOTKEY_HINT };
+        ? { label: 'Wake up', action: 'wake', hint: SLEEP_HOTKEY_HINT }
+        : { label: 'Sleep', action: 'sleep', hint: SLEEP_HOTKEY_HINT };
       // 顺序与桌面端同一排法：余额 / 待办 / 碎碎念 / 对话 / 配图 / 睡觉 → 动作树 → 显示位置 / 回到初始位置。
       // 桌面专属的两项（打开软件、重载配置）在网页端没有对应动作，不出现。
       const tools: MenuNode[] = [
-        { label: '查看余额', action: 'show-balance' },
-        { label: '查询天气', action: 'show-environment' },
-        { label: '待办事项', action: 'todo', hint: TODO_HOTKEY_HINT },
-        { label: '碎碎念', action: 'whisper' },
-        { label: '对话', action: 'chat', hint: CHAT_HOTKEY_HINT },
+        { label: 'Balance', action: 'show-balance' },
+        { label: 'Weather', action: 'show-environment' },
+        { label: 'Todos', action: 'todo', hint: TODO_HOTKEY_HINT },
+        { label: 'Whisper', action: 'whisper' },
+        { label: 'Chat', action: 'chat', hint: CHAT_HOTKEY_HINT },
         ...(memes ? [memes] : []),
         ...(canSleep ? [sleepItem] : []),
       ];
       const tail: MenuNode[] = [
         // 显示位置子菜单与桌面端同一份；改成不含 web 的值后本宠物会从页面消失。
         displayMenuBranch(),
-        { label: '回到初始位置', action: 'home' },
+        { label: 'Reset position', action: 'home' },
       ];
       const tree: MenuNode[] = [
         ...tools,
@@ -375,10 +375,13 @@ export function createCardEntry(rt: CardEntryRuntime) {
       ];
       if (!tree.length) return;
       e.preventDefault();
-      e.stopPropagation(); // 不触碰 DSH 页面的菜单与右键处理。
+      // 不触碰 DSH 页面的菜单与右键处理。
+      e.stopPropagation();
       if (drag.isActive() || drag.justDragged()) return;
-      motion.flight.stop(); // 菜单弹出前停住飞行中的宠物。
-      motion.stopMove(); // 菜单悬停期间宠物不漫游。
+      // 菜单弹出前停住飞行中的宠物。
+      motion.flight.stop();
+      // 菜单悬停期间宠物不漫游。
+      motion.stopMove();
       if (menuRef.current) menuRef.current.close();
       menuRef.current = mountContextMenu({
         tree,
@@ -396,7 +399,8 @@ export function createCardEntry(rt: CardEntryRuntime) {
       handleContextMenu,
       onPointerEnter: (e) => {
         hoverRef.current = true;
-        placeTip(e.clientX, e.clientY); // 先摆位再显示，否则会先在兜底坐标闪一帧。
+        // 先摆位再显示，否则会先在兜底坐标闪一帧。
+        placeTip(e.clientX, e.clientY);
         card.actions.setTipOn(true);
       },
       onPointerLeave: () => {

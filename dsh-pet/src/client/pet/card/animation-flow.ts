@@ -87,8 +87,9 @@ export function createAnimationFlow(rt: AnimationFlowRuntime) {
       const idx = WORK_STATUS_INDEX[ws.state];
       const slot = pool[idx];
       if (slot === undefined) return false;
-      const name = pickSlot(slot, card.animRef.current); // 档内随机抽 1，并避开当前正播动画。
-      log(hub.cfg().id, '互动结束恢复状态动画: ' + name);
+      // 档内随机抽 1，并避开当前正播动画。
+      const name = pickSlot(slot, card.animRef.current);
+      log(hub.cfg().id, 'Interaction finished, resuming status animation: ' + name);
       // 多候选档位恢复后同样走播完轮换；单候选维持无限循环。
       card.actions.setOnce(Array.isArray(slot) && slot.length > 1);
       card.actions.setAnim(name);
@@ -123,7 +124,7 @@ export function createAnimationFlow(rt: AnimationFlowRuntime) {
           ' -> [' +
           decision.kind +
           '] ' +
-          (decision.anim ?? '移动进行中(不重播)'),
+          (decision.anim ?? 'move in progress (no replay)'),
       );
       if (decision.play && decision.anim !== null) card.actions.setAnim(decision.anim);
       card.actions.setOnce(true);
@@ -137,7 +138,8 @@ export function createAnimationFlow(rt: AnimationFlowRuntime) {
       if (sleep().consumeEnded()) return;
       if (cue.kind === 'ignore') return;
       if (cue.kind === 'work-rotate') {
-        card.actions.setOnce(true); // 保持 once=true，下一段播完再轮换。
+        // 保持 once=true，下一段播完再轮换。
+        card.actions.setOnce(true);
         card.actions.setAnim(cue.anim);
         card.actions.bumpSeq();
         return;
@@ -158,7 +160,8 @@ export function createAnimationFlow(rt: AnimationFlowRuntime) {
       if (cue.kind === 'turn') {
         const next = card.state.facing === 'left' ? 'right' : 'left';
         card.actions.setFacing(next);
-        card.facingRef.current = next; // 立即同步：翻转后的掷骰用新朝向过滤。
+        // 立即同步：翻转后的掷骰用新朝向过滤。
+        card.facingRef.current = next;
         // 翻面不改 anim/once/seq，换源 effect 不会重跑：不显式回链，随机链就此停在末帧。
         pickNext();
         return;
@@ -182,13 +185,13 @@ export function createAnimationFlow(rt: AnimationFlowRuntime) {
       if (anim !== false && !sleeping()) {
         const pool = hub.anims().events?.whisper;
         if (!pool || pool.length === 0) {
-          console.error('[dsh-pet] 配置缺少 animations.events.whisper，无法播放碎碎念动画');
+          console.error('[dsh-pet] Missing animations.events.whisper in config, cannot play the whisper animation');
           return;
         }
         // 整池随机抽 1 槽并避开当前正播动画；槽位为数组时再在档内随机。
         name = pickSlot(pick(pool, card.animRef.current), card.animRef.current);
       }
-      log(hub.cfg().id, 'whisper' + (name === null ? ' （不联动动画）' : ' -> [' + name + ']') + ' 「' + text + '」');
+      log(hub.cfg().id, 'whisper' + (name === null ? ' (no animation)' : ' -> [' + name + ']') + ' "' + text + '"');
       // 先起动画：动画与气泡时长是两个独立参数。
       if (name !== null) {
         hub.stopMotion();

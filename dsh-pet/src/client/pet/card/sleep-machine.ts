@@ -49,12 +49,13 @@ export function createSleepMachine(
   const apply = (state: SleepState): void => {
     const petId = hub.cfg().id;
     if (state.sleeping) {
-      if (current !== null) return; // 已在睡（含过渡）：叶子重写一次不该从头再播
+      // 已在睡（含过渡）：叶子重写一次不该从头再播
+      if (current !== null) return;
       hub.stopMotion();
       // 与占用锁同一口径：进入睡觉就收掉任务状态气泡（醒来不补亮，等下一次状态变化再对齐）
       hub.bubbles.hideWork();
       current = { set: { start: state.start, loop: state.loop, end: state.end }, phase: 'start' };
-      log(petId, '睡觉 -> [' + state.start + ']');
+      log(petId, 'sleep -> [' + state.start + ']');
       play(state.start, true);
       return;
     }
@@ -64,11 +65,11 @@ export function createSleepMachine(
     // 这里什么都不播：点击路径已自己播了点击回应；菜单叫醒时当前「开始」播完会自然回随机链。
     if (current.phase === 'start') {
       current = null;
-      log(petId, '入睡被打断：不播起来');
+      log(petId, 'falling asleep interrupted: not playing wake up');
       return;
     }
     current.phase = 'end';
-    log(petId, '醒来 -> [' + current.set.end + ']');
+    log(petId, 'wake up -> [' + current.set.end + ']');
     play(current.set.end, true);
   };
 
@@ -78,7 +79,8 @@ export function createSleepMachine(
       if (current === null) return false;
       if (current.phase === 'start') {
         current.phase = 'loop';
-        play(current.set.loop, false); // 循环段：不触发 ended
+        // 循环段：不触发 ended
+        play(current.set.loop, false);
         return true;
       }
       if (current.phase === 'loop') {
