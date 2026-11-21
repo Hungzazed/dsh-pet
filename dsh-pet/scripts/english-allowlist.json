@@ -1,0 +1,33 @@
+{
+  "$comment": "Allowlist for scripts/check-english.mjs: the only Chinese text that stays after the English-only rework, by fork decisions D3 (file names, menu category ids) and D7 (chat history protocol markers).",
+  "wholeFiles": [
+    {
+      "path": "dsh-pet/src/client/settings/locales/zh.ts",
+      "reason": "Chinese locale dictionary; the i18n layer is out of scope by fork decision"
+    },
+    {
+      "path": "dsh-pet/src/client/chat/locales/zh.ts",
+      "reason": "Chinese locale dictionary; the i18n layer is out of scope by fork decision"
+    },
+    {
+      "path": "dsh-pet/scripts/english-allowlist.json",
+      "reason": "The allowlist necessarily contains the allowed Chinese tokens"
+    }
+  ],
+  "allowedTokenDirs": [
+    {
+      "dir": "dsh-pet/assets/memes",
+      "ext": ".png",
+      "reason": "Meme keys are image file names and stay Chinese (decision D3)"
+    },
+    {
+      "dir": "dsh-pet/assets/webm",
+      "ext": ".webm",
+      "reason": "Animation names are file names and stay Chinese (decision D3)"
+    }
+  ],
+  "allowedTokens": ["小动作", "玩耍", "吃什么", "时节", "文字"],
+  "filenameAllowPrefixes": ["dsh-pet/assets/webm/", "dsh-pet/assets/memes/", "dsh-pet/assets/fonts/"],
+  "protocolMarkerWords": ["图", "动作"],
+  "linePatterns": []
+}

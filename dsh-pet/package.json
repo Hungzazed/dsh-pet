@@ -93,6 +93,7 @@
     "types": "node scripts/gen-types.mjs",
     "lint": "eslint .",
     "check:cycles": "node scripts/check-import-cycles.mjs",
+    "check:english": "node scripts/check-english.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test:ui": "node --test scripts/tests/*.test.mjs",
