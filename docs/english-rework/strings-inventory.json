@@ -1,0 +1,257 @@
+{
+  "totals": {
+    "literals": 2302,
+    "distinct_literals": 2038,
+    "files": 195,
+    "repeated_literals": 184
+  },
+  "areas": {
+    "src/host": {
+      "files_with_literals": 74,
+      "literals": 599,
+      "comment_lines_with_han": 3677
+    },
+    "src/client": {
+      "files_with_literals": 24,
+      "literals": 121,
+      "comment_lines_with_han": 3551
+    },
+    "src/shared": {
+      "files_with_literals": 31,
+      "literals": 174,
+      "comment_lines_with_han": 1890
+    },
+    "src/standalone": {
+      "files_with_literals": 27,
+      "literals": 351,
+      "comment_lines_with_han": 769
+    },
+    "src/app": {
+      "files_with_literals": 2,
+      "literals": 15,
+      "comment_lines_with_han": 59
+    },
+    "runtime/electron-helper": {
+      "files_with_literals": 14,
+      "literals": 242,
+      "comment_lines_with_han": 1414
+    },
+    "scripts": {
+      "files_with_literals": 10,
+      "literals": 52,
+      "comment_lines_with_han": 190
+    },
+    "tools": {
+      "files_with_literals": 11,
+      "literals": 507,
+      "comment_lines_with_han": 566
+    },
+    "site": {
+      "files_with_literals": 2,
+      "literals": 241,
+      "comment_lines_with_han": 11
+    }
+  },
+  "top_files": [
+    {
+      "area": "tools",
+      "path": "tools/api-tester.html",
+      "literals": 364
+    },
+    {
+      "area": "runtime/electron-helper",
+      "path": "dsh-pet/runtime/electron-helper/shared-core.js",
+      "literals": 172
+    },
+    {
+      "area": "site",
+      "path": "site/index.html",
+      "literals": 142
+    },
+    {
+      "area": "src/host",
+      "path": "dsh-pet/src/host/tool-detail/copy.ts",
+      "literals": 130
+    },
+    {
+      "area": "src/standalone",
+      "path": "dsh-pet/src/standalone/settings-page/script/globals.ts",
+      "literals": 102
+    },
+    {
+      "area": "site",
+      "path": "site/fetch_metrics.py",
+      "literals": 99
+    },
+    {
+      "area": "src/standalone",
+      "path": "dsh-pet/src/standalone/settings-page/script/pet-card.ts",
+      "literals": 45
+    },
+    {
+      "area": "tools",
+      "path": "tools/preview.html",
+      "literals": 42
+    },
+    {
+      "area": "src/host",
+      "path": "dsh-pet/src/host/time-context/context.ts",
+      "literals": 38
+    },
+    {
+      "area": "tools",
+      "path": "tools/cordis-probe/lib/client.js",
+      "literals": 34
+    },
+    {
+      "area": "src/standalone",
+      "path": "dsh-pet/src/standalone/settings-page/script/ai.ts",
+      "literals": 33
+    },
+    {
+      "area": "src/host",
+      "path": "dsh-pet/src/host/time-context/entries.ts",
+      "literals": 31
+    },
+    {
+      "area": "src/host",
+      "path": "dsh-pet/src/host/time-context/constants.ts",
+      "literals": 30
+    },
+    {
+      "area": "src/host",
+      "path": "dsh-pet/src/host/wmo-code.ts",
+      "literals": 29
+    },
+    {
+      "area": "runtime/electron-helper",
+      "path": "dsh-pet/runtime/electron-helper/sprite/menu.js",
+      "literals": 24
+    },
+    {
+      "area": "scripts",
+      "path": "dsh-pet/scripts/check-openapi.mjs",
+      "literals": 24
+    },
+    {
+      "area": "tools",
+      "path": "tools/cordis-probe/lib/mock-balance.js",
+      "literals": 24
+    },
+    {
+      "area": "src/shared",
+      "path": "dsh-pet/src/shared/todo/due-picker.ts",
+      "literals": 23
+    },
+    {
+      "area": "src/host",
+      "path": "dsh-pet/src/host/plugin/chat-memory.ts",
+      "literals": 22
+    },
+    {
+      "area": "src/client",
+      "path": "dsh-pet/src/client/baifan/constants.ts",
+      "literals": 22
+    },
+    {
+      "area": "src/standalone",
+      "path": "dsh-pet/src/standalone/cli.ts",
+      "literals": 21
+    },
+    {
+      "area": "src/shared",
+      "path": "dsh-pet/src/shared/todo/format.ts",
+      "literals": 20
+    },
+    {
+      "area": "src/client",
+      "path": "dsh-pet/src/client/pet/menu-actions.ts",
+      "literals": 17
+    },
+    {
+      "area": "src/shared",
+      "path": "dsh-pet/src/shared/chat/hear-control.ts",
+      "literals": 16
+    },
+    {
+      "area": "tools",
+      "path": "tools/api-tester.cjs",
+      "literals": 16
+    },
+    {
+      "area": "src/shared",
+      "path": "dsh-pet/src/shared/menu/tree.ts",
+      "literals": 15
+    },
+    {
+      "area": "src/shared",
+      "path": "dsh-pet/src/shared/todo/render.ts",
+      "literals": 14
+    },
+    {
+      "area": "src/shared",
+      "path": "dsh-pet/src/shared/balance/handlers/windows.ts",
+      "literals": 14
+    },
+    {
+      "area": "src/standalone",
+      "path": "dsh-pet/src/standalone/server/listener.ts",
+      "literals": 14
+    },
+    {
+      "area": "runtime/electron-helper",
+      "path": "dsh-pet/runtime/electron-helper/sprite/playback.js",
+      "literals": 14
+    },
+    {
+      "area": "src/host",
+      "path": "dsh-pet/src/host/memory/powercontext.ts",
+      "literals": 13
+    },
+    {
+      "area": "src/client",
+      "path": "dsh-pet/src/client/pet/card/entry.ts",
+      "literals": 13
+    },
+    {
+      "area": "src/standalone",
+      "path": "dsh-pet/src/standalone/server/handlers.ts",
+      "literals": 13
+    },
+    {
+      "area": "src/standalone",
+      "path": "dsh-pet/src/standalone/ai-provider/test-connection.ts",
+      "literals": 13
+    },
+    {
+      "area": "src/host",
+      "path": "dsh-pet/src/host/plugin/loops.ts",
+      "literals": 12
+    },
+    {
+      "area": "src/standalone",
+      "path": "dsh-pet/src/standalone/check.ts",
+      "literals": 12
+    },
+    {
+      "area": "src/standalone",
+      "path": "dsh-pet/src/standalone/ai-provider/list-models.ts",
+      "literals": 12
+    },
+    {
+      "area": "src/standalone",
+      "path": "dsh-pet/src/standalone/settings-page/script/pets.ts",
+      "literals": 12
+    },
+    {
+      "area": "src/standalone",
+      "path": "dsh-pet/src/standalone/settings-page/script/avatar.ts",
+      "literals": 12
+    },
+    {
+      "area": "src/host",
+      "path": "dsh-pet/src/host/lock.ts",
+      "literals": 11
+    }
+  ]
+}
