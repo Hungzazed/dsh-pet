@@ -89,7 +89,8 @@ export function createPositionFollow(deps: PositionFollowDeps): PositionFollow {
     token = current;
     if (frame !== null) cancelAnimationFrame(frame);
     if (mode === 'line') {
-      if (duration <= 0) return; // 上面已经拦掉，这里只让类型收窄。
+      // 上面已经拦掉，这里只让类型收窄。
+      if (duration <= 0) return;
       const from = deps.box() ?? target;
       const t0 = performance.now();
       const step = (): void => {

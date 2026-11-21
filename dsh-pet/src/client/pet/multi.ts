@@ -91,18 +91,24 @@ export function createPetMulti(
     const applyBalanceRef = useRef<(state: BalanceState, explicit: boolean, petId?: string) => void>(() => {});
     applyBalanceRef.current = (state, explicit, petId) => {
       setBalance(state);
-      setBalanceManual(explicit); // 手动标记随本次数据一起下发，每次到达都覆盖。
-      setBalancePetId(petId); // 归属同样每次覆盖：带 pet 的那次只让该宠物弹，不带则恢复全员
+      // 手动标记随本次数据一起下发，每次到达都覆盖。
+      setBalanceManual(explicit);
+      // 归属同样每次覆盖：带 pet 的那次只让该宠物弹，不带则恢复全员
+      setBalancePetId(petId);
       if (state.ok) {
-        setBalanceTick((t) => t + 1); // 成功：播档位动画并弹余额气泡。
+        // 成功：播档位动画并弹余额气泡。
+        setBalanceTick((t) => t + 1);
         return;
       }
       const { show, key } = decideBalanceNotice(state, noticeKeyRef.current, explicit);
       noticeKeyRef.current = key;
-      if (show) setBalanceNoticeTick((t) => t + 1); // 弹文字说明气泡（不播动画）
+      // 弹文字说明气泡（不播动画）
+      if (show) setBalanceNoticeTick((t) => t + 1);
       // 未登记服务商是配置事实，已由气泡说明；其余原因照旧显式报错。
       if (state.reason !== 'unsupported') {
-        console.error('[dsh-pet] 余额查询失败 reason=' + state.reason + (state.message ? ' ' + state.message : ''));
+        console.error(
+          '[dsh-pet] balance query failed reason=' + state.reason + (state.message ? ' ' + state.message : ''),
+        );
       }
     };
     // 工作状态：容器统一轮询 sections.workStatus，快照与 tick 驱动各宠物播档位动画。
@@ -124,7 +130,7 @@ export function createPetMulti(
         const main = (merged as { main?: Record<string, unknown> } | null)?.main;
         // 形状校验：响应异常时显式抛错，绝不用空列表清空已有宠物。
         if (typeof main !== 'object' || main === null) {
-          throw new Error('配置响应不是成品聚合（host 版本不匹配？）');
+          throw new Error('config response is not a merged config (host version mismatch?)');
         }
         // 点击音效开关只读 main 条目，非 true 一律静音。
         setClickSoundEnabled(main.clickSoundEnabled === true);
@@ -156,7 +162,8 @@ export function createPetMulti(
           applyMerged(merged);
           setReady(true);
         } catch (e) {
-          console.error('[dsh-pet] 配置加载失败', e); // 成品拉取失败要显式报错，不静默隐藏。
+          // 成品拉取失败要显式报错，不静默隐藏。
+          console.error('[dsh-pet] config load failed', e);
         }
       })();
       // 设置页保存或同步后，用权威成品重新拍平；传入 merged 时直接用写接口的响应体。
@@ -167,7 +174,8 @@ export function createPetMulti(
             if (!alive) return;
             applyMerged(next);
           } catch (e) {
-            console.error('[dsh-pet] 配置重载失败，保留当前渲染列表', e); // 显式报错，不清空已有宠物。
+            // 显式报错，不清空已有宠物。
+            console.error('[dsh-pet] config reload failed, keeping current render list', e);
           }
         })();
       };
@@ -232,7 +240,8 @@ export function createPetMulti(
             const snap = readWorkStatus(leaf);
             if (snap) {
               setWorkStatus(snap);
-              setWorkStatusTick((t) => t + 1); // 任何变化都触发，含回到空闲。
+              // 任何变化都触发，含回到空闲。
+              setWorkStatusTick((t) => t + 1);
               // 工作状态播报：与系统通知同级、同样只在网页端出声；不写 say 叶子。
               speakWorkStatus(snap);
             }
@@ -326,7 +335,8 @@ export function createPetMulti(
         // 最近一拍先留给同页消费者（petApi7340.getState）：它读的是同一个对象，不占连接。
         setStateSnapshot(s);
         if (baseline === null) {
-          baseline = flattenCounters(s); // 首拉只记基线，不渲染。
+          // 首拉只记基线，不渲染。
+          baseline = flattenCounters(s);
           // 跳会话是一次性信号：页面没开时写下的那条会被首拉基线吞掉，这里按写入时刻补一次。
           applyFocusSession(s.sections.focusSession?.data);
           // 菜单项是当前状态而不是事件，首拉也必须装上，否则刷新后第三方菜单会一直为空。

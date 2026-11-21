@@ -22,7 +22,8 @@ export function prefersMov(): boolean {
   if (/iPhone|iPad|iPod/i.test(ua)) return true;
   // Chromium 系（含 Electron 桌面端）与 Firefox 原生支持 VP9-alpha，不需要 mov。
   if (/Chrome|Chromium|Edg|OPR|Firefox|FxiOS/i.test(ua)) return false;
-  return /Mac/i.test(navigator.platform || ua); // 余下按 WebKit 处理，且限定 macOS。
+  // 余下按 WebKit 处理，且限定 macOS。
+  return /Mac/i.test(navigator.platform || ua);
 }
 
 /**

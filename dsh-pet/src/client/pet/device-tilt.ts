@@ -123,7 +123,8 @@ export async function requestMotionPermission(kinds: MotionSensorKinds): Promise
   const ask = async (ctor: unknown): Promise<boolean> => {
     if (ctor === undefined) return false;
     const fn = (ctor as { requestPermission?: () => Promise<string> }).requestPermission;
-    if (typeof fn !== 'function') return true; // 安卓 / 桌面没有这个 API，视为已授权
+    // 安卓 / 桌面没有这个 API，视为已授权
+    if (typeof fn !== 'function') return true;
     try {
       return (await fn.call(ctor)) === 'granted';
     } catch {

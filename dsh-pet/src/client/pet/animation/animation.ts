@@ -168,11 +168,13 @@ export function createOwnAnimation(deps: OwnAnimationDeps): OwnAnimation {
     loader.load(assetUrl, {
       onObjectUrl: (objectUrl) => {
         if (!mounted) {
-          loader.release(objectUrl); // 已卸载：不留无人回收的地址。
+          // 已卸载：不留无人回收的地址。
+          loader.release(objectUrl);
           return;
         }
         if (pending?.gen !== swapGen) {
-          loader.release(objectUrl); // 已被更新的切换覆盖：本次加载作废。
+          // 已被更新的切换覆盖：本次加载作废。
+          loader.release(objectUrl);
           return;
         }
         const slot = slotOf(targetIndex);
@@ -183,18 +185,21 @@ export function createOwnAnimation(deps: OwnAnimationDeps): OwnAnimation {
         el.load();
       },
       onError: (error) => {
-        if (!mounted) return; // 卸载后的 abort：静默。
-        if (pending?.gen !== swapGen) return; // 已被更新的切换覆盖。
-        pending = null; // 释放挂起的换源，避免后续点击困在防重循环里。
+        // 卸载后的 abort：静默。
+        if (!mounted) return;
+        // 已被更新的切换覆盖。
+        if (pending?.gen !== swapGen) return;
+        // 释放挂起的换源，避免后续点击困在防重循环里。
+        pending = null;
         if (cuePlaybackId !== null) reportOnce(cuePlaybackId, 'failed', REASON_ASSET_LOAD);
         console.warn(
-          '[dsh-pet] 素材加载失败 pet=' +
+          '[dsh-pet] asset load failed pet=' +
             cfg.id +
             ' anim=' +
             next +
-            '：' +
+            ': ' +
             (error instanceof Error ? error.message : String(error)) +
-            '（已释放本次切换）',
+            ' (released this switch)',
         );
       },
     });
@@ -236,7 +241,8 @@ export function createOwnAnimation(deps: OwnAnimationDeps): OwnAnimation {
     // 回执放在拖拽守卫之前：「播完」是既成事实，不该受动画链推进逻辑影响。
     const done = playing;
     if (done !== null) {
-      playing = null; // 先清再上报，后续换源不会把它当成被打断。
+      // 先清再上报，后续换源不会把它当成被打断。
+      playing = null;
       deps.report(done, 'ended');
     }
     if (deps.isDragging()) return { kind: 'ignore' };
@@ -249,11 +255,13 @@ export function createOwnAnimation(deps: OwnAnimationDeps): OwnAnimation {
     });
     const petId = deps.cfg().id;
     if (cue.kind === 'work-rotate') {
-      console.log('[dsh-pet] ' + stamp(petId) + ' workStatus 档内轮换: ' + deps.currentAnim() + ' -> ' + cue.anim);
+      console.log(
+        '[dsh-pet] ' + stamp(petId) + ' workStatus in-tier rotation: ' + deps.currentAnim() + ' -> ' + cue.anim,
+      );
     } else if (cue.kind === 'work-replay') {
-      console.log('[dsh-pet] ' + stamp(petId) + ' workStatus 循环续播: ' + deps.currentAnim());
+      console.log('[dsh-pet] ' + stamp(petId) + ' workStatus loop replay: ' + deps.currentAnim());
     } else if (cue.kind === 'event-done') {
-      console.log('[dsh-pet] ' + stamp(petId) + ' 事件动画播完 ended anim=' + deps.currentAnim());
+      console.log('[dsh-pet] ' + stamp(petId) + ' event animation ended anim=' + deps.currentAnim());
     }
     return cue;
   };

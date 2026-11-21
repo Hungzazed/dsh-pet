@@ -46,7 +46,9 @@ export function makePlaybackReporter(o: { petId: string }) {
     const request = playbackReportRequest(playbackId, status, reason);
     void postAction(request.url, request.body).then((ok: boolean) => {
       if (!ok) {
-        console.warn('[dsh-pet] 播放回执未送达 pet=' + o.petId + ' id=' + playbackId + ' status=' + status);
+        console.warn(
+          '[dsh-pet] playback report not delivered pet=' + o.petId + ' id=' + playbackId + ' status=' + status,
+        );
       }
     });
   };

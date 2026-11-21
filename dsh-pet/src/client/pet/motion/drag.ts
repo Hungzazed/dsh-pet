@@ -262,7 +262,8 @@ export function createDrag(card: () => DragCard): Drag {
     // 弹弓只比较两次按下的间隔，与本次拖了多久、何时松手无关。
     const pressNow = performance.now();
     const sling = pressNow - lastPressAt < SLINGSHOT_DOUBLE_MS;
-    lastPressAt = sling ? 0 : pressNow; // 命中后清零，免得连点三下弹两次。
+    // 命中后清零，免得连点三下弹两次。
+    lastPressAt = sling ? 0 : pressNow;
     const anchor = c.box();
     return {
       active: true,
@@ -436,7 +437,8 @@ export function createDrag(card: () => DragCard): Drag {
       c.stopAutonomy();
       return;
     }
-    c.stopFlight(); // 点击飞行中的宠物即收手停住。
+    // 点击飞行中的宠物即收手停住。
+    c.stopFlight();
     c.stopAutonomy();
     // 点击音效放在所有「不播点击动画」的早退分支之后。
     c.playClickSound();
@@ -444,7 +446,8 @@ export function createDrag(card: () => DragCard): Drag {
     if (!c.clickAnims.length) return;
     const name = pick(c.clickAnims);
     log(c.petId, '-> [CLICK] ' + name);
-    c.markSquash(); // 等新点击动画切到前台后再压新首帧。
+    // 等新点击动画切到前台后再压新首帧。
+    c.markSquash();
     // 单动画点击时状态不变，effect 不会重放；递增 seq 强制 switchTo 走一遍，
     // 防重分支负责消费 Q 弹标记。
     c.bumpSeq();

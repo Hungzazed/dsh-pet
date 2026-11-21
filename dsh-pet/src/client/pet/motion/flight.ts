@@ -193,7 +193,8 @@ export function createFlight(deps: FlightDeps): Flight {
     quietMs = 0;
     let current: ThrowState = { x: px, y: py, vx, vy };
     let last = performance.now();
-    let prevGrounded = false; // 落地挤压只在空中到地面的转换帧触发一次。
+    // 落地挤压只在空中到地面的转换帧触发一次。
+    let prevGrounded = false;
     const rootEl = deps.root();
 
     /** 写回本帧位置：DOM、包围盒与归一化中心（后者供重渲染时按它重排）。 */
@@ -215,7 +216,8 @@ export function createFlight(deps: FlightDeps): Flight {
       const now = performance.now();
       const dt = Math.min(0.05, Math.max(0, (now - last) / 1000));
       last = now;
-      const fallingVy = current.vy; // 本帧积分前的竖直速度，即落地冲击速度。
+      // 本帧积分前的竖直速度，即落地冲击速度。
+      const fallingVy = current.vy;
       const gravity = held ? deps.gravity?.() : undefined;
       const res = integrateFlight(current, dt, bounds, physics, gravity);
       if (res.hit !== null) deps.onImpact?.({ kind: res.hit.edge, speed: res.hit.speed });
