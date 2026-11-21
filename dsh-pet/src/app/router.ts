@@ -64,7 +64,7 @@ export function startRouter(
     try {
       url = new URL(req.url ?? '/', 'http://127.0.0.1');
     } catch {
-      rejectRequest(res, 400, '请求地址无效');
+      rejectRequest(res, 400, 'Invalid request URL');
       return;
     }
     const route = routes.find((candidate) =>
@@ -89,12 +89,12 @@ export function startRouter(
       };
       if (url.pathname === '/standalone-ai/icon.png') {
         if (method !== 'GET' && method !== 'HEAD') {
-          rejectRequest(res, 405, '仅支持 GET');
+          rejectRequest(res, 405, 'Only GET is supported');
           return;
         }
         const icon = readSettingsIcon();
         if (!icon) {
-          rejectRequest(res, 404, '图标缺失');
+          rejectRequest(res, 404, 'Icon missing');
           return;
         }
         sendIcon(res, icon);
@@ -102,13 +102,13 @@ export function startRouter(
       }
       if (url.pathname === '/standalone-ai/chat-panel.js') {
         if (method !== 'GET' && method !== 'HEAD') {
-          rejectRequest(res, 405, '仅支持 GET');
+          rejectRequest(res, 405, 'Only GET is supported');
           return;
         }
         // 与 CLI 侧共用同一份产物：设置页固定引用它，打包应用里缺这条路由会让对话区空白。
         const chatPanel = chatPanelScript();
         if (chatPanel === undefined) {
-          rejectRequest(res, 404, '对话面板脚本缺失，请重新构建（npm run bundle）');
+          rejectRequest(res, 404, 'Chat panel script missing; rebuild with npm run bundle');
           return;
         }
         sendText(res, 200, 'text/javascript', chatPanel);
@@ -117,7 +117,7 @@ export function startRouter(
       const asset = assets[url.pathname];
       if (asset || url.pathname === '/health' || url.pathname === '/') {
         if (method !== 'GET' && method !== 'HEAD') {
-          rejectRequest(res, 405, '仅支持 GET');
+          rejectRequest(res, 405, 'Only GET is supported');
           return;
         }
         if (asset) sendText(res, 200, asset[1], asset[0]);
@@ -151,8 +151,8 @@ export function startRouter(
       } else await dispatch(req);
     })().catch(() => {
       // 请求体、地址与抛出的值都可能带凭证：日志保持笼统。
-      deps.log('本机接口处理失败');
-      if (!res.headersSent) rejectRequest(res, 500, '接口暂时无法处理请求');
+      deps.log('Local route handler failed (details omitted to protect credentials)');
+      if (!res.headersSent) rejectRequest(res, 500, 'The local server cannot handle the request right now');
       else res.end();
     });
   });

@@ -49,13 +49,13 @@ PetSprite.prototype.onWorkTick = function onWorkTick(snapshot, tick) {
   }
   const pool = this.animations.events?.workStatus;
   if (!pool || pool.length === 0) {
-    console.error('[dsh-pet] 配置缺少 animations.events.workStatus，无法播放工作状态动画');
+    console.error('[dsh-pet] Missing animations.events.workStatus in config, cannot play the work status animation');
     return;
   }
   const idx = S.WORK_STATUS_INDEX[state];
   const slot = pool[idx];
   if (slot === undefined) {
-    console.error('[dsh-pet] work-status 档位索引越界：state=' + state + ' idx=' + idx);
+    console.error('[dsh-pet] work-status level index out of range: state=' + state + ' idx=' + idx);
     return;
   }
   const name = S.pickSlot(slot, this.anim); // 数组槽位档内随机抽 1，避开当前正播动画（与浏览器一致）
@@ -108,7 +108,7 @@ PetSprite.prototype.openWorkSession = function openWorkSession() {
   const sessionId = this.workSessionId;
   if (!sessionId) return;
   S.postAction(FOCUS_SESSION_URL, { sessionId }).then((ok) => {
-    if (!ok) console.warn('[dsh-pet] 跳会话：宿主未接受 pet=' + this.pet.id);
+    if (!ok) console.warn('[dsh-pet] focus session: host did not accept pet=' + this.pet.id);
   });
   if (window.petBridge && typeof window.petBridge.focusDshHost === 'function') {
     window.petBridge.focusDshHost();
@@ -201,7 +201,7 @@ PetSprite.prototype.showWhisper = function showWhisper(text, image, url, duratio
   if (anim !== false) {
     const pool = this.animations.events?.whisper;
     if (!pool || pool.length === 0) {
-      console.error('[dsh-pet] 配置缺少 animations.events.whisper，无法播放碎碎念动画');
+      console.error('[dsh-pet] Missing animations.events.whisper in config, cannot play the whisper animation');
       return;
     }
     // 整池随机抽 1 槽（避开当前正播动画，避免连续重复）；槽位若为数组候选再档内随机（与浏览器一致）
@@ -212,10 +212,10 @@ PetSprite.prototype.showWhisper = function showWhisper(text, image, url, duratio
       new Date().toTimeString().slice(0, 8) +
       ' whisper pet=' +
       this.pet.id +
-      (name === null ? ' （不联动动画）' : ' -> [' + name + ']') +
-      ' 「' +
+      (name === null ? ' (no animation)' : ' -> [' + name + ']') +
+      ' "' +
       text +
-      '」' +
+      '"' +
       (image ? ' [' + image + ']' : ''),
   );
   // 先起动画：它与气泡时长是两个独立参数（duration=0 时动画照播、只是不弹泡）
@@ -261,13 +261,13 @@ PetSprite.prototype.showBalanceNow = function showBalanceNow(state, manual) {
   if (p === undefined) return;
   const pool = this.animations.events?.balance;
   if (!pool || pool.length === 0) {
-    console.error('[dsh-pet] 配置缺少 animations.events.balance，无法播放余额事件动画');
+    console.error('[dsh-pet] Missing animations.events.balance in config, cannot play the balance event animation');
     return;
   }
   const idx = S.balanceEventIndex(p);
   const slot = pool[idx];
   if (!slot) {
-    console.error('[dsh-pet] balance 档位索引越界：p=' + p + ' idx=' + idx);
+    console.error('[dsh-pet] balance level index out of range: p=' + p + ' idx=' + idx);
     return;
   }
   const name = S.pickSlot(slot, this.anim); // 数组槽位档内随机抽 1，且避开当前正播动画（避免连续重复，与浏览器一致）
@@ -328,7 +328,7 @@ function applyBalanceNotice(state, explicit, petId) {
   }
   // 未登记服务商是配置事实（已由气泡说明），不再刷 console；其余原因照旧显式报错，绝不伪造余额
   if (state.reason !== 'unsupported') {
-    console.error('[dsh-pet] 余额查询失败 reason=' + state.reason + (state.message ? ' ' + state.message : ''));
+    console.error('[dsh-pet] balance query failed reason=' + state.reason + (state.message ? ' ' + state.message : ''));
   }
 }
 

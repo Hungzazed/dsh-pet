@@ -10,7 +10,7 @@
 
 // 左键 + 修饰键 = 「呼出 DSH」的快捷键。Windows / Linux 用 Ctrl；macOS 上 Ctrl+左键是系统右键
 // （先触发 contextmenu、拿不到 click），所以改用 Cmd。快捷键文案按平台取，判定统一走 isOpenShortcut。
-const OPEN_SHORTCUT_HINT = /Mac/i.test(navigator.platform || navigator.userAgent) ? 'Cmd+左键' : 'Ctrl+左键';
+const OPEN_SHORTCUT_HINT = /Mac/i.test(navigator.platform || navigator.userAgent) ? 'Cmd+Click' : 'Ctrl+Click';
 /** 本次点击是否按住了「呼出 DSH」的修饰键（Ctrl / Cmd） */
 const isOpenShortcut = (e) => !!(e && (e.ctrlKey || e.metaKey));
 
@@ -154,7 +154,7 @@ class PetSprite {
       facing: this._facing,
     };
     void S.postAction(POSE_REPORT_URL + '?pet=' + encodeURIComponent(this.pet.id), body).then((ok) => {
-      if (!ok) console.warn('[dsh-pet] 实况上报未送达 pet=' + this.pet.id);
+      if (!ok) console.warn('[dsh-pet] pose report not delivered pet=' + this.pet.id);
     });
   }
 
@@ -260,7 +260,10 @@ class PetSprite {
     if (!playbackId) return;
     const body = reason ? { status, reason } : { status };
     void S.postAction(BASE + '/playback/' + encodeURIComponent(playbackId) + '/report', body).then((ok) => {
-      if (!ok) console.warn('[dsh-pet] 播放回执未送达 pet=' + this.pet.id + ' id=' + playbackId + ' status=' + status);
+      if (!ok)
+        console.warn(
+          '[dsh-pet] playback report not delivered pet=' + this.pet.id + ' id=' + playbackId + ' status=' + status,
+        );
     });
   }
 

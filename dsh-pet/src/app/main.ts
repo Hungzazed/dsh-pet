@@ -116,7 +116,7 @@ async function boot(): Promise<void> {
   const server = await startRouter(routes, { security, ai, log, status, landingPage });
   port = server.port;
   const origin = `http://127.0.0.1:${port}`;
-  log(`本机服务 ${origin}`);
+  log(`Local server listening on ${origin}`);
 
   // 先把「我自己就是应用」告诉插件，再 apply：apply 内部据此短路 spawn 与下载
   process.env.DSH_PET_IN_PROCESS = '1';
@@ -131,7 +131,7 @@ async function boot(): Promise<void> {
   if (!process.env.DSH_PET_SCALE) process.env.DSH_PET_SCALE = '1';
 
   apply(context.ctx);
-  log(`apply() 完成：routes=${routes.length} 失败=${context.failures.length}`);
+  log(`apply() done: routes=${routes.length} failures=${context.failures.length}`);
 
   // helper 读它决定建几个窗口；读不到时它会回落到单个默认窗口，首帧再由渲染端自校正
   process.env.DSH_PET_PETS = JSON.stringify(desktopPets());
@@ -140,7 +140,7 @@ async function boot(): Promise<void> {
   // 渲染端日志必须转出来——打包后的应用没有控制台，渲染端报错只会表现成「窗口透明」。
   app.on('web-contents-created', (_event, contents) => {
     contents.on('console-message', (_e, level, message, line, source) => {
-      log(`渲染端[${level}] ${message} (${source}:${line})`);
+      log(`renderer[${level}] ${message} (${source}:${line})`);
     });
   });
   // 必须早于 Helper 的 whenReady 回调建出 file 渲染页。
@@ -159,7 +159,7 @@ async function boot(): Promise<void> {
     delete process.env.DSH_PET_APP_TOKEN;
   }
 
-  app.on('second-instance', () => log('已有一个实例在运行，忽略本次启动'));
+  app.on('second-instance', () => log('Another instance is already running; ignoring this launch'));
   app.on('will-quit', () => {
     // 退出前把最后一批日志刷出去（定时器最多 1s，这里显式补一次）
     void logger.flush();
@@ -180,10 +180,12 @@ function desktopPets(): Array<{ id: string; size: number }> {
     const desktop = pets
       .filter((pet) => pet.display === 'desktop' || pet.display === 'both')
       .map((pet) => ({ id: String(pet.id), size: Number(pet.size) }));
-    log(`桌面宠物 ${JSON.stringify(desktop)}`);
+    log(`Desktop pets ${JSON.stringify(desktop)}`);
     return desktop;
   } catch (error) {
-    log(`读配置失败（回落单窗）：${error instanceof Error ? error.message : String(error)}`);
+    log(
+      `Failed to read config (falling back to a single window): ${error instanceof Error ? error.message : String(error)}`,
+    );
     return [];
   }
 }
@@ -214,11 +216,11 @@ function landingPage(port: number): string {
   const pets = (info.pets as Array<Record<string, unknown>>) ?? [];
   const petLines = pets.length
     ? pets
-        .map((pet) => `<li>${escapeHtml(String(pet.name ?? pet.id))}（${escapeHtml(String(pet.display))}）</li>`)
+        .map((pet) => `<li>${escapeHtml(String(pet.name ?? pet.id))} (${escapeHtml(String(pet.display))})</li>`)
         .join('')
-    : '<li>（未读到宠物，检查配置文件）</li>';
+    : '<li>(no pets found; check the config file)</li>';
   return `<!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><title>dsh-pet</title>
+<html lang="en"><head><meta charset="utf-8"><title>dsh-pet</title>
 <style>
   body{font:14px/1.7 "Segoe UI",system-ui,sans-serif;margin:0;padding:32px;background:#f6f8fa;color:#1f2328}
   main{max-width:720px;margin:0 auto;background:#fff;border:1px solid #d0d7de;border-radius:12px;padding:28px 32px}
@@ -227,16 +229,16 @@ function landingPage(port: number): string {
   ul{margin:6px 0;padding-left:20px} a{color:#0969da}
 </style></head>
 <body><main>
-  <h1>dsh-pet 桌宠</h1>
-  <div class="sub">版本 ${escapeHtml(String(info.version))} · 端口 ${port}</div>
-  <h2>宠物</h2><ul>${petLines}</ul>
-  <h2>配置文件</h2>
+  <h1>dsh-pet desktop pet</h1>
+  <div class="sub">Version ${escapeHtml(String(info.version))} · port ${port}</div>
+  <h2>Pets</h2><ul>${petLines}</ul>
+  <h2>Config file</h2>
   <p><code>${escapeHtml(String(info.configFile))}</code></p>
-  <p>改完配置后从托盘退出、重新打开应用即可生效（本模式没有「重载配置」菜单）。</p>
-  <h2>AI 设置</h2>
-  <p>AI 模型与密钥的配置页需要令牌，请<strong>右键桌宠 →「打开 AI 设置」</strong>，会直接打开已授权的页面。</p>
-  <h2>状态</h2>
-  <p><a href="/health">/health</a> · <a href="/standalone-ai/">配置页（未授权时读写会返回 403）</a></p>
+  <p>Restart the app from the tray after editing the config (this mode has no "Reload config" menu).</p>
+  <h2>AI settings</h2>
+  <p>The AI model and API key settings page requires a token: <strong>right-click the pet → "Open AI settings"</strong> to open the authorized page directly.</p>
+  <h2>Status</h2>
+  <p><a href="/health">/health</a> · <a href="/standalone-ai/">Settings page (reads and writes return 403 unless authorized)</a></p>
 </main></body></html>`;
 }
 

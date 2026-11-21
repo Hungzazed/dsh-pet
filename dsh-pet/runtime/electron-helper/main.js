@@ -13,10 +13,11 @@ try {
   electronApi = require('electron');
 } catch (error) {
   process.stderr.write(
-    '[dsh-pet helper] 启动失败：本进程被以「纯 Node 模式」拉起（ELECTRON_RUN_AS_NODE=' +
+    '[dsh-pet helper] failed to start: this process was launched in "pure Node mode" (ELECTRON_RUN_AS_NODE=' +
       JSON.stringify(process.env.ELECTRON_RUN_AS_NODE ?? null) +
-      '）。该变量必须在 spawn 前删除（见 src/host/helper-process.ts 的 helperSpawnEnv），' +
-      '运行期再删无效，设成空串会让 Electron 直接 abort。原始错误：' +
+      '). That variable must be deleted before spawn (see helperSpawnEnv in src/host/helper-process.ts); ' +
+      'deleting it at runtime has no effect, and setting it to an empty string makes Electron abort. ' +
+      'Original error: ' +
       (error instanceof Error ? error.message.split('\n')[0] : String(error)) +
       '\n',
   );
@@ -112,10 +113,10 @@ const userDataDecision = resolveUserDataDir({
 });
 if (userDataDecision.fallback) {
   app.setPath('userData', userDataDecision.dir);
-  console.error('[dsh-pet-desktop-helper] userData 不可写，回退到', userDataDecision.dir);
+  console.error('[dsh-pet-desktop-helper] userData is not writable, falling back to', userDataDecision.dir);
 } else if (userDataDecision.error) {
   console.error(
-    '[dsh-pet-desktop-helper] userData 回退失败:',
+    '[dsh-pet-desktop-helper] userData fallback failed:',
     String(userDataDecision.error.message || userDataDecision.error),
   );
 }
