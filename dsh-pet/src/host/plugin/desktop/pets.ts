@@ -74,12 +74,12 @@ export function createDesktopPets(deps: DesktopPetsInput) {
       const { pets, desktopPets } = readDecision(configPaths);
       const trayOn = readAllConfig(configPaths).main?.trayEnabled !== false;
       log.info(
-        `[dsh-pet] 桌面判定：pets=${pets.length}，桌面可见=${desktopPets.length}` +
-          `（${desktopPets.map((pet) => String(pet.id)).join(',') || '无'}）→` +
+        `[dsh-pet] desktop decision: pets=${pets.length}, desktop-visible=${desktopPets.length}` +
+          ` (${desktopPets.map((pet) => String(pet.id)).join(',') || 'none'}) →` +
           ` hasDesktopPet=${desktopPets.length > 0} tray=${trayOn}`,
       );
     } catch (e) {
-      log.warn(`[dsh-pet] 宠物配置非法，桌面模式已跳过：${e instanceof Error ? e.message : String(e)}`);
+      log.warn(`[dsh-pet] invalid pet config; desktop mode skipped: ${e instanceof Error ? e.message : String(e)}`);
     }
   };
 

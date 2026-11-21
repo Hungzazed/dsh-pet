@@ -43,7 +43,8 @@ export function createDownloadReport(deps: DownloadReportInput) {
       downloadSlotTimer = null;
       if (workStatus.clear(EXTERNAL_WORK_SESSION)) publishWorkStatus();
     }, DOWNLOAD_SLOT_CLEAR_MS);
-    downloadSlotTimer.unref?.(); // 别把这个定时器钉进宿主的事件循环（退出时不该等它）
+    // 别把这个定时器钉进宿主的事件循环（退出时不该等它）
+    downloadSlotTimer.unref?.();
   };
 
   /** 停掉挂起的清槽定时器（插件卸载时调用）。 */

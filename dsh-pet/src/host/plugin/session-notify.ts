@@ -77,11 +77,14 @@ export function createSessionNotify(deps: SessionNotifyInput) {
       terminalTimers.delete(sessionId);
       const sessionState = workStatus.stateOf(sessionId);
       if (sessionState === 'success' || sessionState === 'error') {
-        workStatus.clear(sessionId); // 条目连同它的任务详情文案一起消失，不残留到后续活动
+        // 条目连同它的任务详情文案一起消失，不残留到后续活动
+        workStatus.clear(sessionId);
         turnFlags.delete(sessionId);
-        lastTodoText.delete(sessionId); // 会话都没了，这两份按会话记的缓存也一起清（防泄漏）
+        // 会话都没了，这两份按会话记的缓存也一起清（防泄漏）
+        lastTodoText.delete(sessionId);
         toolsInFlight.delete(sessionId);
-        publishWorkStatus(); // 清完要写 S：否则前端一直挂着那条陈旧完成态
+        // 清完要写 S：否则前端一直挂着那条陈旧完成态
+        publishWorkStatus();
       }
     }, TERMINAL_KEEP_MS);
     terminalTimers.set(sessionId, t);
@@ -110,7 +113,8 @@ export function createSessionNotify(deps: SessionNotifyInput) {
       );
       return hasBlockingActivity(activity);
     } catch {
-      return false; // 查询失败不阻塞通知（与「判据不可用时放行」同一策略）
+      // 查询失败不阻塞通知（与「判据不可用时放行」同一策略）
+      return false;
     }
   };
 
@@ -126,7 +130,8 @@ export function createSessionNotify(deps: SessionNotifyInput) {
       setTimeout(() => {
         notifyActivityTimers.delete(sessionId);
         void (async () => {
-          if (await sessionHasRunningWork(sessionId)) return; // 还有活：等真正的收尾轮再弹
+          // 还有活：等真正的收尾轮再弹
+          if (await sessionHasRunningWork(sessionId)) return;
           const frame = reduceNotifyFrame(event as Parameters<typeof reduceNotifyFrame>[0], replyText);
           // 这条延迟路径（活动门等 1.5s 确认没活了才推的「对话完成」）最常被点，同样要带会话 id
           if (frame) pushNotifyFrame(withSessionId(frame, sessionId));

@@ -127,7 +127,7 @@ describe('createDesktopPets —— 判定必须现读配置', () => {
       pets.logDesktopDecision();
       assert.equal(lines.length, 2);
       const line = lines[1];
-      assert.ok(line.includes('桌面可见=1（main）'), line);
+      assert.ok(line.includes('desktop-visible=1 (main)'), line);
       assert.ok(line.includes('hasDesktopPet=true'), line);
       assert.ok(line.includes('tray=false'), line);
     } finally {

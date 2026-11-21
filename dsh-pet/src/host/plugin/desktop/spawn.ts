@@ -74,7 +74,8 @@ export function createDesktopSpawn(deps: DesktopSpawnInput) {
   const inProcessHost = process.env.DSH_PET_IN_PROCESS === '1';
 
   const launchHelper = (electronPath: string | undefined): void => {
-    if (inProcessHost) return; // 应用模式：窗口由本进程建，绝不 spawn
+    // 应用模式：窗口由本进程建，绝不 spawn
+    if (inProcessHost) return;
     if (helper || disposed) return;
     // 无桌面宠物时：只有「桌面模式曾启用过且托盘还开着」才值得为托盘常驻，否则不启动
     if (!getHasDesktopPet() && !(desktopModeEverActive && getTrayOn())) return;
@@ -85,11 +86,13 @@ export function createDesktopSpawn(deps: DesktopSpawnInput) {
       // 「连尝试都没有」且没有任何线索。这里只加可见性，重试节奏与次数保持原样。
       portWaitAttempts += 1;
       if (portWaitAttempts === 1) {
-        log.info(`[dsh-pet] webServer 端口尚未就绪（port=${String(port)}），每 500ms 重试拉起桌面 Helper`);
+        log.info(
+          `[dsh-pet] webServer port not ready yet (port=${String(port)}); retrying desktop helper launch every 500ms`,
+        );
       } else if (portWaitAttempts % 20 === 0) {
         log.warn(
-          `[dsh-pet] 已等待 webServer 端口 ${(portWaitAttempts * 500) / 1000}s 仍未就绪` +
-            `（port=${String(port)}），桌面 Helper 尚未拉起`,
+          `[dsh-pet] webServer port still not ready after ${(portWaitAttempts * 500) / 1000}s` +
+            ` (port=${String(port)}); desktop helper not launched yet`,
         );
       }
       if (!startRetryTimer) {
@@ -147,7 +150,8 @@ export function createDesktopSpawn(deps: DesktopSpawnInput) {
     );
     try {
       helper.start();
-      desktopModeEverActive = true; // 此后即使桌面宠物清零也保留 Helper：托盘常驻，可随时切回来
+      // 此后即使桌面宠物清零也保留 Helper：托盘常驻，可随时切回来
+      desktopModeEverActive = true;
       log.info(`dsh-pet desktop helper started (config: ${configUrl})`);
     } catch (e) {
       log.warn(`dsh-pet desktop helper start failed: ${e instanceof Error ? e.message : String(e)}`);
@@ -156,7 +160,8 @@ export function createDesktopSpawn(deps: DesktopSpawnInput) {
   };
 
   const startHelper = (): void => {
-    if (inProcessHost) return; // 应用模式：不探测、不下载 Electron
+    // 应用模式：不探测、不下载 Electron
+    if (inProcessHost) return;
     if (helper || electronEnsure || disposed) return;
     if (!getHasDesktopPet() && !(desktopModeEverActive && getTrayOn())) {
       // 诊断日志（issue #168）：这条短路不打日志，就是「桌面模式凭空消失：无进程、无目录、无提示」
@@ -165,7 +170,7 @@ export function createDesktopSpawn(deps: DesktopSpawnInput) {
       if (!noDesktopSkipped) {
         noDesktopSkipped = true;
         log.info(
-          `[dsh-pet] 无桌面宠物（display 均为 web/none）且无需保留托盘（tray=${getTrayOn()}），已跳过桌面 Helper 启动`,
+          `[dsh-pet] no desktop pet (display is web/none for all pets) and no tray to keep (tray=${getTrayOn()}); desktop helper launch skipped`,
         );
       }
       return;
@@ -176,8 +181,8 @@ export function createDesktopSpawn(deps: DesktopSpawnInput) {
       if (!displayWarned) {
         displayWarned = true;
         log.warn(
-          '[dsh-pet] 未检测到图形显示环境（DISPLAY/WAYLAND_DISPLAY 均为空），已跳过桌面宠物。' +
-            '浏览器内宠物不受影响；如需在服务器上启用桌面模式，请配置 Xvfb 后设置 DSH_PET_DESKTOP_FORCE=1。',
+          '[dsh-pet] no graphical display detected (DISPLAY/WAYLAND_DISPLAY are both empty); desktop pet skipped. ' +
+            'Browser pets are unaffected. To enable desktop mode on a server, configure Xvfb and set DSH_PET_DESKTOP_FORCE=1.',
         );
       }
       return;
@@ -190,10 +195,10 @@ export function createDesktopSpawn(deps: DesktopSpawnInput) {
     // 诊断日志（issue #168）：只报「没找到」不够用——最常见的情形是「文件明明存在」，
     // 但不在实际查询的路径上（DSH_HOME 不一致）。把真正查的路径一起打出来。
     log.warn(
-      `[dsh-pet] 未找到 Electron 可执行文件：DSH_HOME=${dshHomeDir()}，查找路径=${defaultElectronExe()}` +
-        `，DSH_PET_ELECTRON_PATH=${process.env.DSH_PET_ELECTRON_PATH ?? '(未设置)'}`,
+      `[dsh-pet] Electron executable not found: DSH_HOME=${dshHomeDir()}, searched path=${defaultElectronExe()}` +
+        `, DSH_PET_ELECTRON_PATH=${process.env.DSH_PET_ELECTRON_PATH ?? '(not set)'}`,
     );
-    log.warn(`[dsh-pet] 开始下载 Electron 到 ${defaultElectronExe()} ...`);
+    log.warn(`[dsh-pet] downloading Electron to ${defaultElectronExe()} ...`);
     electronEnsure = ensureElectronDownload({
       // 下载全过程写进工作状态气泡（用户没有控制台，只能靠它看进度与失败原因）
       onLog: ({ text, level, done }) =>

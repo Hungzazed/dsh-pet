@@ -171,7 +171,8 @@ export function registerSessionWatch(deps: SessionWatchInput): void {
         if ((toolsInFlight.get(sessionId)?.size ?? 0) > 0) return;
         if (workStatus.has(sessionId)) {
           workStatus.setTask(sessionId, text);
-          publishWorkStatus(); // 任务文案变化也要写 S（气泡内容靠它更新）
+          // 任务文案变化也要写 S（气泡内容靠它更新）
+          publishWorkStatus();
         }
         return;
       }
@@ -184,17 +185,22 @@ export function registerSessionWatch(deps: SessionWatchInput): void {
           flags.goalRound = true;
           turnFlags.set(sessionId, flags);
         }
-        return; // user/message 不驱动档位动画
+        // user/message 不驱动档位动画
+        return;
       }
       if (type === 'turn/start') {
-        turnFlags.set(sessionId, { goalRound: false, closing: null }); // 新一轮：清 turn 级标志
+        // 新一轮：清 turn 级标志
+        turnFlags.set(sessionId, { goalRound: false, closing: null });
         // 新一轮也开始新的任务上下文：清掉上一轮留下的任务详情文案（issue #59），否则它会一直挂着。
         // 代价：goal 续跑这类多轮任务，每轮开头会回落一瞬档位文案，直到本轮（通常在开头几步内）
         // 再写一次 todo 清单。
         workStatus.setTask(sessionId, null);
-        lastTodoText.delete(sessionId); // 上一轮的清单文案，不该被下一轮的工具跑完时「恢复」回来
-        toolsInFlight.delete(sessionId); // 上一轮若有工具没等到 tool/result（被打断），别拖累这一轮
-        publishWorkStatus(); // 清掉上一轮任务文案也要写 S
+        // 上一轮的清单文案，不该被下一轮的工具跑完时「恢复」回来
+        lastTodoText.delete(sessionId);
+        // 上一轮若有工具没等到 tool/result（被打断），别拖累这一轮
+        toolsInFlight.delete(sessionId);
+        // 清掉上一轮任务文案也要写 S
+        publishWorkStatus();
       }
       if (
         type === 'tool/call' &&
@@ -217,11 +223,15 @@ export function registerSessionWatch(deps: SessionWatchInput): void {
         // 落到其他活跃会话，防止回合被打断后永久卡在上一档；其他事件的 null 是「不关心」，忽略。
         if (type === 'turn/end') {
           turnFlags.delete(sessionId);
-          cancelTerminalCleanup(sessionId); // 条目都要清了，别留一个到点后无事可做的定时器
-          lastTodoText.delete(sessionId); // 按会话记的两份缓存跟着会话一起消失（防泄漏）
+          // 条目都要清了，别留一个到点后无事可做的定时器
+          cancelTerminalCleanup(sessionId);
+          // 按会话记的两份缓存跟着会话一起消失（防泄漏）
+          lastTodoText.delete(sessionId);
           toolsInFlight.delete(sessionId);
-          workStatus.clear(sessionId); // 条目连同任务详情文案一起消失（clear 内部会重算展示）
-          publishWorkStatus(); // 回合被打断 → 回到空闲：前端据此收起常驻气泡
+          // 条目连同任务详情文案一起消失（clear 内部会重算展示）
+          workStatus.clear(sessionId);
+          // 回合被打断 → 回到空闲：前端据此收起常驻气泡
+          publishWorkStatus();
         }
         return;
       }
@@ -242,7 +252,8 @@ export function registerSessionWatch(deps: SessionWatchInput): void {
       if (outcome?.keepWorking) next = 'working';
       const changed = workStatus.setState(sessionId, next, seq);
       if (outcome?.task !== undefined) workStatus.setTask(sessionId, outcome.task);
-      publishWorkStatus(); // 档位或文案变了 → 写 S（内容没变时它自己会短路，不产生多余写入）
+      // 档位或文案变了 → 写 S（内容没变时它自己会短路，不产生多余写入）
+      publishWorkStatus();
       // 同会话同状态不重复更新（防刷屏）：写已经落定，这里只负责跳过终态清理的重排
       if (!changed) return;
       // 终态只展示短暂窗口后自动清理：陈旧完成态不再浮上来（Bug 3 的一环，顺带缓解 Bug 2 残留）。

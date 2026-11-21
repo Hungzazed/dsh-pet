@@ -74,7 +74,9 @@ export function createBalancePoll(deps: BalancePollInput) {
    */
   const refreshBalance = async (manual = false, petId?: string): Promise<void> => {
     // 开始 + 结果各一行：否则 logs.txt 里既看不出「有没有查」，也看不出「查了但余额没变」。
-    log.info(`[dsh-pet] 余额刷新开始（${manual ? '手动' : '周期'}${petId === undefined ? '' : ' pet=' + petId}）`);
+    log.info(
+      `[dsh-pet] balance refresh start (${manual ? 'manual' : 'periodic'}${petId === undefined ? '' : ' pet=' + petId})`,
+    );
     // manual 与 petId 都只在有时才补键：叶子形状是对外契约，多余的 undefined 键会被严格比对打回
     const mark = <T>(v: T): T & { manual?: true; petId?: string } => ({
       ...v,
@@ -106,10 +108,10 @@ export function createBalancePoll(deps: BalancePollInput) {
       // 失败也写 S（前端弹文字说明），日志同样留一条：否则「查了、失败了」与「根本没查」
       // 在文件里长得一模一样。成功用 info，失败用 warn（亮度不同，扫一眼就能分辨）。
       if (result.ok) {
-        log.info(`[dsh-pet] 余额刷新成功 provider=${result.provider}（${result.shape}）`);
+        log.info(`[dsh-pet] balance refresh ok provider=${result.provider} (${result.shape})`);
       } else {
         log.warn(
-          `[dsh-pet] 余额刷新失败 provider=${result.provider} reason=${result.reason}` +
+          `[dsh-pet] balance refresh failed provider=${result.provider} reason=${result.reason}` +
             (result.message ? ' ' + result.message : ''),
         );
       }
@@ -124,7 +126,7 @@ export function createBalancePoll(deps: BalancePollInput) {
           message,
         }),
       );
-      log.warn('[dsh-pet] 余额刷新异常：' + message);
+      log.warn('[dsh-pet] balance refresh error: ' + message);
     }
   };
 

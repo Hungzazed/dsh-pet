@@ -115,7 +115,8 @@ export function createChatMemory(deps: ChatMemoryInput) {
     try {
       raw = await readFile(memoryPath, 'utf8');
     } catch {
-      return {}; // 文件不存在 = 尚无记忆
+      // 文件不存在 = 尚无记忆
+      return {};
     }
     try {
       const parsed = JSON.parse(raw) as Record<string, unknown>;
@@ -123,7 +124,7 @@ export function createChatMemory(deps: ChatMemoryInput) {
       return parsed as Record<string, Record<string, { messages: ChatMemoryMessage[] }>>;
     } catch (e) {
       log.error(
-        `dsh-pet: 记忆文件无法解析（对话将从头开始）：${memoryPath}（${e instanceof Error ? e.message : String(e)}）`,
+        `dsh-pet: cannot parse memory file (chat will start from scratch): ${memoryPath} (${e instanceof Error ? e.message : String(e)})`,
       );
       return {};
     }
@@ -191,13 +192,16 @@ export function createChatMemory(deps: ChatMemoryInput) {
       const result = await Promise.race([Promise.resolve(recall.call(provider, req, signal)), deadline]);
       if (result === undefined) return undefined;
       if (!isChatRequest(result)) {
-        log.warn('[dsh-pet] 记忆召回返回非法请求体 id=' + provider.id);
+        log.warn('[dsh-pet] memory recall returned an invalid request body id=' + provider.id);
         return undefined;
       }
       return result;
     } catch (error) {
       log.warn(
-        '[dsh-pet] 记忆召回失败 id=' + provider.id + '：' + (error instanceof Error ? error.message : String(error)),
+        '[dsh-pet] memory recall failed id=' +
+          provider.id +
+          ': ' +
+          (error instanceof Error ? error.message : String(error)),
       );
       return undefined;
     }
@@ -216,7 +220,10 @@ export function createChatMemory(deps: ChatMemoryInput) {
       .then(() => capture.call(provider, turn))
       .catch((error) => {
         log.warn(
-          '[dsh-pet] 记忆接收失败 id=' + provider.id + '：' + (error instanceof Error ? error.message : String(error)),
+          '[dsh-pet] memory capture failed id=' +
+            provider.id +
+            ': ' +
+            (error instanceof Error ? error.message : String(error)),
         );
       });
   };
@@ -247,7 +254,7 @@ export function createChatMemory(deps: ChatMemoryInput) {
     const found = findPetInstance(cfg, petId);
     // 宠物可能在「校验那次读」与这里之间被删（配置随时会变，两次读之间就是窗口）：
     // 明确失败、不生成不写 S——写下去就是一只已不存在宠物的幽灵叶子（常驻到进程重启）。
-    if (!found) return { ok: false, reason: 'unknown-pet', message: '没有这只桌宠：' + petId };
+    if (!found) return { ok: false, reason: 'unknown-pet', message: 'No such pet: ' + petId };
     // 每一类语音由自己的开关决定：周期调度看 voiceWhisperEnabled，手动触发（右键菜单、
     // 斜杠命令）看 voiceEnabled。叶子不带 voiceTo = 谁都不念，气泡照旧弹。
     const whisperVoiceOn = cfg.main?.voiceWhisperEnabled === true;
@@ -260,7 +267,7 @@ export function createChatMemory(deps: ChatMemoryInput) {
     // 点名了却没命中 = 配置写错或图已被删：明确失败，不静默换成另一张（点了 A 却看到 B 会以为坏了）。
     const forced = image === undefined ? undefined : matchMeme(pool, image);
     if (image !== undefined && forced === undefined) {
-      return { ok: false, reason: 'unknown-image', message: '表情包不在池内：' + image };
+      return { ok: false, reason: 'unknown-image', message: 'Meme is not in the pool: ' + image };
     }
     const meme = forced ?? (found.conf.whisperImageEnabled === true ? pickMeme(pool) : undefined);
     // 模型：条目配置的 whisperModel 优先（留空 = 不指定）；生成侧失败会回落到当前对话的模型重试一次
@@ -272,7 +279,7 @@ export function createChatMemory(deps: ChatMemoryInput) {
     if (!result.ok) {
       // 失败不写 S：静默跳过 + warn，不伪造文案、不弹错误气泡
       log.warn(
-        '[dsh-pet] 碎碎念生成失败 pet=' +
+        '[dsh-pet] whisper generation failed pet=' +
           petId +
           ' reason=' +
           result.reason +
@@ -289,8 +296,8 @@ export function createChatMemory(deps: ChatMemoryInput) {
     });
     // 成功也留一行：否则 logs.txt 里「没触发」与「触发了并且成功」无法区分。
     log.info(
-      `[dsh-pet] 碎碎念生成成功 pet=${petId}，${result.text.length} 字` +
-        (result.image ? `，配图=${result.image}` : ''),
+      `[dsh-pet] whisper generated pet=${petId} chars=${result.text.length}` +
+        (result.image ? ` meme=${result.image}` : ''),
     );
     // 文本随返回值带出，且与刚写进叶子的是同一个变量：两条出口给同一份文本，不是一个真相两个版本
     return { ok: true, text: result.text, ...(result.image ? { image: result.image } : {}) };
@@ -311,7 +318,7 @@ export function createChatMemory(deps: ChatMemoryInput) {
     });
     if (!result.ok) {
       log.warn(
-        '[dsh-pet] 梦话生成失败 pet=' +
+        '[dsh-pet] sleep talk generation failed pet=' +
           petId +
           ' reason=' +
           result.reason +
@@ -320,7 +327,7 @@ export function createChatMemory(deps: ChatMemoryInput) {
       return false;
     }
     state.writePet(petId, 'say', { text: result.text, anim: false });
-    log.info(`[dsh-pet] 梦话生成成功 pet=${petId}，${result.text.length} 字`);
+    log.info(`[dsh-pet] sleep talk generated pet=${petId} chars=${result.text.length}`);
     return true;
   };
 
@@ -341,7 +348,9 @@ export function createChatMemory(deps: ChatMemoryInput) {
     const bucket = mem[found.entry];
     const existing = bucket && typeof bucket === 'object' && !Array.isArray(bucket) ? bucket[petId] : undefined;
     if (existing !== undefined && (!existing || !Array.isArray(existing.messages))) {
-      log.error(`[dsh-pet] 记忆结构异常（messages 不是数组）pet=${petId}，按新会话处理：${memoryPath}`);
+      log.error(
+        `[dsh-pet] malformed memory (messages is not an array) pet=${petId}; treating it as a new chat: ${memoryPath}`,
+      );
     }
     // rounds = 0（用户关掉历史）→ 空历史；否则截尾部 rounds 轮（1 轮 = 1 问 1 答）。
     // 不能写 slice(-rounds * 2)：-0 在 JS 里 === 0，slice(-0) 返回整个数组而不是空。
@@ -380,7 +389,9 @@ export function createChatMemory(deps: ChatMemoryInput) {
           : (mem[args.entryKey] = {});
       const existing = bucket[args.petId];
       if (existing !== undefined && (!existing || !Array.isArray(existing.messages))) {
-        log.error(`[dsh-pet] 记忆结构异常（messages 不是数组）pet=${args.petId}，按新会话处理：${memoryPath}`);
+        log.error(
+          `[dsh-pet] malformed memory (messages is not an array) pet=${args.petId}; treating it as a new chat: ${memoryPath}`,
+        );
       }
       const entry = existing && Array.isArray(existing.messages) ? existing : (bucket[args.petId] = { messages: [] });
       // 用户上传的图只存不送：记忆要能还原「这一轮带过图」（聊天记录存档），但不把图本体重发给模型；
@@ -418,7 +429,7 @@ export function createChatMemory(deps: ChatMemoryInput) {
     const epochAtStart = deletedEpoch.get(petId) ?? 0;
     // 读上下文只占一次短锁：召回与模型调用都在锁外。
     const context = await withMemoryLock(() => readContext(petId, env));
-    if (context === null) return { ok: false, reason: 'unknown-pet', message: '没有这只桌宠：' + petId };
+    if (context === null) return { ok: false, reason: 'unknown-pet', message: 'No such pet: ' + petId };
     const { cfg, found, pool, actions, list, system } = context;
     // 记忆实现：配置里的 id 决定用谁；未注册的 id 在解析时就回落内置，这里补一条日志说明。
     const memoryConf = found.conf.memory;
@@ -427,13 +438,15 @@ export function createChatMemory(deps: ChatMemoryInput) {
     ).trim();
     const provider = resolveChatMemoryProvider(configuredId);
     if (configuredId !== '' && configuredId !== provider.id) {
-      log.warn('[dsh-pet] 记忆 provider 未注册：' + configuredId + '，本轮用 ' + provider.id);
+      log.warn(
+        '[dsh-pet] memory provider not registered: ' + configuredId + '; using ' + provider.id + ' for this turn',
+      );
     }
     // 图片只记尺寸与字节数（不记 base64）：模型不支持读图时 dsh-llm 会把它投影成占位文本，靠这行日志定位
     if (image !== undefined) {
       log.info(
-        `[dsh-pet] 对话附带图片 pet=${petId}，${image.width}x${image.height}，${image.bytes} 字节` +
-          '（模型不支持读图时内核会以占位文本代替）',
+        `[dsh-pet] chat with image pet=${petId}, ${image.width}x${image.height}, ${image.bytes} bytes` +
+          ' (when the model cannot read images, the kernel substitutes placeholder text)',
       );
     }
     // 记忆：核心先拼一份完整请求体，provider 可整份替换，也可原样交回。
@@ -502,7 +515,7 @@ export function createChatMemory(deps: ChatMemoryInput) {
       });
     } else {
       // 用户在生成期间删了历史：本轮不落盘、不通知第三方，回复照常返回。
-      log.info('[dsh-pet] 生成期间历史被删除，跳过写回与接收 pet=' + petId);
+      log.info('[dsh-pet] history deleted during generation; skipping write-back and capture pet=' + petId);
     }
     // 动作先写：与 POST /anim 同一条写回链路（记录 + anim 叶子），渲染端据此播放并回报执。
     if (generated.action !== undefined) {
@@ -538,7 +551,7 @@ export function createChatMemory(deps: ChatMemoryInput) {
       const cfg = readAllConfig(configPaths);
       const found = findPetInstance(cfg, petId);
       // 与对话同一支：宠物随时可能被删，明确失败，不在文件里留没人消费的分桶
-      if (!found) return { ok: false as const, reason: 'unknown-pet' as const, message: '没有这只桌宠：' + petId };
+      if (!found) return { ok: false as const, reason: 'unknown-pet' as const, message: 'No such pet: ' + petId };
       // 删除代数 +1：正在生成的那一轮据此放弃写回，避免「删完又冒出来」
       deletedEpoch.set(petId, (deletedEpoch.get(petId) ?? 0) + 1);
       const mem = await readMemory();
@@ -559,7 +572,7 @@ export function createChatMemory(deps: ChatMemoryInput) {
         await writeMemory(mem);
       }
       // 只记数量与动作，不打正文（记忆内容是用户隐私）
-      log.info(`[dsh-pet] 删除对话记忆 pet=${petId}，removed=${removed}` + (ts === undefined ? '（清空）' : ''));
+      log.info(`[dsh-pet] chat history deleted pet=${petId} removed=${removed}` + (ts === undefined ? ' (all)' : ''));
       return { ok: true as const, removed };
     });
 
