@@ -77,7 +77,7 @@ function makeMenu(get: (name: string) => unknown, transport: Transport, show: Sh
 }
 
 describe('createMenu', () => {
-  test('读点击：页面内服务缺失 → 补注册菜单，不点播', async () => {
+  test('read click: in-page service missing → re-register the menu, no playback', async () => {
     const { transport, calls } = fakeTransport(() => ({ ok: true }));
     const { show, starts } = fakeShow();
     const menu = makeMenu(() => undefined, transport, show);
@@ -88,12 +88,12 @@ describe('createMenu', () => {
     assert.deepEqual(
       calls.map((rec) => rec.method + ' ' + rec.path),
       ['GET /config'],
-      '服务缺失时应只补注册，不应发生点播',
+      'service missing: only re-register, never play',
     );
-    assert.equal(starts.length, 0, '没有点击就不该开演');
+    assert.equal(starts.length, 0, 'no click means no show');
   });
 
-  test('读点击：owner 还没进快照（ok:false）→ 补注册菜单', async () => {
+  test('read click: owner not in the snapshot yet (ok:false) → re-register the menu', async () => {
     const { transport, calls } = fakeTransport(() => ({ ok: true }));
     const { show } = fakeShow();
     const menu = makeMenu(() => ({ menuEvents: () => ({ ok: false }) }), transport, show);
@@ -104,16 +104,20 @@ describe('createMenu', () => {
     assert.deepEqual(
       calls.map((rec) => rec.method + ' ' + rec.path),
       ['GET /config'],
-      'owner 不在快照里时按间隔重试注册',
+      'owner not in the snapshot: retry registration on the interval',
     );
   });
 
-  test('读点击：命中「吃白饭」→ 按 petId 找归属条目并开演', async () => {
+  test('read click: hits "Rice time" → find the owning entry by petId and start the show', async () => {
     const { transport, calls } = fakeTransport(() => ({
       main: { pets: [{ id: 'pet-1' }], animations: { baifan: ['a', 'b'] } },
     }));
     const { show, starts } = fakeShow();
-    const menu = makeMenu(() => ({ menuEvents: () => ({ ok: true, events: { 吃白饭: 'pet-1' } }) }), transport, show);
+    const menu = makeMenu(
+      () => ({ menuEvents: () => ({ ok: true, events: { 'Rice time': 'pet-1' } }) }),
+      transport,
+      show,
+    );
 
     menu.tick();
     await flush();
@@ -121,13 +125,13 @@ describe('createMenu', () => {
     assert.deepEqual(
       calls.map((rec) => rec.method + ' ' + rec.path),
       ['GET /config'],
-      '命中后只读一次配置，不再补注册',
+      'after a hit: read the config once, no re-registration',
     );
-    assert.equal(starts.length, 1, '找到归属条目应开演一次');
-    assert.equal(starts[0].petId, 'pet-1', '开演的是被点的那只宠物');
+    assert.equal(starts.length, 1, 'owning entry found: start exactly one show');
+    assert.equal(starts[0].petId, 'pet-1', 'the click starts the pet that was clicked');
   });
 
-  test('注册菜单：main 没配 animations.baifan → 不发 POST', async () => {
+  test('register menu: main without animations.baifan → no POST', async () => {
     const { transport, calls } = fakeTransport(() => ({ main: { animations: {} } }));
     const { show } = fakeShow();
     const menu = makeMenu(() => undefined, transport, show);
@@ -137,11 +141,11 @@ describe('createMenu', () => {
     assert.deepEqual(
       calls.map((rec) => rec.method + ' ' + rec.path),
       ['GET /config'],
-      '没有这个玩法就不该往宿主注册菜单项',
+      'without the activity, do not register a host menu item',
     );
   });
 
-  test('注册菜单：配了 animations.baifan → POST 带上 owner', async () => {
+  test('register menu: animations.baifan configured → POST carries the owner', async () => {
     const { transport, calls } = fakeTransport(() => ({ ok: true, main: { animations: { baifan: ['a'] } } }));
     const { show } = fakeShow();
     const menu = makeMenu(() => undefined, transport, show);
@@ -149,31 +153,43 @@ describe('createMenu', () => {
     await menu.ensureMenu();
 
     const post = calls.find((rec) => rec.method === 'POST');
-    assert.ok(post !== undefined, '配了玩法应发 POST /menu/item');
+    assert.ok(post !== undefined, 'activity configured: send POST /menu/item');
     assert.equal(post.path, '/menu/item');
-    assert.deepEqual((post.body as Record<string, unknown>).owner, 'dsh-pet-baifan', '菜单项 owner 固定为吃白饭');
+    assert.deepEqual(
+      (post.body as Record<string, unknown>).owner,
+      'dsh-pet-baifan',
+      'the menu item owner stays the fixed rice-activity owner',
+    );
   });
 
-  test('点播：被点的宠物不属于任何条目 → 不开演', async () => {
+  test('playback: the clicked pet belongs to no entry → no show', async () => {
     const { transport } = fakeTransport(() => ({ main: { pets: [{ id: 'other' }], animations: { baifan: ['a'] } } }));
     const { show, starts } = fakeShow();
-    const menu = makeMenu(() => ({ menuEvents: () => ({ ok: true, events: { 吃白饭: 'pet-1' } }) }), transport, show);
+    const menu = makeMenu(
+      () => ({ menuEvents: () => ({ ok: true, events: { 'Rice time': 'pet-1' } }) }),
+      transport,
+      show,
+    );
 
     menu.tick();
     await flush();
 
-    assert.equal(starts.length, 0, '找不到归属条目就不演');
+    assert.equal(starts.length, 0, 'no owning entry means no show');
   });
 
-  test('dispose 后：不再读点击', async () => {
+  test('after dispose: no more click reads', async () => {
     const { transport, calls } = fakeTransport(() => ({ ok: true }));
     const { show } = fakeShow();
-    const menu = makeMenu(() => ({ menuEvents: () => ({ ok: true, events: { 吃白饭: 'pet-1' } }) }), transport, show);
+    const menu = makeMenu(
+      () => ({ menuEvents: () => ({ ok: true, events: { 'Rice time': 'pet-1' } }) }),
+      transport,
+      show,
+    );
 
     menu.dispose();
     menu.tick();
     await flush();
 
-    assert.equal(calls.length, 0, '卸载后不应再发请求');
+    assert.equal(calls.length, 0, 'after dispose: no more requests');
   });
 });

@@ -10,43 +10,46 @@ import assert from 'node:assert/strict';
 import { frameToToast, MAX_BODY } from './notify.ts';
 
 /** 审批帧：标题固定是「正在申请权限」，用它观察会话名怎么拼进标题。 */
-const approvalFrame = { type: 'approval/requested', sessionId: 's1', toolName: 'bash', reason: '要写 /tmp' };
+const approvalFrame = { type: 'approval/requested', sessionId: 's1', toolName: 'bash', reason: 'wants to write /tmp' };
 
-describe('frameToToast：会话名进标题', () => {
-  test('有会话名时是「会话名 · 事件」', () => {
-    assert.equal(frameToToast(approvalFrame, '修复通知标题')?.title, '修复通知标题 · 正在申请权限');
+describe('frameToToast — session name in the title', () => {
+  test('with a session name it is "session · event"', () => {
+    assert.equal(
+      frameToToast(approvalFrame, 'Fix notification titles')?.title,
+      'Fix notification titles · Permission requested',
+    );
   });
 
-  test('没有会话名、空串、纯空白时只留事件类型', () => {
-    assert.equal(frameToToast(approvalFrame)?.title, '正在申请权限');
-    assert.equal(frameToToast(approvalFrame, '')?.title, '正在申请权限');
-    assert.equal(frameToToast(approvalFrame, '   ')?.title, '正在申请权限');
+  test('no session name, empty string or whitespace only leaves the event type alone', () => {
+    assert.equal(frameToToast(approvalFrame)?.title, 'Permission requested');
+    assert.equal(frameToToast(approvalFrame, '')?.title, 'Permission requested');
+    assert.equal(frameToToast(approvalFrame, '   ')?.title, 'Permission requested');
   });
 
-  test('会话名超长按 30 字符截断，事件类型不被截掉', () => {
-    assert.equal(frameToToast(approvalFrame, '会话'.repeat(30))?.title, '会话'.repeat(15) + '… · 正在申请权限');
+  test('long session names truncate to 30 chars without eating the event type', () => {
+    assert.equal(frameToToast(approvalFrame, 'ab'.repeat(30))?.title, 'ab'.repeat(15) + '… · Permission requested');
   });
 });
 
-describe('frameToToast：完成通知', () => {
+describe('frameToToast — completion notifications', () => {
   const done = (text?: string) => ({
     type: 'session/event',
     sessionId: 's1',
     event: { type: 'turn/end', data: { reason: { kind: 'completed' }, text } },
   });
 
-  test('标题是会话名本身，不再缀「对话完成」', () => {
-    const t = frameToToast(done('改完了'), '修复通知标题');
-    assert.equal(t?.title, '修复通知标题');
-    assert.equal(t?.body, '改完了');
+  test('title is the session name itself, with no "Chat finished" suffix', () => {
+    const t = frameToToast(done('Done editing'), 'Fix notification titles');
+    assert.equal(t?.title, 'Fix notification titles');
+    assert.equal(t?.body, 'Done editing');
   });
 
-  test('没有会话名时回落「对话完成」', () => {
-    assert.equal(frameToToast(done('改完了'))?.title, '对话完成');
-    assert.equal(frameToToast(done('改完了'), '   ')?.title, '对话完成');
+  test('falls back to "Chat finished" without a session name', () => {
+    assert.equal(frameToToast(done('Done editing'))?.title, 'Chat finished');
+    assert.equal(frameToToast(done('Done editing'), '   ')?.title, 'Chat finished');
   });
 
-  test('正文仍按 80 字符截断，标题与正文互不影响', () => {
+  test('body still truncates at 80 chars; title and body stay independent', () => {
     const long = 'x'.repeat(MAX_BODY + 10);
     const t = frameToToast(done(long), 'a'.repeat(100));
     assert.equal(t?.body, 'x'.repeat(MAX_BODY) + '…');
@@ -54,42 +57,42 @@ describe('frameToToast：完成通知', () => {
   });
 });
 
-describe('frameToToast：其他事件带上会话名', () => {
-  test('error 是「会话名 · 生成失败」，正文仍是错误信息', () => {
+describe('frameToToast — other events carry the session name', () => {
+  test('error is "session · Generation failed"; body stays the error message', () => {
     const frame = {
       type: 'session/event',
       sessionId: 's1',
-      event: { type: 'turn/end', data: { reason: { kind: 'error', error: { message: '连接超时' } } } },
+      event: { type: 'turn/end', data: { reason: { kind: 'error', error: { message: 'Connection timeout' } } } },
     };
-    const t = frameToToast(frame, '跑测试');
-    assert.equal(t?.title, '跑测试 · 生成失败');
-    assert.equal(t?.body, '连接超时');
-    assert.equal(frameToToast(frame)?.title, '生成失败');
+    const t = frameToToast(frame, 'Run tests');
+    assert.equal(t?.title, 'Run tests · Generation failed');
+    assert.equal(t?.body, 'Connection timeout');
+    assert.equal(frameToToast(frame)?.title, 'Generation failed');
   });
 
-  test('max-tokens / 审批 / 提问同样前缀会话名', () => {
+  test('max-tokens / approval / question also prefix the session name', () => {
     const maxTokens = { type: 'session/event', event: { type: 'turn/end', data: { reason: { kind: 'max-tokens' } } } };
-    assert.equal(frameToToast(maxTokens, '长文档')?.title, '长文档 · 输出被截断');
-    assert.equal(frameToToast(approvalFrame, '部署')?.title, '部署 · 正在申请权限');
+    assert.equal(frameToToast(maxTokens, 'Long document')?.title, 'Long document · Output truncated');
+    assert.equal(frameToToast(approvalFrame, 'Deploy')?.title, 'Deploy · Permission requested');
 
-    const question = { type: 'question/requested', sessionId: 's1', questions: [{ question: '选哪个？' }] };
-    assert.equal(frameToToast(question, '选型')?.title, '选型 · 模型在等你回答');
-    assert.equal(frameToToast(question)?.title, '模型在等你回答');
+    const question = { type: 'question/requested', sessionId: 's1', questions: [{ question: 'Which one?' }] };
+    assert.equal(frameToToast(question, 'Pick a model')?.title, 'Pick a model · The model is waiting for your answer');
+    assert.equal(frameToToast(question)?.title, 'The model is waiting for your answer');
   });
 
-  test('host/agent-error 没有会话维度，标题保持「生成失败」', () => {
-    const t = frameToToast({ type: 'host/agent-error', message: '进程崩了' }, '任何名字');
-    assert.equal(t?.title, '生成失败');
-    assert.equal(t?.body, '进程崩了');
+  test('host/agent-error has no session dimension; title stays "Generation failed"', () => {
+    const t = frameToToast({ type: 'host/agent-error', message: 'process crashed' }, 'any name');
+    assert.equal(t?.title, 'Generation failed');
+    assert.equal(t?.body, 'process crashed');
   });
 });
 
-describe('frameToToast：不弹的分支', () => {
-  test('aborted / interrupted / 未知类型返回 null', () => {
+describe('frameToToast — events that do not pop', () => {
+  test('aborted / interrupted / unknown types return null', () => {
     for (const kind of ['aborted', 'interrupted']) {
       const frame = { type: 'session/event', event: { type: 'turn/end', data: { reason: { kind } } } };
-      assert.equal(frameToToast(frame, '这条也不该弹'), null);
+      assert.equal(frameToToast(frame, 'this one should not pop'), null);
     }
-    assert.equal(frameToToast({ type: 'unknown/frame' }, '同样'), null);
+    assert.equal(frameToToast({ type: 'unknown/frame' }, 'likewise'), null);
   });
 });

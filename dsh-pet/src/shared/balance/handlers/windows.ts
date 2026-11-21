@@ -16,8 +16,8 @@ import type { ShapeHandler } from './shape.ts';
  * 滚动窗的时长是服务商自己的业务事实（如 5 小时），不走这张表，见 DEFAULT_ROLLING_LABEL。
  */
 export const WINDOW_LABELS = {
-  weekly: '周',
-  monthly: '月',
+  weekly: 'Weekly',
+  monthly: 'Monthly',
 } as const;
 
 /**
@@ -93,10 +93,10 @@ export function resetInText(iso?: string): string {
   const t = new Date(iso).getTime();
   if (!Number.isFinite(t)) return '';
   const delta = t - Date.now();
-  if (delta <= 0) return '已重置';
+  if (delta <= 0) return 'Already reset';
   const hoursF = delta / 3_600_000;
-  if (hoursF >= 96) return (Math.round((hoursF / 24) * 10) / 10).toFixed(1) + ' 天';
-  return Math.max(0.1, Math.round(hoursF * 10) / 10).toFixed(1) + ' 小时';
+  if (hoursF >= 96) return (Math.round((hoursF / 24) * 10) / 10).toFixed(1) + ' d';
+  return Math.max(0.1, Math.round(hoursF * 10) / 10).toFixed(1) + ' h';
 }
 
 /** 三窗口取最大值，只有月窗口时就是它本身 */
@@ -106,17 +106,17 @@ function windowsPercent(v: BalanceView): number | undefined {
 
 /** 把 resetInText 的三种返回翻成一句提示：空串 = 时间未知，'已重置' = 已经过点，其余 = 倒计时。 */
 function resetPhrase(reset: string): string {
-  if (reset === '') return '重置时间未知';
-  return reset === '已重置' ? reset : reset + '重置';
+  if (reset === '') return 'Reset time unknown';
+  return reset === 'Already reset' ? reset : 'resets in ' + reset;
 }
 
 /** 两行：最紧迫窗口的已用百分比与重置倒计时 */
 function windowsRows(v: BalanceView): BalanceBubbleRow[] {
   const w = urgentWindow(v);
-  if (!w) return [{ role: 'label', text: '额度数据不可用' }];
+  if (!w) return [{ role: 'label', text: 'Quota data unavailable' }];
   const reset = resetInText(w.resetsAt);
   return [
-    { role: 'label', text: w.label + '额度已用 ' + Math.round(w.percent) + '%' },
+    { role: 'label', text: w.label + ' quota used ' + Math.round(w.percent) + '%' },
     { role: 'sub', text: resetPhrase(reset) },
   ];
 }
@@ -171,9 +171,9 @@ function windowsUsage(v: BalanceView): BalanceBubbleRow[] | undefined {
   const u = v.usage;
   if (!u) return undefined;
   const total = compactCount(u.totalTokens);
-  const input = compactCount(u.inputTokens) + ' 入';
-  const output = compactCount(u.outputTokens) + ' 出';
-  const period = '本期 ' + u.requests + ' 次';
+  const input = compactCount(u.inputTokens) + ' in';
+  const output = compactCount(u.outputTokens) + ' out';
+  const period = u.requests + ' requests this period';
   const spend = '$' + u.spentUsd.toFixed(2);
   // 比例条用真实占比：输入通常占绝对多数，条看起来几乎单色是事实，不做最小宽度放大。
   const sum = u.inputTokens + u.outputTokens;

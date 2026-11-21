@@ -110,7 +110,7 @@ export function createMenu(deps: MenuDeps) {
         return;
       }
     } catch (error) {
-      console.warn('[dsh-pet] 吃白饭启动失败 ' + String(error));
+      console.warn('[dsh-pet] Rice time failed to start ' + String(error));
     }
   }
 
