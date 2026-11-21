@@ -1,418 +1,418 @@
 ---
 name: dsh-plugin-comment-spec
-description: "为 DSH 插件编写、评审或迁移代码注释时使用：以模块头、声明级 TSDoc 契约和少量 why 注释为核心，统一标签、语言与校验方式。"
-whenToUse: "编写或修改 DSH 插件（宿主半侧 / 浏览器半侧 / 独立模式 / 桌面 helper）代码、补 TSDoc 与 API 文档、评审注释质量、清理横幅式或叙述式注释、为注释引入 lint 或文档门禁时。"
+description: "Use when writing, reviewing, or migrating code comments for DSH plugins: built around module headers, declaration-level TSDoc contracts, and a few why comments; unifies tags, language, and validation."
+whenToUse: "When writing or modifying DSH plugin code (host side / browser side / standalone mode / desktop helper), adding TSDoc and API documentation, reviewing comment quality, cleaning up banner or narrative comments, or introducing lint or documentation gates for comments."
 metadata:
-  language: "zh"
+  language: "en"
   category: "development"
 disable-model-invocation: false
 user-invocable: true
 ---
 
-# DSH 插件注释规范
+# DSH Plugin Comment Specification
 
-## 目标
+## Goal
 
-让调用方不读实现就能正确使用插件 API，让维护者只读必要信息就能安全改动代码，让注释可以被工具校验、并且不会随实现漂移。
+Let callers use the plugin API correctly without reading the implementation, let maintainers change the code safely after reading only the necessary information, and let comments be validated by tools without drifting away from the implementation.
 
-三条基线：
+Three baselines:
 
-1. **注释是契约，不是散文。** 每条注释只回答类型和命名回答不了的问题：边界、不变量、副作用、为什么这样做。
-2. **一处事实只写一遍。** 能从代码、类型、OpenAPI、schema 生成的信息，不手写第二份。
-3. **默认单行，复杂才展开。** 先改结构，再写注释；注释不能弥补过大的文件或过深的函数。
+1. **A comment is a contract, not prose.** Each comment answers only what types and names cannot: boundaries, invariants, side effects, and why it is done this way.
+2. **State each fact once.** Information that can be generated from code, types, OpenAPI, or schemas is not written a second time by hand.
+3. **One line by default, expand only when complex.** Fix the structure first, then write comments; comments cannot compensate for an oversized file or a too-deep function.
 
-## 速查（十行版）
+## Quick reference (ten-line version)
 
-| 场景 | 写什么 | 写在哪 |
+| Scenario | What to write | Where |
 | --- | --- | --- |
-| 新文件（入口/驱动/带状态 hook） | 职责、非目标、依赖、不变量 | 文件头 4–8 行 |
-| 新文件（普通模块） | 一句话职责 | 文件头 1 行 |
-| 新文件（纯函数叶子） | 可省略：导出自身有完整文档时省略 | — |
-| 导出符号 | 一行摘要，必要时加标签 | 声明上方 |
-| 接口字段 | 语义不显然才写（配置项、单位、互斥、缺省） | 字段上方，1 行 |
-| 复杂函数 | 摘要 + `@param` / `@returns` / `@throws` | 声明上方，≤ 12 行 |
-| 私有成员 / 内部类 | 一行摘要，不承诺兼容 | 声明上方 |
-| 非显然实现 | 为什么、权衡、必须的顺序 | 行内 1–4 行 |
-| 生成文件 | `@generated`、生成命令、禁止手改 | 文件头 |
-| 凭据相关 | 来源、生命周期、能否进日志 | 使用处一行 |
-| 待办 | `TODO(#123, @owner): 动作` | 行内 |
-| 背景与决策 | 链接 `docs/` 或 ADR | 模块头一行 |
+| New file (entry / driver / stateful hook) | Responsibilities, non-goals, dependencies, invariants | Top of the file, 4–8 lines |
+| New file (ordinary module) | One-sentence responsibility | Top of the file, 1 line |
+| New file (pure-function leaf) | May be omitted: omit it when the export documents itself fully | — |
+| Exported symbol | One-line summary, plus tags when needed | Above the declaration |
+| Interface field | Write only when the semantics are not obvious (config options, units, mutual exclusion, defaults) | Above the field, 1 line |
+| Complex function | Summary + `@param` / `@returns` / `@throws` | Above the declaration, ≤ 12 lines |
+| Private member / internal class | One-line summary, no compatibility promise | Above the declaration |
+| Non-obvious implementation | Why, tradeoffs, the ordering that must hold | Inline, 1–4 lines |
+| Generated file | `@generated`, the generation command, do not edit by hand | Top of the file |
+| Credential-related | Source, lifetime, whether it may go into logs | One line at the point of use |
+| TODO | `TODO(#123, @owner): action` | Inline |
+| Background and decisions | Link to `docs/` or an ADR | One line in the module header |
 
-## 适用范围
+## Scope
 
-适用于 DSH 插件仓库里的手写源码：
+Applies to hand-written source code in DSH plugin repositories:
 
-- 宿主半侧（host）：Cordis 插件入口、服务注册、路由、配置合并、状态维护。
-- 浏览器半侧（client）：`./client` 入口、React 组件、设置页、渲染与轮询。
-- 独立模式（standalone / CLI）：参数解析、伪 ctx、本地 server、shim。
-- 桌面 helper（Electron / runtime）：主进程、preload、renderer、窗口与素材调度。
+- Host side: the Cordis plugin entry, service registration, routes, config merging, state maintenance.
+- Browser side (client): the `./client` entry, React components, the settings page, rendering and polling.
+- Standalone mode (standalone / CLI): argument parsing, the pseudo ctx, the local server, shims.
+- Desktop helper (Electron / runtime): the main process, preload, renderer, windows and asset scheduling.
 
-不适用于：`lib/` 构建产物、`*.d.ts` 生成声明、`node_modules`、以及 `package.json` 这类无法写注释的清单文件（这类文件的说明放 README）。
+Does not apply to: `lib/` build output, generated `*.d.ts` declarations, `node_modules`, and manifest files such as `package.json` that cannot hold comments (document those in the README).
 
-其他语言的项目可以复用分层、禁止项与流程，只把标签换成对应生态（例如 Java 用 Javadoc）。
+Projects in other languages can reuse the layering, the prohibitions, and the workflow, swapping only the tags for the corresponding ecosystem (for example, Java uses Javadoc).
 
-## 第一原则：先判断“该不该写”
+## First principle: decide first whether it should be written
 
-落笔前对每句话做三次判断：
+Before typing, ask three questions of every sentence:
 
-1. **能否从签名或命名直接得到？** 能——删掉。`/** 用户名 */ name: string` 是噪音。
-2. **描述的是当前事实，还是历史与计划？** 历史——删掉或进 CHANGELOG；计划——进 issue；只保留“现在必须成立”的约束。
-3. **下次改代码时它会不会失效？** 会——改成约束、改成链接，或者不写。注释的价值不在于“写了”，而在于“仍然为真”。
+1. **Can it be derived directly from the signature or the name?** Yes — delete it. `/** user name */ name: string` is noise.
+2. **Does it describe the current fact, or history and plans?** History — delete it or move it to the CHANGELOG; plans — file an issue; keep only the constraints that must hold now.
+3. **Will it become false the next time the code changes?** Yes — turn it into a constraint, turn it into a link, or do not write it. The value of a comment is not that it was written but that it is still true.
 
-一句话检验：**未来的读者能否用代码或测试验证这句话？** 不能验证的叙述，多半不该留在注释里。
+One-sentence test: **can a future reader verify this sentence with the code or a test?** A narrative that cannot be verified probably should not stay in a comment.
 
-### 否定式注释
+### Negative comments
 
-模块头允许且鼓励写一条非目标；函数级与字段级默认不写。
+In a module header, one non-goal is allowed and encouraged; at function and field level, do not write them by default.
 
-落笔前过三问，三问都否就不写：
+Before typing, pass three questions; if all three answers are no, do not write it:
 
-1. **越界是否低成本？** 不新增 import、不跨类型边界就能顺手写进去。
-2. **读者是否会误会？** 名字与上下文没有暗示这条边界。
-3. **是否出过事故？** 有过真实的错放或返工。
+1. **Is going out of scope cheap?** It can be written in passing without adding imports or crossing type boundaries.
+2. **Would the reader be mistaken?** The name and context do not hint at this boundary.
+3. **Has an incident happened?** There has been a real misfiling or rework.
 
-反例（写了等于噪音）：
+Counter-examples (writing them is noise):
 
-- `// 本文件不是工具函数集合。` —— 读者不会这样以为。
-- `/** 不负责持久化。*/` 挂在 `parseX()` 上 —— 函数体已经说明了。
-- `const ts = Date.now(); // 这里是毫秒而不是秒` —— 应该直接改名 `tsMs`。
+- `// This file is not a collection of utility functions.` — the reader would not think so.
+- `/** Does not handle persistence. */` attached to `parseX()` — the function body already says so.
+- `const ts = Date.now(); // this is milliseconds, not seconds` — just rename it to `tsMs`.
 
-正例（写了才有价值）：
+Good examples (worth writing):
 
-- 配置写入口：不重启桌面 Helper —— 上层曾直接调重启，属跨层顺手错。
-- 事件监听模块：不订阅事件（订阅在装配层）—— 名字叫 watch 却不订阅，反直觉。
+- Config write entry point: does not restart the desktop Helper — a higher layer once called restart directly, an easy cross-layer mistake.
+- Event-listening module: does not subscribe to events (subscription happens at the assembly layer) — the name says watch but it does not subscribe, which is counterintuitive.
 
-变量层面的“是 A 而不是 B”：只在两个相似概念并存时写，且优先用命名区分；命名能说清就不写。
+Variable-level "is A, not B": write it only when two similar concepts coexist, and prefer distinguishing them by name; if naming can make it clear, do not write it.
 
-## 注释分层
+## Comment layers
 
-| 层级 | 位置 | 必须写什么 | 长度上限 | 校验方式 |
+| Layer | Location | What must be written | Length limit | Verification |
 | --- | --- | --- | --- | --- |
-| 模块头（入口/驱动/带状态） | 文件顶部 | 插件角色、职责、非目标、依赖关系、关键不变量 | 4–8 行 | review |
-| 模块头（普通模块） | 文件顶部 | 一句话职责 | 1 行 | review |
-| 模块头（纯函数叶子） | 文件顶部 | 可省略 | 0 行 | review |
-| 导出声明 | `export` 的函数、类、常量、类型 | 一行摘要，按需加标签 | 1–7 行 | tsdoc / api-extractor |
-| 接口字段 | 语义不显然的字段 | 一行语义 | 1 行 | review |
-| 私有成员 | 内部类字段、私有方法、模块内常量 | 一行摘要，不承诺兼容 | 1 行 | review |
-| 复杂函数 | 参数、返回、异常不显然时 | 摘要 + `@param` / `@returns` / `@throws` | ≤ 12 行 | eslint |
-| 生命周期 | `apply` / `inject` / `dispose` / `ctx.on` | 注册了什么、依赖什么、何时清理 | 1–4 行 | review |
-| 实现体内 | 非显然分支、魔数、外部怪癖 | 为什么这样做、为什么不能那样做 | 1–4 行 | review |
-| 生成文件 | 文件顶部 | `@generated`、生成命令、禁止手改 | 3 行 | review |
-| 工具指令 | `eslint-disable` / `v8 ignore` | 指令 + 原因 | 1 行 | lint |
+| Module header (entry / driver / stateful) | Top of the file | Plugin role, responsibilities, non-goals, dependencies, key invariants | 4–8 lines | review |
+| Module header (ordinary module) | Top of the file | One-sentence responsibility | 1 line | review |
+| Module header (pure-function leaf) | Top of the file | May be omitted | 0 lines | review |
+| Exported declaration | `export`ed functions, classes, constants, types | One-line summary, plus tags when needed | 1–7 lines | tsdoc / api-extractor |
+| Interface field | Fields whose semantics are not obvious | One line of semantics | 1 line | review |
+| Private member | Internal class fields, private methods, module-level constants | One-line summary, no compatibility promise | 1 line | review |
+| Complex function | When parameters, return values or exceptions are not obvious | Summary + `@param` / `@returns` / `@throws` | ≤ 12 lines | eslint |
+| Lifecycle | `apply` / `inject` / `dispose` / `ctx.on` | What is registered, what is depended on, when it is cleaned up | 1–4 lines | review |
+| Inside the implementation | Non-obvious branches, magic numbers, external quirks | Why it is done this way, why it cannot be done that way | 1–4 lines | review |
+| Generated file | Top of the file | `@generated`, the generation command, do not edit by hand | 3 lines | review |
+| Tool directives | `eslint-disable` / `v8 ignore` | Directive + reason | 1 line | lint |
 
-### 模块头
+### Module header
 
-按文件角色分三档，不要一律写成四段式：
+Split into three tiers by file role; do not always write the four-paragraph form:
 
-| 角色 | 写什么 | 长度 |
+| Role | What to write | Length |
 | --- | --- | --- |
-| 入口、装配、服务、驱动、带状态的 hook | 负责什么、不负责什么（最多一条）、依赖谁、什么必须始终成立 | 4–8 行 |
-| 普通模块（一组相关函数或一个组件） | 一句话职责，必要时补一条非目标 | 1 行 |
-| 纯函数叶子（换算、格式化、纯决策） | 省略；文件只有一个导出且该导出已有完整文档时也应省略 | 0 行 |
+| Entry, assembly, service, driver, stateful hook | What it is responsible for, what it is not responsible for (at most one), what it depends on, what must always hold | 4–8 lines |
+| Ordinary module (a group of related functions or one component) | One-sentence responsibility, plus one non-goal if needed | 1 line |
+| Pure-function leaf (conversion, formatting, pure decision) | Omit; also omit when the file has a single export and that export is already fully documented | 0 lines |
 
-有 `@module` 时写在首行或末行，只有入口与驱动类文件值得带它。头不是表格：一句话说得清就不该写成四行。
+When `@module` is present, put it on the first or the last line; only entry and driver files are worth carrying it. The header is not a table: if one sentence makes it clear, it should not be stretched into four lines.
 
-不要写：路由清单、字段清单、配置项清单、变更历史、ASCII 图、目录结构。这些内容要么能生成，要么属于文档站，写进注释就是第二份真相。
+Do not write: route lists, field lists, config-option lists, change history, ASCII diagrams, directory trees. This content can either be generated or belongs to the documentation site; writing it into a comment creates a second source of truth.
 
 ```ts
 /**
- * 宿主半侧：把 <能力> 注册为 DSH 服务与路由，并维护其内存状态。
- * 不负责渲染与素材；浏览器半侧经 /<prefix>/state 轮询读取。
- * 契约见 openapi.yaml；配置只经 readAllConfig 读取，本模块不碰文件。
+ * Host side: registers <capability> as DSH services and routes, and maintains its in-memory state.
+ * Does not handle rendering or assets; the browser side polls /<prefix>/state to read it.
+ * The contract is defined in openapi.yaml; config is read only through readAllConfig and this module never touches files.
  * @module dsh-plugin-<name>
  */
 ```
 
-超过 8 行通常不是“需要更多说明”，而是“这个文件该拆了”。
+Going over 8 lines usually does not mean that more explanation is needed; it means this file should be split.
 
-### 导出声明
+### Exported declarations
 
-`package.json` 的 `exports`（`.`、`./client`）指向的入口，其导出就是插件的公开面：每个符号必须有摘要；字段按下一节的判据写。
+The entries pointed to by `exports` in `package.json` (`.` and `./client`) are the plugin's public surface: every symbol must have a summary; fields are written per the criteria in the next section.
 
-摘要用祈使句或名词短语、现在时、句末句号；用中文写，标识符保持原文。不要重复名称和类型。
+Write the summary as an imperative or a noun phrase, in the present tense, ending with a period; write it in English and keep identifiers as-is. Do not repeat the name or the type.
 
 ```ts
-/** 解析不带前导斜杠的命令名；不合法时返回 undefined。 */
+/** Parses a command name without a leading slash; returns undefined when it is invalid. */
 export function parseCommandName(line: string): string | undefined;
 
-/** 轮询状态的唯一数据源；counter 变化才触发渲染。 */
+/** The only data source for polled state; rendering is triggered only when counter changes. */
 readonly state: PollState;
 ```
 
-### 接口字段
+### Interface fields
 
-只写语义不显然的字段。以下四类必须写：
+Write only fields whose semantics are not obvious. The following four categories must be written:
 
-- **配置项与开关**：它改变什么行为，以及缺省值。
-- **数值**：单位与量纲（`_MS` / `_PX` / `_BYTES`），以及取值范围或夹取规则。
-- **互斥或二选一**：另一侧是什么，由谁保证只出现一个。
-- **跨模块契约**：谁写、谁读、失败或缺失时怎么降级。
+- **Config options and toggles**: what behavior they change, and the default value.
+- **Numbers**: unit and dimension (`_MS` / `_PX` / `_BYTES`), plus the value range or clamping rule.
+- **Mutually exclusive or either-or**: what the other side is, and who guarantees that only one appears.
+- **Cross-module contract**: who writes, who reads, how it degrades on failure or absence.
 
-坐标、尺寸、计数、名字这类字段名已经说清的，不写。给几十个字段逐个补一行，读起来更像表格而不像契约：真正需要解释的字段会被同款句式淹没。
+Do not write for fields whose names already make things clear, such as coordinates, sizes, counts and names. Adding a line to each of dozens of fields reads more like a table than a contract: the fields that really need explaining get drowned by the same boilerplate phrasing.
 
-### 私有成员与内部类
+### Private members and internal classes
 
-内部类、私有字段、模块内常量与导出符号用同一标准，但只写一行摘要，不写完整标签，也不承诺兼容性：
+Internal classes, private fields and module-level constants follow the same standard as exported symbols, but get only a one-line summary, no full tag set, and no compatibility promise:
 
 ```ts
-/** 当前实例的注册层级；层级高的定义遮蔽全局定义。 */
+/** Registration layer of the current instance; a definition in a higher layer shadows the global one. */
 private readonly layers: ScopedLayers;
 
-/** 单进程内生成 commandId 的序号，重启后从 0 开始。 */
+/** Sequence for generating commandId within a single process; starts from 0 after a restart. */
 private commandSeq = 0;
 ```
 
-需要明确“不对外”时加 `@internal`；能被外部直接 `import` 到的符号一律按导出标准写。
+Add `@internal` when something must be explicitly marked as not public; any symbol that can be imported directly from outside is documented to the exported standard.
 
-### 复杂函数
+### Complex functions
 
-只在“读完签名仍有疑问”时展开。结构固定：摘要一行 → 空行 → 标签区。
+Expand only when questions remain after reading the signature. The structure is fixed: one summary line → blank line → tag block.
 
-- `@param name - 语义`：写含义、可选性、缺省值、边界，不写类型。
-- `@returns`：写边界值（空、`undefined`、默认值、部分成功）。
-- `@throws`：写触发条件与错误类型；不抛错就不写。
-- `{@link Symbol}`：引用相关符号，不写“见 xxx.ts:123”。
-- `@example`：只给非常规用法，一个函数最多一个。
+- `@param name - semantics`: write the meaning, optionality, default value, boundaries; do not write the type.
+- `@returns`: write the boundary values (empty, `undefined`, defaults, partial success).
+- `@throws`: write the trigger condition and the error type; if it never throws, do not write it.
+- `{@link Symbol}`: reference a related symbol; do not write "see xxx.ts:123".
+- `@example`: only for unconventional usage, at most one per function.
 
 ```ts
 /**
- * 注册一个插件命令。
+ * Registers a plugin command.
  *
- * @param definition - 发现元数据与处理器；同名重复注册会被拒绝。
- * @returns 精确注销该定义的 disposer。
- * @throws {TypeError} 名称不符合 `<规则>` 时。
+ * @param definition - Discovery metadata and the handler; a duplicate registration of the same name is rejected.
+ * @returns A disposer that unregisters exactly this definition.
+ * @throws {TypeError} When the name does not match `<rule>`.
  */
 ```
 
-#### 泛型
+#### Generics
 
-类型参数不显然时用 `@typeParam` 写约束与用途，不重复 `extends` 已经表达的内容：
+When a type parameter is not obvious, use `@typeParam` to state the constraint and the purpose; do not repeat what `extends` already expresses:
 
 ```ts
 /**
- * 按配置键读取值。
+ * Reads a value by config key.
  *
- * @typeParam K - 配置键；返回类型由该键推导。
- * @param key - 已声明的键。
- * @returns 对应值；键不存在时返回 `undefined`。
+ * @typeParam K - Config key; the return type is derived from this key.
+ * @param key - A declared key.
+ * @returns The corresponding value; `undefined` when the key does not exist.
  */
 export function readConfigValue<K extends keyof Config>(key: K): Config[K] | undefined;
 ```
 
-#### 重载
+#### Overloads
 
-摘要与标签只写一次，放在实现签名或第一个重载上；各重载只在行为有差异时补一行 `@remarks`，不要把同一段说明复制三遍。
+Write the summary and tags once, on the implementation signature or the first overload; add a `@remarks` line only to an overload whose behavior differs, and do not copy the same explanation three times.
 
-### 生命周期与注入
+### Lifecycle and injection
 
-DSH 插件的特有位置，最容易被写成“复述框架”：
+DSH-plugin-specific places, the ones most likely to be written as a restatement of the framework:
 
-- `name` / `inject` / `provide` / `apply` / `dispose`：各写一行，说明**为什么需要这个依赖、注册了什么、清理什么**，不要解释 Cordis 本身怎么工作。
-- `ctx.on(...)` / `ctx.effect(...)`：注明监听器的生命周期与解除时机。
-- 路由处理函数：契约链接 OpenAPI，不逐字段列响应体。
-- 客户端组件：props 每个字段一行；`useEffect` 依赖只解释“为什么这个依赖不能删”。
-- 配置合并：默认值与优先级写进模块头，不逐字段写散文。
+- `name` / `inject` / `provide` / `apply` / `dispose`: one line each stating **why this dependency is needed, what is registered, what is cleaned up**; do not explain how Cordis itself works.
+- `ctx.on(...)` / `ctx.effect(...)`: note the listener's lifetime and when it is torn down.
+- Route handlers: link the contract to OpenAPI; do not enumerate the response body field by field.
+- Client components: one line per prop field; for `useEffect` dependencies, explain only why this dependency cannot be removed.
+- Config merging: write defaults and precedence in the module header; do not write prose per field.
 
-### 实现体内
+### Inside the implementation
 
-只写五类内容：非显然的常量来源、反直觉的分支、性能或安全权衡、外部系统的怪癖、必须保持的调用顺序。
+Write only five categories of content: the source of a non-obvious constant, a counterintuitive branch, a performance or security tradeoff, a quirk of an external system, and a call order that must be preserved.
 
-不写：逐行翻译、显而易见的判空、getter/setter 说明、变量含义复述。
+Do not write: line-by-line restatement of the code, obvious null checks, getter/setter descriptions, restatements of what a variable means.
 
-1–4 行为限。超过 4 行说明需要更好的命名、更小的函数，或者把背景迁到 `docs/` 并只留链接。
-
-```ts
-// 宿主的 dispose 是异步的：先摘监听再关窗，否则回调会打到已销毁的 webContents。
-```
-
-### 安全与凭据
-
-涉及密钥、token、用户数据的代码，注释只写**来源、生命周期、能否进日志**，绝不写真实值；示例一律用占位符。
+Limit: 1–4 lines. More than 4 lines means you need better names, a smaller function, or moving the background to `docs/` and leaving only a link.
 
 ```ts
-// key 只驻留内存，禁止写日志或落盘；错误信息里只保留后四位。
+// The host's dispose is asynchronous: detach listeners first, then close the window, otherwise callbacks land on an already-destroyed webContents.
 ```
 
-### 生成文件
+### Security and credentials
 
-提交进仓库的生成物（bundle、复制出来的 runtime 脚本）必须在文件头三行内声明：谁生成的、生成命令、禁止手改。
+For code that deals with keys, tokens, or user data, the comment states only the **source, lifetime, and whether it may go into logs**; never write real values, and always use placeholders in examples.
+
+```ts
+// key lives only in memory; never log it or write it to disk; keep only the last four characters in error messages.
+```
+
+### Generated files
+
+Generated artifacts committed to the repository (bundles, copied runtime scripts) must declare within the first three lines of the file: who generates them, the generation command, and do not edit by hand.
 
 ```ts
 /**
- * @generated by `pnpm run build:desktop-core`，请勿手改。
- * 源文件：src/shared/index.ts。
+ * @generated by `pnpm run build:desktop-core`; do not edit by hand.
+ * Source file: src/shared/index.ts.
  */
 ```
 
-生成器不支持注入文件头时，在最近的手写入口或 README 里标注。
+When the generator cannot inject a file header, note it in the nearest hand-written entry point or in the README.
 
-## 禁止项
+## Prohibitions
 
-| 反模式 | 为什么不行 | 替代做法 |
+| Anti-pattern | Why it is wrong | Alternative |
 | --- | --- | --- |
-| `// ---- 配置 ----` 这类横幅 | 掩盖文件过大，制造合并冲突，代码搬走后常留在原地 | 拆模块，用文件与导出边界代替 |
-| `**加粗**`、`## 标题`、ASCII 图 | 编辑器不渲染，grep 与 diff 里全是噪音 | 纯文本；图进文档站 |
-| “改造前 / 旧实现 / 曾经” | 无法验证，必然腐化 | git、CHANGELOG、ADR |
-| 注释掉的代码 | 双重维护，读者不知道哪份有效 | 删除，靠版本库找回 |
-| 行号或文件路径引用 | 文件一移动就失效 | `{@link}` 或稳定文档链接 |
-| `@param {string} name 名称` | 类型已由 TS 表达，纯冗余 | 只写语义 |
-| 在注释里抄路由表、字段表、配置表 | 与实现漂移，且无人校验 | 链接 OpenAPI、schema 或生成物 |
-| 无主 TODO | 永远不会被处理 | `TODO(#123, @owner): 具体动作`，或只留 issue |
-| 同一段注释中英混写 | 读者来回切换，术语容易漂移 | 统一用中文；英文只用于标识符与引用原文 |
-| 为覆盖率凑注释 | 增加噪音，掩盖真正缺失的契约 | 宁可缺，不可假 |
-| `// 本文件不是…`、函数级“不负责…”、变量“是 A 而不是 B” | 读者本来不会误会，属噪音 | 删；需要区分时改命名 |
+| Banners such as `// ---- config ----` | Hide an oversized file, create merge conflicts, and often stay behind after the code is moved | Split the module; use files and export boundaries instead |
+| `**bold**`, `## heading`, ASCII diagrams | Editors do not render them, and they are pure noise in grep and diff output | Plain text; diagrams go to the documentation site |
+| "before the rework / the old implementation / it used to be" | Not verifiable, and necessarily rots | git, CHANGELOG, ADR |
+| Commented-out code | Double maintenance; the reader cannot tell which copy is live | Delete it and recover it from version control |
+| Line-number or file-path references | Break as soon as the file moves | `{@link}` or a stable documentation link |
+| `@param {string} name the name` | The type is already expressed by TS, pure redundancy | Write only the semantics |
+| Copying route, field, or config tables into comments | Drifts from the implementation and nobody validates it | Link OpenAPI, the schema, or the generated artifact |
+| An ownerless TODO | Will never be handled | `TODO(#123, @owner): concrete action`, or just leave an issue |
+| Mixing languages within one comment block | Readers switch back and forth and terminology drifts | Use English consistently; other languages only for identifiers and quoted originals |
+| Padding comments to reach coverage | Adds noise and masks the contracts that are really missing | Better missing than fake |
+| `// this file is not…`, "does not handle…" at function level, "is A, not B" for a variable | The reader would not have been mistaken anyway, so it is noise | Delete; rename when a distinction is needed |
 
-## 标签规范
+## Tag conventions
 
-使用 TSDoc 语义（JSDoc 工具链兼容）。
+Use TSDoc semantics (compatible with the JSDoc toolchain).
 
-| 标签 | 何时用 | 写法 |
+| Tag | When to use | Form |
 | --- | --- | --- |
-| `@module` | 模块头 | `@module <包名>` |
-| `@param` | 有参数且语义不显然 | `@param name - 语义` |
-| `@typeParam` | 泛型参数不显然 | `@typeParam T - 约束与用途` |
-| `@returns` | 有返回值且边界不显然 | `@returns 边界与缺省` |
-| `@throws` | 会抛出异常 | `@throws {Type} 触发条件` |
-| `@deprecated` | 计划移除 | `@deprecated 替代品与起始版本` |
-| `@internal` | 不对外承诺 | `@internal` |
-| `@remarks` | 需要成段说明 | 摘要之后的独立段落 |
-| `@example` | 非常规用法 | 代码块，最多一个 |
-| `@see` / `{@link}` | 关联符号或文档 | `{@link Symbol}` |
+| `@module` | Module header | `@module <package-name>` |
+| `@param` | Has parameters and their semantics are not obvious | `@param name - semantics` |
+| `@typeParam` | A generic parameter is not obvious | `@typeParam T - constraint and purpose` |
+| `@returns` | Has a return value and its boundaries are not obvious | `@returns boundaries and defaults` |
+| `@throws` | Can throw | `@throws {Type} trigger condition` |
+| `@deprecated` | Planned for removal | `@deprecated replacement and starting version` |
+| `@internal` | No public promise | `@internal` |
+| `@remarks` | Needs a paragraph of explanation | A separate paragraph after the summary |
+| `@example` | Unconventional usage | Code block, at most one |
+| `@see` / `{@link}` | Related symbol or document | `{@link Symbol}` |
 
-规则：
+Rules:
 
-- 顺序固定：摘要 → `@remarks` → `@typeParam` → `@param` → `@returns` → `@throws` → `@example`。
-- `@param` 的名字必须与签名完全一致；改参数名时同步改标签。
-- 标签之间不空行；`@param` 组与 `@returns` 之间不空行；与摘要之间空一行。
-- 中文句子用全角标点；代码片段、命令、路径内部的符号保持原样。
-- 不写 `@param {type}`，类型交给 TypeScript。
+- Fixed order: summary → `@remarks` → `@typeParam` → `@param` → `@returns` → `@throws` → `@example`.
+- The `@param` name must match the signature exactly; update the tag when renaming a parameter.
+- No blank lines between tags; no blank line between the `@param` group and `@returns`; one blank line after the summary.
+- English sentences use ASCII punctuation; punctuation inside code snippets, commands and paths stays as-is.
+- Do not write `@param {type}`; leave the type to TypeScript.
 
-## 语言与术语
+## Language and terminology
 
-注释一律用中文。代码标识符、类型名、API 名、命令名保持英文原文，不翻译；引用错误消息、日志、UI 文案时保留原文，不改写。
+Comments are always written in English. Code identifiers, type names, API names and command names keep their original spelling and are not translated; when quoting error messages, logs, or UI copy, keep the original text and do not rewrite it.
 
-- **语言跟随目标仓库。** 本文示例用中文；移植或参考其他代码时不照抄语言，按目标仓库统一，同一个文件里不混写。
-- **全仓库统一中文叙述。** 不要一句中文一句英文；专有名词直接用英文不算混写。
-- **一个概念一个词。** 首次出现可括注英文，例如“成品配置（resolved config）”；同义词不要轮换。
-- **避免项目黑话。** 必须使用时，在模块头定义一次；不要让新人靠猜。
-- **标点跟语义走。** 中文句子用全角标点；代码片段、命令、路径内部的符号保持原样。
-- **标签名保持英文。** `@param`、`@returns`、`{@link}` 是工具语法，不翻译。
+- **The comment language follows the target repository.** The examples in this document are in English because the target language for this repository is English; when porting or referencing other code, do not copy its language; unify on the target repository's language, and do not mix languages in one file.
+- **One narrative language across the whole repository.** Do not alternate languages sentence by sentence; using proper nouns in English does not count as mixing.
+- **One concept, one word.** On first occurrence you may gloss it in parentheses, for example "resolved config"; do not rotate synonyms.
+- **Avoid project jargon.** When it is unavoidable, define it once in the module header; do not make newcomers guess.
+- **Punctuation follows the sentence.** English sentences use ASCII punctuation; punctuation inside code snippets, commands and paths stays as-is.
+- **Tag names stay in English.** `@param`, `@returns`, `{@link}` are tool syntax and are not translated.
 
-## 注释与测试的取舍
+## Comments versus tests
 
-能被测试钉住的规则不写进注释。优先级表、边界换算、状态转移、降级分支，都写成断言；注释只留测试表达不了的三类：
+Rules that a test can pin down are not written into comments. Precedence tables, boundary conversions, state transitions and fallback branches all become assertions; comments keep only the three categories a test cannot express:
 
-- **顺序**：为什么必须按这个次序执行，换个次序会坏在哪。
-- **权衡**：两个都可行的方案里为什么选这个，放弃了什么。
-- **外部怪癖**：宿主或浏览器某处的行为反直觉，测试无法稳定复现。
+- **Ordering**: why execution must follow this order, and where a different order breaks.
+- **Tradeoffs**: among two workable options, why this one was chosen and what was given up.
+- **External quirks**: behavior somewhere in the host or the browser is counterintuitive, and a test cannot reproduce it reliably.
 
-同一条事实只出现在一处：测试已经断言了换算公式，模块头就不必再抄一遍，只写测试覆盖不到的约定（例如结果与耗时无关、不受输入顺序影响）。两边都写会漂移，且漂移时没人知道该信哪边。
+The same fact appears in only one place: if a test already asserts the conversion formula, the module header does not need to copy it, so write only the conventions the tests do not cover (for example, the result is independent of elapsed time and unaffected by input order). Writing both drifts, and when they drift nobody knows which side to trust.
 
-## 长度与密度
+## Length and density
 
-- 模块头按角色分档（入口 4–8 行 / 普通 1 行 / 纯函数叶子可省）；声明摘要 1 行；函数文档 ≤ 12 行；体内 why 1–4 行。
-- 文档块中位数应为 1 行，p90 ≤ 7 行。**≥ 10 行的块是“该迁文档”的信号**，不是“写得更详细”的信号。
-- 注释行占比 10%–20% 属于常见区间。高于 25% 先查“是不是在写散文、是不是在掩盖结构”；低于 5% 先查“导出契约是不是缺失”。
-- 密度不是 KPI，不按行数考核，也不为了达标补废话。字段注释尤其如此：把显然的字段补满，会让真正需要解释的字段淹没在同款句式里。
+- Module headers are tiered by role (entry 4–8 lines / ordinary 1 line / pure-function leaf optional); declaration summaries 1 line; function documentation ≤ 12 lines; in-body why 1–4 lines.
+- The median documentation block should be 1 line, p90 ≤ 7 lines. **A block of ≥ 10 lines is a signal that it should move to the docs**, not a signal to write more detail.
+- A comment-line ratio of 10%–20% is the usual range. Above 25%, first check whether you are writing prose or masking the structure; below 5%, first check whether exported contracts are missing.
+- Density is not a KPI, is not assessed by line count, and does not justify filler written to hit a target. This is especially true for field comments: padding out the obvious fields drowns the fields that really need explaining in the same boilerplate phrasing.
 
-## 写作流程
+## Writing workflow
 
-**新增代码**
+**Adding code**
 
-1. 新文件先按角色定模块头（入口/驱动 4–8 行；普通模块 1 行；纯函数叶子可省），再写 import。
-2. 每个导出符号写一行摘要；接口每个字段一行。
-3. 参数、返回、异常不显然时补标签；不显然的用法才加 `@example`。
-4. 只在非显然处写 why；能用命名和类型表达的一律不写。
-5. 提交前跑类型检查与 lint（若已配置 TSDoc 规则）。
+1. For a new file, define the module header by role first (entry/driver 4–8 lines; ordinary module 1 line; pure-function leaf optional), then write the imports.
+2. Write one summary line per exported symbol; one line per interface field.
+3. Add tags when parameters, return values or exceptions are not obvious; add `@example` only for non-obvious usage.
+4. Write why only in non-obvious places; anything expressible through naming and types is not written at all.
+5. Before committing, run the type check and lint (if TSDoc rules are configured).
 
-**修改代码**
+**Modifying code**
 
-1. 先判断这次改动让哪些注释失真；只改相关注释，不顺手重写无关注释。
-2. 删除已不存在的符号引用与失效示例。
-3. 行为变化同步 `@returns` / `@throws`；要删除导出，先标 `@deprecated` 保留一个版本。
-4. 新增分支若引入新约束，补一句 why，而不是补一段流程说明。
+1. First work out which comments this change makes false; change only the relevant comments, do not rewrite unrelated ones in passing.
+2. Remove references to symbols that no longer exist and examples that no longer work.
+3. Sync behavior changes into `@returns` / `@throws`; to remove an export, first mark it `@deprecated` and keep it for one version.
+4. If a new branch introduces a new constraint, add a why sentence rather than a paragraph of process description.
 
-**评审代码**
+**Reviewing code**
 
-1. 按检查清单逐条过，把问题分成“错误、过期、风格”三类。
-2. 只对“错误、过期”要求必须改；风格问题给建议，不阻塞。
-3. 长注释只要求迁移到文档，不要求删掉信息。
-4. 发现“注释与实现矛盾”时，以代码为准，先改注释，再判断代码是否有 bug。
+1. Go through the checklist item by item and classify the problems as wrong, stale, or style.
+2. Require changes only for wrong and stale; style issues get suggestions and do not block.
+3. For long comments, require only that they be migrated to the documentation, not that information be deleted.
+4. When a comment contradicts the implementation, the code wins: fix the comment first, then decide whether the code has a bug.
 
-**迁移存量**
+**Migrating existing code**
 
-1. 先删装饰：横幅、加粗、标题、ASCII 图。
-2. 再把 ≥ 10 行的块迁到 `docs/`，代码里留 2–3 行摘要加链接。
-3. 再补齐导出符号的标签。
-4. 最后开门禁：先 `warn`，稳定后再 `error`。一次只动一个维度，避免大 diff。
+1. Remove decoration first: banners, bold, headings, ASCII diagrams.
+2. Then move blocks of ≥ 10 lines to `docs/`, leaving a 2–3 line summary plus a link in the code.
+3. Then fill in the tags for exported symbols.
+4. Finally turn on the gates: `warn` first, `error` once stable. Change one dimension at a time to avoid a huge diff.
 
-## 检查清单
+## Checklist
 
-- [ ] 模块头与文件角色匹配（入口/驱动写全，纯函数叶子可以不写），回答了“负责什么、依赖谁、什么必须成立”？
-- [ ] 每个导出符号有摘要；接口字段只写了语义不显然的那些（配置项、单位、互斥、缺省），明显字段没被凑数？
-- [ ] 泛型参数不显然时写了 `@typeParam`？重载说明只写了一遍？
-- [ ] 生成文件是否标了 `@generated` 与生成命令？
-- [ ] 凭据相关注释是否只写来源与脱敏要求，没有真实值？
-- [ ] `@param` 名称与签名一致？返回与异常的边界写清楚？
-- [ ] 有没有重复类型、重复命名、重复实现细节？
-- [ ] 有没有横幅、加粗、图、历史叙述、行号引用？
-- [ ] ≥ 10 行的注释是否应该迁到文档？
-- [ ] TODO 是否带 issue 与 owner？
-- [ ] 同一事实是否只存在一处（没有复制 OpenAPI、schema、配置表）？
-- [ ] 叙述语言是否统一为中文（标识符与引用原文除外）？
+- [ ] Does the module header match the file role (entry/driver written in full, pure-function leaves may skip it), and does it answer what it is responsible for, what it depends on, and what must always hold?
+- [ ] Does every exported symbol have a summary; are interface fields written only for those whose semantics are not obvious (config options, units, mutual exclusion, defaults), with obvious fields not padded for coverage?
+- [ ] Is `@typeParam` written when a generic parameter is not obvious? Is the overload note written only once?
+- [ ] Are generated files marked with `@generated` and the generation command?
+- [ ] Do credential-related comments state only the source and the redaction requirement, with no real values?
+- [ ] Do `@param` names match the signature? Are the boundaries of return values and exceptions spelled out?
+- [ ] Is there any duplicated type, duplicated name, or duplicated implementation detail?
+- [ ] Is there any banner, bold text, diagram, historical narrative, or line-number reference?
+- [ ] Should a comment of ≥ 10 lines be migrated to the documentation?
+- [ ] Does every TODO carry an issue and an owner?
+- [ ] Does each fact exist in only one place (no copied OpenAPI, schema, or config table)?
+- [ ] Is the narrative language consistently English (except identifiers and quoted originals)?
 
-## 门禁与工具（推荐，不强制）
+## Gates and tools (recommended, not mandatory)
 
-- `eslint-plugin-tsdoc`：校验 TSDoc 语法，直接 `error`。
-- `eslint-plugin-jsdoc`：`require-jsdoc`（仅 exported）、`require-param`、`require-returns`、`check-param-names`、`check-tag-names`、`tag-lines`，先 `warn`。
-- `@microsoft/api-extractor`：生成 `.api.md` 并在 CI diff，导出变更必须显式批准。
-- TypeDoc：`--validation.notDocumented` 把“导出无文档”变成失败。
-- CI 检查 TODO 格式：只接受 `TODO(#\d+, @[\w-]+)`。
-- **存量基线**：门禁只对新增文件与 diff 行生效；存量问题用基线文件记录，指标只降不升，避免上千个存量块一次全红。
-- 迁移顺序：只读盘点 → `warn` → 修存量 → `error`。不要一次性全开。
+- `eslint-plugin-tsdoc`: validates TSDoc syntax; start directly at `error`.
+- `eslint-plugin-jsdoc`: `require-jsdoc` (exported only), `require-param`, `require-returns`, `check-param-names`, `check-tag-names`, `tag-lines`; start with `warn`.
+- `@microsoft/api-extractor`: generates `.api.md` and diffs it in CI; export changes must be explicitly approved.
+- TypeDoc: `--validation.notDocumented` turns "an export without documentation" into a failure.
+- CI checks the TODO format: only `TODO(#\d+, @[\w-]+)` is accepted.
+- **Existing baseline**: gates apply only to new files and diff lines; record existing problems in a baseline file and only let the metric go down, never up, so that thousands of legacy blocks do not all turn red at once.
+- Migration order: read-only inventory → `warn` → fix existing code → `error`. Do not turn everything on at once.
 
-## 指标（建议值，不作硬指标）
+## Metrics (suggested values, not hard requirements)
 
-| 指标 | 建议值 |
+| Metric | Suggested value |
 | --- | --- |
-| 导出符号文档覆盖 | ≥ 95% |
-| 导出函数带 `@param` | ≥ 90% |
-| 接口字段覆盖 | 不作指标：只覆盖非显然字段，写满反而降质 |
-| ≥ 10 行注释块 | 0 |
-| 横幅、加粗、ASCII 图 | 0 |
-| TODO 带 issue 与 owner | 100% |
-| 文档块长度 p50 / p90 | 1 行 / ≤ 7 行 |
-| 注释行占比 | 10%–20% |
+| Export documentation coverage | ≥ 95% |
+| Exported functions with `@param` | ≥ 90% |
+| Interface field coverage | Not a metric: cover only non-obvious fields, writing them all lowers quality |
+| Comment blocks of ≥ 10 lines | 0 |
+| Banners, bold, ASCII diagrams | 0 |
+| TODOs with an issue and an owner | 100% |
+| Documentation block length p50 / p90 | 1 line / ≤ 7 lines |
+| Comment-line ratio | 10%–20% |
 
-## 示例：一次改写
+## Example: one rewrite
 
 ```ts
-// ---- 配置模块 ----
-// 改造前配置分散在三个文件，现在统一到这里
-// 读取配置
+// ---- config module ----
+// Before the rework, config was scattered across three files; now it is unified here
+// Read config
 export function readConfig() { /* ... */ }
 ```
 
-改成：
+Becomes:
 
 ```ts
 /**
- * 配置的唯一读取入口：合并内置默认、用户层与环境变量。
- * 不负责写盘；写盘只经 saveUserConfig。
+ * The single read entry point for config: merges built-in defaults, the user layer, and environment variables.
+ * Does not write to disk; writing goes only through saveUserConfig.
  * @module dsh-plugin-<name>/config
  */
 
-/** 返回字段已填满的成品配置；解析失败时抛出，不返回半成品。 */
+/** Returns the resolved config with all fields filled in; throws on a parse failure instead of returning a half-built result. */
 export function readConfig(): Config;
 ```
 
-改动只有三件事：横幅换成模块头，历史叙述删掉，函数摘要写契约。没有增加信息量，但每句话都可验证。
+The change is only three things: the banner becomes a module header, the historical narrative is removed, and the function summary states the contract. No information was added, but every sentence is now verifiable.
 
-## 守则
+## Ground rules
 
-1. 不为了指标写注释；宁缺毋滥。
-2. 不用注释弥补结构：文件过大先拆，函数过长先提，不写横幅。
-3. 有价值的 why 不删，迁移到 `docs/` 或 ADR，代码里留链接。
-4. 一次只改一个维度：先装饰，再长文，再标签，最后门禁。
-5. 公开 API 变更必须同步注释与 API 报告。
-6. 拿不准时，用“未来读者能否验证这句话”决定去留。
+1. Do not write comments for metrics; better missing than excessive.
+2. Do not use comments to compensate for structure: split an oversized file first, extract from an overlong function, do not write banners.
+3. Do not delete a valuable why; migrate it to `docs/` or an ADR and leave a link in the code.
+4. Change one dimension at a time: decoration first, then long prose, then tags, and finally the gates.
+5. Public API changes must sync the comments and the API report.
+6. When in doubt, decide by whether a future reader can verify the sentence.

@@ -1,103 +1,103 @@
 ---
 name: git-commit
-description: "根据本次代码变更生成遵循 type(scope): subject 结构规范的中文 Git 提交信息，便于追溯与自动生成更新日志。用户要求“生成/总结/规范化提交信息”时使用。"
-whenToUse: "用户要求根据本次代码变更生成提交信息；用户要求按前文所述结构化格式撰写中文 commit；用户要求规范化/改写一段提交信息使其可追溯。"
+description: "Generates an English Git commit message following the type(scope): subject structure from the current code change, for traceability and automatic changelog generation. Use when the user asks to generate, summarize, or normalize a commit message."
+whenToUse: "The user asks to generate a commit message from the current code change; the user asks to write an English commit in the structured format described above; the user asks to normalize or rewrite a commit message so that it is traceable."
 metadata:
-  language: "zh"
+  language: "en"
   category: "development"
 disable-model-invocation: false
 user-invocable: true
 ---
 
-# 结构化 Git 提交规范（Technical Commit Convention）
+# Structured Git Commit Convention (Technical Commit Convention)
 
-## 目标
+## Goal
 
-为任何项目提供一套统一、结构化、技术可追溯的 Git 提交信息规范，让每次提交清晰说明代码层的变更（模块、算法、配置、依赖等），同时保持面向开发者的可读性，且便于自动化生成更新日志。
+Provide any project with a unified, structured, technically traceable Git commit message convention, so that every commit clearly describes the code-level change (module, algorithm, configuration, dependencies, etc.) while staying readable for developers and easy to turn into an automatically generated changelog.
 
-## 核心理念
+## Core Principles
 
-- 技术可追溯：每次提交清晰说明代码层面的变更，包括模块、算法、配置、依赖等。
-- 面向开发者：提交信息是可读的，但核心是技术描写，避免含糊表述。
-- 结构化：采用轻量级标记（类型、范围、主体、技术细节），便于自动化解析与生成更新日志。
+- Technically traceable: every commit clearly describes the code-level change, including module, algorithm, configuration, dependencies, etc.
+- Developer-oriented: the commit message is readable, but the core is the technical description; avoid vague wording.
+- Structured: use lightweight markers (type, scope, subject, technical details) so that automated parsing and changelog generation are easy.
 
-## 输入与输出
+## Input and Output
 
-- 输入：本次变更的文件列表或变更描述（可由用户提供，或基于代码推断）。
-- 输出：可直接用于 `git commit -m` 的纯文本提交信息。
+- Input: the file list or change description for this change (provided by the user, or inferred from the code).
+- Output: plain-text commit message that can be used directly with `git commit -m`.
 
-## 格式定义
+## Format Definition
 
 ```
 <type>(<scope>): <subject>
 
-<technical body>  (必填，至少一条技术描述)
+<technical body>  (required, at least one technical description)
 
 [optional footer]
 ```
 
-### 1. Type（类型，技术语义，必填）
+### 1. Type (commit type, technical semantics, required)
 
-| Type    | 含义                     | 示例场景                          |
-|---------|--------------------------|-----------------------------------|
-| feat    | 新增功能/页面/组件        | 新增搜索功能、新增登录流程        |
-| fix     | 修复代码或内容缺陷        | 修复 XSS 漏洞、修复分页计数错误   |
-| perf    | 性能优化                  | 图片懒加载、缓存策略、打包分包    |
-| refactor| 代码重构（不改变功能）    | 重写某模块实现、统一请求层        |
-| style   | UI/样式变更               | 修改主题色、调整响应式断点        |
-| docs    | 文档内容更新              | 新增/修改 README、注释、接口文档  |
-| chore   | 构建/依赖/配置变更        | 升级依赖、修改构建配置、调整 CI   |
-| revert  | 回滚某次技术变更          | 因兼容性问题回滚某方案            |
+| Type    | Meaning                          | Example scenario                                  |
+|---------|----------------------------------|---------------------------------------------------|
+| feat    | New feature/page/component       | Add a search feature, add a login flow            |
+| fix     | Fix a code or content defect     | Fix an XSS vulnerability, fix a pagination count error |
+| perf    | Performance optimization         | Image lazy loading, caching strategy, bundle splitting |
+| refactor| Code refactoring (no behavior change) | Rewrite a module's implementation, unify the request layer |
+| style   | UI/style change                  | Change the theme color, adjust responsive breakpoints |
+| docs    | Documentation update             | Add/change the README, comments, API documentation |
+| chore   | Build/dependency/configuration change | Upgrade dependencies, change the build configuration, adjust CI |
+| revert  | Revert a technical change        | Revert an approach because of compatibility problems |
 
-### 2. Scope（范围，必填）
+### 2. Scope (required)
 
-用单词语义指定受影响的技术模块，例如：`template`、`router`、`api`、`auth`、`ui`、`style`、`config`、`deploy`、`docs`、`analytics`、`test`、`script` 等。无法归入单一模块时，可省略 `(<scope>)`。
+Name the affected technical module with a single word, for example: `template`, `router`, `api`, `auth`, `ui`, `style`, `config`, `deploy`, `docs`, `analytics`, `test`, `script`, and so on. When a change cannot be assigned to a single module, `(<scope>)` may be omitted.
 
-### 3. Subject（主题，简洁技术描述，必填）
+### 3. Subject (concise technical description, required)
 
-用中文，10~20 字，直接说明做了什么技术变更，例如：
+Write in English, using the imperative mood, at most 72 characters, stating directly what technical change was made, for example:
 
-- 重构分页逻辑，改用游标分页
-- 升级 marked 库并修复 XSS 隐患
-- 添加 webp 支持并实现降级方案
+- Rework pagination logic to use cursor-based pagination
+- Upgrade the marked library and fix the XSS risk
+- Add webp support with a fallback path
 
-### 4. Technical Body（技术正文，必填）
+### 4. Technical Body (required)
 
-必须包含至少一条具体的技术描写，多条可用列表。内容包括但不限于：
+It must contain at least one concrete technical description; multiple items may be written as a list. The content includes, but is not limited to:
 
-- 实现方式：用了什么 API、算法、数据结构、设计模式。
-- 修改前后对比：关键代码逻辑的变化。
-- 性能指标：优化前后的加载时间、包体积等。
-- 依赖变更：新增/升级了哪些依赖包及版本号。
-- 配置调整：构建、lint、测试等配置改动。
-- Bug 根因：错误产生的原因及修复原理。
+- Implementation approach: which API, algorithm, data structure, or design pattern was used.
+- Before/after comparison: how the key code logic changed.
+- Performance metrics: load time, bundle size, etc. before and after the optimization.
+- Dependency changes: which dependency packages were added/upgraded and their version numbers.
+- Configuration adjustments: build, lint, test, and other configuration changes.
+- Bug root cause: why the error occurred and how the fix works.
 
-示例格式：
+Example format:
 
 ```
-- 技术实现：
-  - 将分页参数 from offset 改为 after timestamp，基于 createTime 索引查询，减少大偏移量下的慢查询。
-  - 前端修改 API 调用方式：`GET /items?after=xxx&limit=10`。
-- 性能影响：接口延迟从 320ms 降至 210ms（压测结果）。
-- 涉及文件：`routes/items.js`, `src/api.ts`
+- Technical implementation:
+  - Change the pagination parameter from offset to after timestamp, and query through the createTime index, reducing slow queries at large offsets.
+  - Frontend changes the API call to: `GET /items?after=xxx&limit=10`.
+- Performance impact: endpoint latency drops from 320ms to 210ms (load test result).
+- Files involved: `routes/items.js`, `src/api.ts`
 ```
 
-### 5. Footer（脚注，可选）
+### 5. Footer (optional)
 
-- `Breaking change:` 描述不兼容的变更。
-- `Closes #issue` 关联任务或问题。
-- `See also` 相关文档链接。
+- `Breaking change:` describes an incompatible change.
+- `Closes #issue` links a task or issue.
+- `See also` links related documentation.
 
-## 工作流
+## Workflow
 
-1. 当用户要求"根据本次代码变更生成提交信息"时，主动询问变更的文件列表或描述；若未提供，则基于文件扩展名和常见模式推断（如 `.scss` 变化写样式细节、`.js/.ts` 写逻辑细节），并提醒用户补充。
-2. 判断变更主类型，选定 `type` 与 `scope`。
-3. 写中文 `subject`（10~20 字），再补至少一条技术正文。
-4. 需要时附加 footer。
-5. 输出纯文本，可直接用于 `git commit -m`。
+1. When the user asks to "generate a commit message from this change", proactively ask for the changed file list or description; if none is provided, infer it from file extensions and common patterns (e.g. a `.scss` change means style details, `.js/.ts` means logic details), and remind the user to fill in the details.
+2. Determine the primary type of the change, and pick `type` and `scope`.
+3. Write an English `subject` (at most 72 characters, imperative mood), then add at least one technical body item.
+4. Add a footer when needed.
+5. Output plain text that can be used directly with `git commit -m`.
 
-## 守则
+## Guidelines
 
-- 生成的提交信息**必须**包含至少一条技术描写，不能只写"更新了样式"这种模糊描述。
-- 若用户提供的信息不足以写清技术细节，基于常见模式推断并在结果后提醒用户按需补充。
-- 输出保持结构化、可追溯，面向开发者可读。
+- The generated commit message **must** contain at least one technical description; vague descriptions such as "updated styles" are not acceptable.
+- If the information the user provided is not enough to describe the technical details, infer from common patterns and remind the user afterwards to fill in as needed.
+- Keep the output structured, traceable, and readable for developers.

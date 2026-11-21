@@ -1,59 +1,59 @@
 ---
 name: dsh-pet-dev
-description: "本仓库（dsh-pet 宠物插件）的开发总则：把任务边界、插件代码规范、注释规范与提交规范串成一条执行链，一次调用覆盖从改代码到提交的全过程。"
-whenToUse: "在本仓库改动任何代码、注释、文档或准备提交时使用：用户说“改这个”“加个功能”“修一下”“提交推送”，或用户手动调用 dsh-pet-dev 时。"
+description: "Development charter for this repository (the dsh-pet pet plugin): chains task boundaries, plugin code standards, comment standards, and commit standards into a single execution chain, so one invocation covers the whole path from changing code to committing."
+whenToUse: "Use when changing any code, comments, documentation, or preparing a commit in this repository: when the user says “change this”, “add a feature”, “fix it”, “commit and push”, or when the user manually invokes dsh-pet-dev."
 metadata:
-  language: "zh"
+  language: "en"
   category: "development"
 disable-model-invocation: true
 user-invocable: true
 ---
 
-# dsh-pet 开发总则（dsh-pet-dev）
+# dsh-pet Development Charter (dsh-pet-dev)
 
-## 目标
+## Goal
 
-本仓库唯一的入口 skill。它不重复四条规范的内容，只回答一件事：**这次请求该调用哪几个子 skill、按什么顺序执行**。
+The only entry-point skill of this repository. It does not repeat the content of the four standards; it answers one thing: **which sub-skills this request should invoke, and in what order**.
 
-四个子 skill 是权威正文；本文件是索引与顺序表。二者冲突时以子 skill 为准。
+The four sub-skills are the authoritative text; this file is the index and order table. When the two conflict, the sub-skills win.
 
-## 四个子 skill
+## The Four Sub-Skills
 
-| 子 skill | 什么时候必须调用 |
+| Sub-skill | When it must be invoked |
 | --- | --- |
-| `task-guardrails` | 每个请求的第一步，任何工具调用之前 |
-| `dsh-plugin-standards` | 要动 host/client 源码、加删文件、改接口、补测试 |
-| `dsh-plugin-comment-spec` | 和 `dsh-plugin-standards` 一起调：写代码就要写注释 |
-| `git-commit` | 要提交、要写或改写提交信息 |
+| `task-guardrails` | The first step of every request, before any tool call |
+| `dsh-plugin-standards` | When touching host/client source, adding or deleting files, changing interfaces, or adding tests |
+| `dsh-plugin-comment-spec` | Invoked together with `dsh-plugin-standards`: writing code means writing comments |
+| `git-commit` | When committing, or when writing or rewriting a commit message |
 
-四个子 skill 都已注册，直接按名字交给 `skill` 工具，不需要去找文件，也不需要读文件。门禁命令在 `dsh-pet/` 子目录下执行。
+All four sub-skills are registered; hand them to the `skill` tool by name — no need to find files and no need to read files. Gate commands run in the `dsh-pet/` subdirectory.
 
-## 执行链
+## Execution Chain
 
-按顺序走，不要跳步，也不要一次全部调用。
+Follow the order; do not skip steps, and do not invoke everything at once.
 
-1. **判类型**（`task-guardrails`）：纯对话 / 只读调查 / 需要变更。判定不清时往更保守的一类靠。
-2. **先开口再动工具**：说出理解与打算看什么；只读也要先开口。
-3. **写操作前停住**：说清「改什么、达到什么效果、怎么验证」，然后用弹窗等回复。预告不等于获批。
-4. **动代码前一起调 `dsh-plugin-standards` 与 `dsh-plugin-comment-spec`**：前者定插件类型、文件规模、目录归属、导出面、测试位置，后者定模块头分档、导出符号一行摘要、只写 why。写代码必然带注释，不拆成两步。
-5. **收尾跑门禁**（在 `dsh-pet/`）：`npm run typecheck`、`npm run lint`、`npm run format:check`、`npm run check:cycles`、`npm run check:runtime`、`npm run check:openapi`、`npm test`、`npm run build`。没跑过的不要说「已验证」。
-6. **提交时调 `git-commit`**：从实际 diff 推断 `type(scope)`，正文写实现方式、行为变化与涉及文件；推送必须有明确指令。
+1. **Classify the request** (`task-guardrails`): pure conversation / read-only investigation / change required. When the classification is unclear, lean to the more conservative category.
+2. **Speak before touching tools**: state your understanding and what you plan to look at; even read-only work requires speaking first.
+3. **Stop before write operations**: state “what to change, what effect to achieve, how to verify”, then wait for a reply with the dialog. Announcing is not approval.
+4. **Before touching code, invoke `dsh-plugin-standards` and `dsh-plugin-comment-spec` together**: the former defines the plugin type, file size, directory ownership, export surface, and test location; the latter defines module-header tiers, one-line summaries for exported symbols, and writing only why. Code always comes with comments; do not split this into two steps.
+5. **Run the gates at the end** (in `dsh-pet/`): `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm run check:cycles`, `npm run check:runtime`, `npm run check:openapi`, `npm test`, `npm run build`. Do not say “verified” for something you have not run.
+6. **Invoke `git-commit` when committing**: infer `type(scope)` from the actual diff, and write the implementation approach, behavior changes, and affected files in the body; pushing requires an explicit instruction.
 
-## 调用方式
+## How to Invoke
 
-- 按需调用，别一次全调：纯问答一个都不调；只读调查只调 `task-guardrails`；改代码把 `task-guardrails`、`dsh-plugin-standards`、`dsh-plugin-comment-spec` 三个一起调；提交调 `git-commit`。
-- 同一子 skill 在一次任务里调一次即可，不要重复调用，也不要凭记忆复述它的规则。
-- 本 skill 只由用户点名触发；四个子 skill 由 AI 按需调用，用户也可以直接点名。
+- Invoke on demand, not all at once: for pure Q&A invoke none; for read-only investigation invoke only `task-guardrails`; when changing code invoke `task-guardrails`, `dsh-plugin-standards`, and `dsh-plugin-comment-spec` together; for committing invoke `git-commit`.
+- The same sub-skill only needs to be invoked once per task; do not invoke it repeatedly, and do not restate its rules from memory.
+- This skill is triggered only when the user names it; the four sub-skills are invoked by the AI as needed, and the user may also name them directly.
 
-## 冲突与优先级
+## Conflicts and Priority
 
-- **边界优先**：`task-guardrails` 决定「能不能动」，`dsh-plugin-standards` / `dsh-plugin-comment-spec` 决定「怎么写」，`git-commit` 决定「怎么记录」。规范与边界冲突时，先满足边界。
-- **规范与代码不一致时报告，不擅自改**：发现规范里的说法与仓库现状冲突，先说明再问，不直接改规范。
+- **Boundaries first**: `task-guardrails` decides “whether you may act”, `dsh-plugin-standards` / `dsh-plugin-comment-spec` decide “how to write”, and `git-commit` decides “how to record”. When a standard conflicts with a boundary, satisfy the boundary first.
+- **Report inconsistencies between the standards and the code; do not change them on your own**: if you find that a statement in the standards conflicts with the current state of the repository, explain first and then ask; do not change the standards directly.
 
-## 守则
+## Guidelines
 
-1. 没有明确授权，不产生任何副作用：不写文件、不装依赖、不动 Git。
-2. 不把举例当任务：用户描述问题或吐槽时，先确认理解再动手。
-3. 删而不留：确认无引用后删除，不留兼容层、不留旧实现、不留注释掉的代码（除非用户要求）。
-4. 一处事实只写一遍：定位算术、常量、类型不复制第二份；规范内容不搬进本文件。
-5. 提交信息来自本次 diff，不照抄本 skill 的示例文字。
+1. Without explicit authorization, produce no side effects: do not write files, do not install dependencies, do not touch Git.
+2. Do not treat an example as a task: when the user describes a problem or complains, confirm your understanding first.
+3. Delete and leave nothing behind: delete after confirming there are no references; leave no compatibility layer, no old implementation, no commented-out code (unless the user asks for it).
+4. Write a fact only once: do not duplicate positioning arithmetic, constants, or types; do not move standard content into this file.
+5. Commit messages come from the current diff; do not copy the example text from this skill.

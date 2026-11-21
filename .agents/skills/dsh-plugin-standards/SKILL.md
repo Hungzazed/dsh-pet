@@ -1,50 +1,50 @@
 ---
 name: dsh-plugin-standards
-description: "编写、修改或评审 DSH 插件时的代码规范：统一插件类型、包清单、目录与文件、命名、类型与接口、配置与状态、测试与发布方式。"
-whenToUse: "新建 DSH 插件包、编写或修改 host/client 插件代码、拆分文件或新增接口、补测试、发布前自查时使用。"
+description: "Code standards for writing, modifying, or reviewing DSH plugins: unified plugin types, package manifest, directories and files, naming, types and interfaces, configuration and state, testing and release practices."
+whenToUse: "Use when creating a new DSH plugin package, writing or modifying host/client plugin code, splitting files or adding interfaces, adding tests, or self-checking before a release."
 metadata:
-  language: "zh"
+  language: "en"
   category: "development"
 disable-model-invocation: false
 user-invocable: true
 ---
 
-# DSH 插件代码规范
+# DSH Plugin Code Standards
 
-## 目标
+## Goal
 
-让 DSH 插件在结构上一致、在接口上可预测、在维护上可拆分。规范只回答一个问题：**这段代码该怎么写，才能让别人接手时不骂人。**
+Make DSH plugins structurally consistent, predictable at their interfaces, and split-friendly for maintenance. The standards answer one question only: **how should this code be written so the next person taking it over does not curse you out.**
 
-适用对象：宿主半侧（host）、浏览器半侧（client）、工具、投影、bundle、独立运行与桌面 carrier。不适用于第三方库内部实现。
+Applies to: the host half (host), the browser half (client), tools, projections, bundles, standalone and desktop carriers. Does not apply to the internals of third-party libraries.
 
-## 1. 先定插件类型
+## 1. Decide the plugin type first
 
-写第一行代码前，先确认属于哪一类；类型决定入口、清单字段与生命周期。
+Before writing the first line of code, confirm which category this is; the type determines the entry point, manifest fields, and lifecycle.
 
-| 类型 | 特征 | 入口 |
+| Type | Traits | Entry point |
 |---|---|---|
-| A 函数式 host | 只注册服务/监听/路由 | 命名导出 `name`/`inject`/`Config`/`apply` |
-| B 服务式 host | 对外提供一个 Cordis 服务 | `class X extends Service` + `static Config` + `super(ctx, 'name')` |
-| C 工具 | 给模型注册工具 | `ctx.tools.register(defineTool({...}))` |
-| D 投影 | 从会话事件折叠状态 | `ctx.sessionProjections.register({...})` |
-| E 客户端 UI | 有浏览器渲染 | host 侧空 `apply()` + `lib/client.js` + `dsh.client` |
-| F bundle | 只组合其他插件 | `lib/index.js` + `cordis.patch.yml` + `dsh.bundle.patch` |
-| G 纯再导出 | 只导出类型或转调 | 只 re-export，不写逻辑 |
-| H 元数据 | 只有 locale/icon | `locale/*.json` + `icon` |
+| A Functional host | Registers services/listeners/routes only | Named exports `name`/`inject`/`Config`/`apply` |
+| B Service host | Provides one Cordis service to the outside | `class X extends Service` + `static Config` + `super(ctx, 'name')` |
+| C Tool | Registers a tool for the model | `ctx.tools.register(defineTool({...}))` |
+| D Projection | Folds state from session events | `ctx.sessionProjections.register({...})` |
+| E Client UI | Has browser rendering | empty `apply()` on the host side + `lib/client.js` + `dsh.client` |
+| F Bundle | Only composes other plugins | `lib/index.js` + `cordis.patch.yml` + `dsh.bundle.patch` |
+| G Pure re-export | Exports types or forwards calls only | re-export only, no logic |
+| H Metadata | Only locale/icon | `locale/*.json` + `icon` |
 
-判定顺序：有 UI → E；只组合 → F；给模型用 → C；维护派生状态 → D；对外提供服务 → B；其余 → A。
+Decision order: has UI → E; composes only → F; used by the model → C; maintains derived state → D; exposes a service → B; everything else → A.
 
-## 2. 包清单
+## 2. Package manifest
 
-`package.json` 固定字段：
+Fixed `package.json` fields:
 
 ```jsonc
 {
   "name": "@scope/dsh-<domain>-<role>",
-  "description": "一句话，市场展示用",
-  "version": "0.2.1-rc.2",              // 与同 release 的 DSH 精确对齐，不用 ^
+  "description": "One line, shown in the marketplace",
+  "version": "0.2.1-rc.2",              // exactly aligned with the DSH of the same release, no ^
   "publishConfig": { "access": "public" },
-  "repository": { "type": "git", "url": "…", "directory": "packages/<组>/<包>" },
+  "repository": { "type": "git", "url": "…", "directory": "packages/<group>/<package>" },
   "type": "module",
   "main": "lib/index.js",
   "types": "lib/types/index.d.ts",
@@ -54,7 +54,7 @@ user-invocable: true
 }
 ```
 
-`exports` 五段固定：
+Five fixed `exports` entries:
 
 ```jsonc
 ".":               { "types": "./lib/types/index.d.ts", "default": "./lib/index.js" },
@@ -64,147 +64,147 @@ user-invocable: true
 "./locale/*.json": "./locale/*.json"
 ```
 
-- `./client` 只给 E 类，且必须同时存在 `lib/client.js` 与 `lib/types/client/index.d.ts`。
-- `./cordis.patch.yml` 只给 F 类。
-- `files` 只发运行产物与元数据：`lib/index.js`、`lib/types/**/*.d.ts`、`locale/*.json`；E 类加 `lib/client.js`；F 类加 `cordis.patch.yml`、`icon.svg`。
+- `./client` is only for type E, and `lib/client.js` and `lib/types/client/index.d.ts` must both exist.
+- `./cordis.patch.yml` is only for type F.
+- `files` ships runtime artifacts and metadata only: `lib/index.js`, `lib/types/**/*.d.ts`, `locale/*.json`; type E adds `lib/client.js`; type F adds `cordis.patch.yml`, `icon.svg`.
 
-依赖三分：
+Dependencies in three buckets:
 
-| 位置 | 放什么 | 版本 |
+| Location | What goes there | Version |
 |---|---|---|
-| `dependencies` | 运行时真正 import、宿主不提供的包 | 精确 |
-| `peerDependencies` | 宿主提供、不能打包的包；通常只有 `@deepseek-ai/cordis` | 精确或 `~` |
-| `devDependencies` | 其余全部：peer 包、类型包、测试库、react | 与 release 精确一致 |
+| `dependencies` | Packages actually imported at runtime and not provided by the host | exact |
+| `peerDependencies` | Packages the host provides that must not be bundled; usually only `@deepseek-ai/cordis` | exact or `~` |
+| `devDependencies` | Everything else: peer packages, typings, test libraries, react | exact match with the release |
 
-凡写进 `dsh.client.inject` 的包，必须同时列进 `devDependencies`，否则拿不到类型。
+Every package listed in `dsh.client.inject` must also appear in `devDependencies`, otherwise you get no types.
 
-`dsh` 字段：
+`dsh` field:
 
 ```jsonc
-// E 类
+// type E
 "dsh": { "client": { "inject": ["@deepseek-ai/dsh-client-locale"], "platform": "web" } }
-// F 类
+// type F
 "dsh": { "bundle": { "patch": "./cordis.patch.yml" } }
-// 需要兼容性声明时
+// when a compatibility declaration is needed
 "dsh": { "compatibility": { "dshReleases": { "0.2.1-rc.2": "compatible" } } }
 ```
 
-`dsh.client.inject` 列包名，插件 `inject` 列服务名，两者不是一回事。
+`dsh.client.inject` lists package names; the plugin's `inject` lists service names — they are not the same thing.
 
-## 3. 目录与文件
+## 3. Directories and files
 
-`src` 模板：
+`src` template:
 
 ```text
 src/
-├── index.ts          # 插件入口：name/inject/Config/apply
-├── types.ts          # 本包类型唯一归属地
-├── client.ts         # 可选：客户端类型再导出
-├── client/           # E 类浏览器半边
+├── index.ts          # plugin entry: name/inject/Config/apply
+├── types.ts          # the single home for this package's types
+├── client.ts         # optional: client type re-exports
+├── client/           # type E browser half
 │   ├── index.ts      # inject + apply(ClientContext)
 │   ├── <Component>.tsx
 │   ├── slots.ts      # inject face / props
-│   └── locales.ts    # zh/en 字典 + key 类型
-└── <topic>.ts        # host 侧按主题拆：storage / request / format
+│   └── locales.ts    # zh/en dictionaries + key types
+└── <topic>.ts        # host side split by topic: storage / request / format
 ```
 
-文件规模（有效行，去空行与注释）：
+File size (effective lines, excluding blank lines and comments):
 
-| 类型 | 软上限 | 硬上限 |
+| Type | Soft limit | Hard limit |
 |---|---|---|
-| 普通模块 | 200 | 300 |
-| 含 IO/路由聚合 | 300 | 400 |
-| React 组件文件 | 200 | 250 |
-| 入口/装配 | 120 | 150 |
-| 类型文件 | 150 | 200 |
-| 测试文件 | 400 | 600 |
+| Regular module | 200 | 300 |
+| With IO/routing aggregation | 300 | 400 |
+| React component file | 200 | 250 |
+| Entry/wiring | 120 | 150 |
+| Type file | 150 | 200 |
+| Test file | 400 | 600 |
 
-- 超限时按**变化原因**拆，不按行数切：同一资源、同一状态所有者、同一生命周期放一起。
-- 行数与变化原因冲突时，**变化原因优先**：确实没有独立变化原因的就不切，在提交信息里写明“超限但没有独立变化原因，暂不拆”。判断标准是“以后改一个需求，还会不会同时动这两处”，不是“行数有没有回到表内”。
-- 一个文件一个主职责，模块头第一行必须说得清。
-- 目录深度 ≤4；单目录文件 ≤30；不留空目录。
-- 文件命名 kebab-case；组件文件 PascalCase；类型 `types.ts`；插槽 `slots.ts`；字典 `locales.ts`。
-- 禁止 `utils.ts`、`helpers.ts`、`common.ts`、`misc.ts`；按领域命名（`jsonc.ts`、`http.ts`、`dom.ts`）。
-- 相对导入带扩展名：`from './slots.ts'`、`from './GoalBar.tsx'`。
-- `src/index.ts` 是唯一入口，其他文件都是它的私有依赖；客户端插件入口不得 import `src/client/**`。
+- When over the limit, split by **reason to change**, not by line count: the same resource, the same state owner, and the same lifecycle stay together.
+- When line count conflicts with reason to change, **reason to change wins**: if there truly is no independent reason to change, do not split; state in the commit message "over the limit but no independent reason to change; not split for now". The criterion is "will a future requirement still touch both places at once", not "does the line count fit the table again".
+- One file, one primary responsibility; the first line of the module header must make it clear.
+- Directory depth ≤4; ≤30 files per directory; leave no empty directories.
+- File names kebab-case; component files PascalCase; types `types.ts`; slots `slots.ts`; dictionaries `locales.ts`.
+- `utils.ts`, `helpers.ts`, `common.ts`, `misc.ts` are forbidden; name by domain (`jsonc.ts`, `http.ts`, `dom.ts`).
+- Relative imports carry the extension: `from './slots.ts'`, `from './GoalBar.tsx'`.
+- `src/index.ts` is the only entry; every other file is its private dependency; a client plugin entry must not import `src/client/**`.
 
-README 必须有源码地图：
+The README must have a source map:
 
 ```md
-| 文件 | 职责 |
+| File | Responsibility |
 |---|---|
-| `src/index.ts` | 插件入口：Config schema、工具注册 |
-| `src/types.ts` | 投影键与载荷类型的唯一归属地 |
+| `src/index.ts` | Plugin entry: Config schema, tool registration |
+| `src/types.ts` | Single home for projection keys and payload types |
 ```
 
-### 目录细化
+### Directory refinement
 
-目录按领域分，不按技术类型分。满足以下五条才建子目录：
+Directories are split by domain, not by technical type. Create a subdirectory only when all five conditions hold:
 
-1. 这组文件共享一个变化原因（改 A 常要改 B）；
-2. 对外只需要 1–2 个入口；
-3. 能用领域名命名（不是 `utils`/`common`/`components`）；
-4. 组内 ≤30 个文件（与单目录上限同口径），且不会继续膨胀；
-5. 跨组引用主要经过出口。
+1. This group of files shares one reason to change (changing A usually means changing B);
+2. It needs only 1–2 entry points to the outside;
+3. It can be named after a domain (not `utils`/`common`/`components`);
+4. ≤30 files in the group (same measure as the per-directory limit), and it will not keep growing;
+5. Cross-group references go mostly through the exit.
 
-| 单目录文件数（含测试） | 建议 |
+| Files per directory (including tests) | Recommendation |
 |---|---|
-| ≤20 | 保持扁平 |
-| 20–30 | 先合并同类、删无用文件，再考虑分 |
-| >30 | 必须按领域分 |
+| ≤20 | Stay flat |
+| 20–30 | Merge similar files and delete unused ones first, then consider splitting |
+| >30 | Must be split by domain |
 
-- 子目录 ≥3 个文件才建。
-- `index.ts` 出口按需建：跨组引用 ≥2 处、或有稳定的对外面时才建；只有 1–2 处引用时直接相对导入。出口解决的是“散落的深路径”，不是“目录必须长得一样”——没有第二个消费方时，加一层只是多一跳。
-- 禁止按技术类型分（`components/`、`hooks/`、`services/`）与杂物目录（`misc/`、`helpers/`、`common/`）。
-- 测试文件跟随源文件进子目录，不集中到 `tests/`。
+- Create a subdirectory only with ≥3 files.
+- Create an `index.ts` exit on demand: only with ≥2 cross-group references or a stable public surface; with only 1–2 references, import directly by relative path. An exit solves "scattered deep paths", not "directories must all look alike" — without a second consumer, an extra layer is just one more hop.
+- Do not split by technical type (`components/`, `hooks/`, `services/`) or create junk-drawer directories (`misc/`, `helpers/`, `common/`).
+- Test files follow their source files into subdirectories; do not gather them into `tests/`.
 
-### 文件生命周期
+### File lifecycle
 
-拆分或替换旧文件时，旧文件只有三种去向：
+When splitting or replacing an old file, the old file has only three possible destinations:
 
-| 旧文件身份 | 去向 | 保留多久 |
+| Old file role | Destination | Kept for |
 |---|---|---|
-| 包入口 | 薄壳：只 re-export 与装配，≤50 行 | 永久 |
-| 被其他包 import | 兼容层：只 re-export，标 `@deprecated 替代路径与删除版本` | 一个 minor |
-| 仅本包内部使用 | 删除 | 立即 |
+| Package entry | Thin shell: re-exports and wiring only, ≤50 lines | Forever |
+| Imported by other packages | Compatibility layer: re-exports only, marked `@deprecated replacement path and removal version` | One minor |
+| Used only inside this package | Delete | Immediately |
 
-- 禁止 `legacy/`、`old/`、`archive/`、`backup/` 目录；禁止 `_v2`/`_new` 并行实现；禁止注释掉的旧代码。
-- 删除前确认：引用清零、类型检查通过、测试绿、README 源码地图已更新。
-- 历史交给 git（`git log --follow`、`git blame -C -C`），不靠留文件。
+- `legacy/`, `old/`, `archive/`, `backup/` directories are forbidden; `_v2`/`_new` parallel implementations are forbidden; commented-out old code is forbidden.
+- Before deleting, confirm: references are gone, typecheck passes, tests are green, the README source map is updated.
+- History belongs to git (`git log --follow`, `git blame -C -C`), not to leftover files.
 
-## 4. 插件骨架
+## 4. Plugin skeleton
 
-函数式 host：
+Functional host:
 
 ```ts
 /**
- * <一句话职责>。
+ * <One-line responsibility>.
  *
- * <为什么需要这个插件 / 它约束了什么，2–4 句>。
+ * <Why this plugin is needed / what it constrains, 2–4 sentences>.
  * @module @scope/dsh-<name>
  */
 import z from '@deepseek-ai/schemastery';
 
 /** Cordis plugin name. */
 export const name = '<name>';
-/** 需要的宿主服务。 */
+/** Required host services. */
 export const inject = ['<service>'];
-/** 运行时配置 schema；默认值写在这里。 */
+/** Runtime config schema; defaults live here. */
 export const Config = z.object({
   enabled: z.boolean().default(true),
 });
 
 /**
- * <注册了什么、依赖什么、清理什么>。
- * @param ctx - 挂载上下文。
- * @param config - <配置语义>。
+ * <What it registers, what it depends on, what it cleans up>.
+ * @param ctx - mount context.
+ * @param config - <config semantics>.
  */
 export function apply(ctx: Context, config: z.infer<typeof Config>) {
   ctx.effect(() => ctx.<service>.<register>({ /* ... */ }), '<name>.<resource>()');
 }
 ```
 
-服务式 host：
+Service host:
 
 ```ts
 export class WebServer extends Service {
@@ -219,7 +219,7 @@ declare module '@deepseek-ai/cordis' {
 }
 ```
 
-客户端 UI：host 侧保留空 `apply()`，让 Loader 能看到插件；浏览器侧：
+Client UI: keep an empty `apply()` on the host side so the Loader can see the plugin; browser side:
 
 ```ts
 import type { Context as ClientContext } from '@deepseek-ai/cordis';
@@ -238,215 +238,215 @@ export const inject: string[] = ['slots', 'locale'];
 export function apply(ctx: ClientContext): void { /* ctx.slots.register(...) */ }
 ```
 
-规则：
+Rules:
 
-- 所有注册走 `ctx.effect(register, '<模块>.<资源>()')`，第二个参数是稳定标签，不能省。
-- 配置默认值只写在 `Config` schema，`apply` 内不再兜底。
-- 可选字段用展开合并：`...config.x ? { x: true } : {}`。
-- bundle 的 patch 用 `- insert:` + `id`/`name`/`config`，`group: true` 配 `isolate` 隔离服务作用域。
+- All registrations go through `ctx.effect(register, '<module>.<resource>()')`; the second argument is a stable label and must not be omitted.
+- Config defaults live only in the `Config` schema; `apply` adds no fallbacks.
+- Optional fields use spread merge: `...config.x ? { x: true } : {}`.
+- A bundle patch uses `- insert:` + `id`/`name`/`config`; `group: true` with `isolate` isolates the service scope.
 
-## 5. 导出与 Loader 契约
+## 5. Exports and the Loader contract
 
-Loader 的 `unwrapExports` 只要发现 `default` 就取 default，命名导出被静默忽略：
+The Loader's `unwrapExports` takes `default` whenever it sees one; named exports are silently ignored:
 
-| 形态 | 写法 | 后果 |
+| Shape | How to write it | Consequence |
 |---|---|---|
-| 函数式 | 只用命名导出，**不要 default** | 有 default 则 `inject` 丢失 |
-| 类式 | `export { Klass, Klass as default }`，`inject`/`name` 写成**静态成员** | 命名 `inject` 不生效 |
+| Functional | Named exports only, **no default** | With a default, `inject` is lost |
+| Class-based | `export { Klass, Klass as default }`, write `inject`/`name` as **static members** | A named `inject` does not take effect |
 
-- 导出顺序按字母序：`export { Config, apply, inject, name }`。
-- 一个文件一个主导出；类型紧邻实现；测试专用导出标 `@internal` 并放文件末尾。
-- 单文件导出 ≤15 个；`index.ts` 只做公开入口，禁止 `export *`。
-- 包导出面只包含插件四件套与公开类型；内部模块不承诺兼容。
+- Export order is alphabetical: `export { Config, apply, inject, name }`.
+- One leading export per file; types sit next to their implementation; test-only exports are marked `@internal` and placed at the end of the file.
+- ≤15 exports per file; `index.ts` is the public entry only, `export *` is forbidden.
+- The package export surface contains only the plugin's four-piece contract and public types; internal modules promise no compatibility.
 
-## 6. 命名
+## 6. Naming
 
-| 对象 | 规则 | 例 |
+| Object | Rule | Example |
 |---|---|---|
-| 文件/目录 | kebab-case | `request-zone.ts` |
-| 组件文件 | PascalCase | `GoalBar.tsx` |
-| 变量/函数 | camelCase，动词开头 | `deriveTimeZoneContext` |
-| 常量 | UPPER_SNAKE | `MAX_WAIT_MS` |
-| 类型/接口 | PascalCase，无 `I` 前缀 | `WebRoute` |
-| 布尔 | `is/has/can/should/was` | `isLoopbackHost` |
-| 服务名 | camelCase，Context 上的键 | `webServer` |
-| 插件 name | kebab-case | `tool-todo` |
-| 事件名 | `<域>/<动作>` | `turn/start`、`llm/stream` |
-| slot 名 | 点分层级 | `conversation.input.dock` |
-| 配置字段 | camelCase，单位入名 | `compressionThresholdBytes` |
+| File/directory | kebab-case | `request-zone.ts` |
+| Component file | PascalCase | `GoalBar.tsx` |
+| Variable/function | camelCase, starting with a verb | `deriveTimeZoneContext` |
+| Constant | UPPER_SNAKE | `MAX_WAIT_MS` |
+| Type/interface | PascalCase, no `I` prefix | `WebRoute` |
+| Boolean | `is/has/can/should/was` | `isLoopbackHost` |
+| Service name | camelCase, a key on Context | `webServer` |
+| Plugin name | kebab-case | `tool-todo` |
+| Event name | `<domain>/<action>` | `turn/start`, `llm/stream` |
+| Slot name | dot-separated hierarchy | `conversation.input.dock` |
+| Config field | camelCase, unit in the name | `compressionThresholdBytes` |
 
-- 单位后缀强制：`_MS`、`_PX`、`_BYTES`、`_PERCENT`。
-- 禁止 1–2 字符标识符（`i/j` 循环、`e` catch、`t` 翻译函数例外）。
-- 禁止 `data/info/temp/obj/val/manager/helper/flag` 作局部变量名。
-- 缩写白名单：`id`、`url`、`api`、`http`、`json`、`css`、`ms`。
-- 同一概念只用一个词；不要 `pet`/`instance`/`item` 轮换。
+- Unit suffixes are mandatory: `_MS`, `_PX`, `_BYTES`, `_PERCENT`.
+- No 1–2 character identifiers (`i/j` loop counters, `e` in catch, and `t` translation functions are exceptions).
+- `data/info/temp/obj/val/manager/helper/flag` are forbidden as local variable names.
+- Abbreviation allowlist: `id`, `url`, `api`, `http`, `json`, `css`, `ms`.
+- One word per concept; do not rotate `pet`/`instance`/`item`.
 
-## 7. 变量
+## 7. Variables
 
-按角色分类，每类有自己的规则：
+Classified by role; each class has its own rules:
 
-| 种类 | 形态 | 规则 |
+| Kind | Shape | Rule |
 |---|---|---|
-| 模块常量 | UPPER_SNAKE | 只在定义处赋值；单位入名 |
-| 共享常量 | 集中在 `constants.ts` | 一个概念一处定义；跨包用 type-only 引用 |
-| 配置值 | `config.xxx` | 只来自 schema；只读；不再兜底 |
-| 环境变量 | `DSH_<PKG>_<NAME>` | 只在 `env.ts` 读一次并解析；非法即失败 |
-| 可变状态 | camelCase | 只存在 store/闭包；不导出可变对象 |
-| 模块单例 | `xxxStore`/`xxxRegistry` | 必须可 dispose；测试可重置；初始化顺序写进模块头 |
-| 缓存 | `cache`/`byId` 后缀 | 必须有失效策略与容量上限 |
-| 计数器 | `seq`/`count`/`epoch` | 单调性写清；并发下不靠自增保证唯一 |
-| 定时器 | `*Timer`/`*Handle` | 必须可清理；`unref` 策略统一 |
-| disposer | `dispose*`/`*Off` | 必须被 `ctx.effect` 收集，禁止丢弃返回值 |
-| 资源句柄 | `child`/`stream`/`fd`/`server` | 单一所有者；关闭顺序写进模块头 |
-| 哨兵 | 禁魔法字符串 | 缺失用 `undefined`，无值用 `null`，不让一个值兼表两义 |
-| 凭据 | `*Key`/`*Token`/`*Secret` | 只驻内存；禁日志；错误只回分类文案 |
-| 路径 | `*Path`/`*Dir` | 内部用绝对路径；拼接后校验前缀 |
-| 标识符串 | 常量导出 | route/service/slot/event 名禁止字面量散落 |
-| 时间/随机 | `now`/`rng` 参数 | 纯函数不读时钟；随机可注入 |
+| Module constant | UPPER_SNAKE | Assigned only at the definition; unit in the name |
+| Shared constant | Centralized in `constants.ts` | One definition per concept; cross-package use is type-only |
+| Config value | `config.xxx` | Comes only from the schema; read-only; no fallback |
+| Environment variable | `DSH_<PKG>_<NAME>` | Read once in `env.ts` and parsed there; invalid means failure |
+| Mutable state | camelCase | Lives only in a store/closure; never export mutable objects |
+| Module singleton | `xxxStore`/`xxxRegistry` | Must be disposable; resettable in tests; initialization order documented in the module header |
+| Cache | `cache`/`byId` suffix | Must have an invalidation policy and a capacity limit |
+| Counter | `seq`/`count`/`epoch` | Monotonicity documented; uniqueness under concurrency never relies on increment alone |
+| Timer | `*Timer`/`*Handle` | Must be cleanable; one `unref` policy across the codebase |
+| Disposer | `dispose*`/`*Off` | Must be collected by `ctx.effect`; never discard the return value |
+| Resource handle | `child`/`stream`/`fd`/`server` | Single owner; shutdown order documented in the module header |
+| Sentinel | No magic strings | Missing is `undefined`, no value is `null`; never let one value mean two things |
+| Credential | `*Key`/`*Token`/`*Secret` | Memory only; never logged; errors return a category message only |
+| Path | `*Path`/`*Dir` | Absolute paths internally; validate the prefix after joining |
+| Identifier string | Constant export | route/service/slot/event names must not be scattered as literals |
+| Time/randomness | `now`/`rng` parameters | Pure functions do not read the clock; randomness is injectable |
 
-位置规则：模块常量在 import 之后、类型之前；局部变量距首次使用 ≤10 行；循环不变量提到循环外；同一语义只声明一次。
+Placement rules: module constants go after imports and before types; a local variable sits ≤10 lines from its first use; loop invariants are hoisted out of the loop; the same meaning is declared once.
 
-## 8. 类型与接口
+## 8. Types and interfaces
 
-两种 schema 分工明确：
+Two schemas with a clear division of labor:
 
-- **插件 `Config` 用 schemastery**：要能 dump JSON Schema 给 Loader 与 patch。
-- **持久化 record / wire payload 用 zod**：`z.infer` 推导类型，同一 schema 之后还能投影成 RPC schema。
+- **A plugin `Config` uses schemastery**: it must be able to dump JSON Schema for the Loader and patches.
+- **Persisted records / wire payloads use zod**: `z.infer` derives the type, and the same schema can later be projected into an RPC schema.
 
-类型规则：
+Type rules:
 
-- 对外字段一律 `readonly`；数组 `readonly T[]`。
-- 失败用判别联合：`{ ok: false; error: { code; message } }`，不用 `boolean + 可选错误`。
-- 跨包契约只用 `declare module` 合并（`Context`/`Events`/`SlotMap`/`LocaleNamespaceMap`/`SessionProjectionMap`），不在本地复制一份。
-- 配置类型从 schema 推导，不手写第二份。
-- 禁 `any`；外部输入用 `unknown` + 逐字段校验；断言必须紧邻校验语句。
-- 内部字段用 `#private`，不靠 `_` 前缀。
-- 判别联合必须穷尽：`default: assertNever(x)`。
+- Public fields are always `readonly`; arrays are `readonly T[]`.
+- Failures use a discriminated union: `{ ok: false; error: { code; message } }`, never `boolean + optional error`.
+- Cross-package contracts use `declare module` merging only (`Context`/`Events`/`SlotMap`/`LocaleNamespaceMap`/`SessionProjectionMap`); never copy a local duplicate.
+- Config types are derived from the schema; never hand-write a second copy.
+- `any` is forbidden; external input is `unknown` + field-by-field validation; an assertion must sit right next to its validation statement.
+- Internal fields use `#private`, not a `_` prefix.
+- Discriminated unions must be exhaustive: `default: assertNever(x)`.
 
-接口分层与稳定性：
+Interface layers and stability:
 
-| 层 | 内容 | 承诺 |
+| Layer | Content | Promise |
 |---|---|---|
-| 包导出面 | `exports` 的 `.`/`./client` | semver 约束 |
-| 插件接口 | `name/inject/Config/apply` | Loader 契约 |
-| 服务接口 | `Service` 类 + `Context` 增强 | 跨插件运行时契约 |
-| 跨包类型 | `declare module` 合并 | 编译期契约 |
+| Package export surface | `.`/`./client` of `exports` | semver-bound |
+| Plugin interface | `name/inject/Config/apply` | Loader contract |
+| Service interface | `Service` class + `Context` augmentation | Cross-plugin runtime contract |
+| Cross-package type | `declare module` merging | Compile-time contract |
 
-- 事件声明写清 `@mode emit`/`@mode waterfall`/`@mode serial`，载荷必须是可序列化判别联合。
-- 注册类接口一律 `register(def) => disposer`：id 唯一、内置优先、重复注册抛错、注销只删自己那一次。
-- 对外错误必须有稳定 `code`（kebab-case）+ 人话 `message`；`code` 变更等同 API 变更。
-- 废弃用 `@deprecated 替代品与起始版本`，至少保留一个 minor。
+- Event declarations state `@mode emit`/`@mode waterfall`/`@mode serial`; the payload must be a serializable discriminated union.
+- Registration interfaces are always `register(def) => disposer`: unique id, built-in wins, duplicate registration throws, unregistering removes only one's own registration.
+- Public errors must have a stable `code` (kebab-case) + a human-readable `message`; a `code` change counts as an API change.
+- Deprecation uses `@deprecated replacement and starting version` and is kept for at least one minor.
 
-## 9. 函数、控制流与分层
+## 9. Functions, control flow, and layering
 
-### 9.1 规模与复杂度
+### 9.1 Size and complexity
 
-| 对象 | 上限 |
+| Object | Limit |
 |---|---|
-| 普通函数 | 40 行 |
-| 导出 API 函数 | 60 行 |
-| `apply` | 60 行 |
-| React 组件（展示） | 150 行 |
-| React 组件（实时：rAF / 指针 / 状态机） | 面板部分 150 行，驱动必须外置 |
-| 自定义 hook | 80 行 |
-| 类 | 200 行；方法 30 行；公开方法 10 个 |
-| 参数 | 4（超过改对象） |
-| 嵌套 | 3 |
-| 圈复杂度 | 10 |
+| Regular function | 40 lines |
+| Exported API function | 60 lines |
+| `apply` | 60 lines |
+| React component (presentational) | 150 lines |
+| React component (real-time: rAF / pointer / state machine) | 150 lines for the panel part; the driver must be external |
+| Custom hook | 80 lines |
+| Class | 200 lines; methods 30 lines; 10 public methods |
+| Parameters | 4 (beyond that, use an object) |
+| Nesting | 3 |
+| Cyclomatic complexity | 10 |
 
-- 一个函数只做一层抽象：不混“决策 + IO + 格式化”。
-- 布尔参数 ≥2 个、参数 >4 个，改选项对象或拆函数。
-- 类只用于“有生命周期/多实例状态”；一次性对象必须在模块头写明“stop 后不可复用”。
-- 实时组件按**驱动数量**判，不按行数：`ref ≥ 8`、`rAF 循环 ≥ 2`、或带指针状态机时，把驱动抽成 `createXxx(deps)` 工厂，组件只留「面板 + 装配」。拆分的判据是“这块有没有独立的失败模式”，不是“行数超没超”。
-- 拿不准要不要抽时，用一条判据：**这块的规则能不能脱离 DOM / React 断言？** 能（换算、优先级、状态转移、决策）就抽成纯函数并配测试；不能（帧时序、指针捕获、布局写入）就先收拢状态，别急着换文件。
+- A function performs one layer of abstraction: never mix "decision + IO + formatting".
+- With ≥2 boolean parameters or >4 parameters, switch to an options object or split the function.
+- Classes are only for "state with a lifecycle / multiple instances"; one-shot objects must state in the module header "not reusable after stop".
+- Real-time components are judged by **driver count**, not line count: with `ref ≥ 8`, `rAF loops ≥ 2`, or a pointer state machine, extract the driver into a `createXxx(deps)` factory and leave only "panel + wiring" in the component. The criterion for splitting is "does this part have an independent failure mode", not "did the line count go over".
+- When unsure whether to extract, apply one criterion: **can this part's rules be asserted without DOM / React?** If yes (conversion, priority, state transitions, decisions), extract into a pure function with tests; if no (frame timing, pointer capture, layout writes), consolidate the state first — do not rush to move files.
 
-### 9.2 控制流
+### 9.2 Control flow
 
-- 卫语句 + 早返回；成功路径保持最左缩进，`else` 只用于真正对称的分支。
-- 嵌套 ≤3；超出就提取函数或改查表。
-- 同一概念的分支 >3 个（例如 `kind` 有四种以上）改 `Record<Kind, Handler>`，并用 `assertNever` 兜住穷尽性。
-- 循环内不做 IO；嵌套循环先建索引；能一次遍历解决就不要两遍。
-- 禁止嵌套三元；`if (x) return true; return false;` 写成 `return x`。
-- 复杂条件先命名：`const isStale = ...`，不要整段塞进 `if`。
+- Guard clauses + early returns; keep the success path at the leftmost indentation; use `else` only for genuinely symmetric branches.
+- Nesting ≤3; beyond that, extract a function or switch to a lookup table.
+- With >3 branches on the same concept (e.g. `kind` with four or more values), switch to `Record<Kind, Handler>` and cover exhaustiveness with `assertNever`.
+- No IO inside loops; build an index before nested loops; if one pass suffices, do not make two.
+- Nested ternaries are forbidden; write `if (x) return true; return false;` as `return x`.
+- Name complex conditions first: `const isStale = ...`, instead of stuffing the whole expression into `if`.
 
-### 9.3 校验边界
+### 9.3 Validation boundaries
 
-DSH 的写法是“解析一次，之后信任”：
+The DSH way is "parse once, then trust":
 
-- 外部输入在入口解析一次：`parseX(raw): X` 返回**已校验的值**，不返回 boolean。
-- 分工：schema 负责类型/必填/枚举；`parseX` 只补 schema 表达不了的约束（非空、范围、去重、组合）。
-- 解析后向下传已校验类型（branded 或解析后对象）；内部函数不再校验。
-- 配置在 `apply` 入口一次性解析：校验 + 填默认 + `deepFreeze`，之后只读。
-- 只有三种情况允许二次校验：跨进程边界、跨版本读取、从介质读回。
-- A 校验后调 B、B 又校验——二者只能留一个：B 是公共 API 就删 A 的校验；B 是内部函数就删 B 的校验。
+- External input is parsed once at the entry: `parseX(raw): X` returns the **validated value**, not a boolean.
+- Division of labor: the schema handles types/required/enums; `parseX` only adds constraints the schema cannot express (non-empty, range, dedupe, combination).
+- After parsing, pass the validated type downward (branded or parsed object); internal functions do not validate again.
+- Configuration is parsed once at the `apply` entry: validate + fill defaults + `deepFreeze`, then read-only.
+- Only three cases allow a second validation: a process boundary, cross-version reads, and reading back from a medium.
+- A validates, calls B, and B validates again — only one may stay: if B is a public API, drop A's validation; if B is an internal function, drop B's validation.
 
-### 9.4 分层与依赖方向
+### 9.4 Layering and dependency direction
 
-按能力缝分四层，不照搬 controller / service / mapper：
+Split into four layers along capability seams; do not copy controller / service / mapper:
 
-| 层 | 形态 | 只做 | 禁止 |
+| Layer | Shape | Only does | Forbidden |
 |---|---|---|---|
-| 入口 carrier | 路由 handler、slot 组件、tool `execute`、CLI 命令 | 解析输入、调服务、写响应/渲染 | 业务规则、直接读介质 |
-| 服务编排 service | `Service` 子类、registry | 注册、路由、生命周期、事务边界 | 纯计算、文案拼接 |
-| 领域 domain | 纯 fold、parse、format、policy | 规则、换算、状态转移 | IO、时钟、随机、DOM |
-| 介质适配 adapter | storage backend、LLM adapter、HTTP client、bridge | 序列化、持久化、协议 | 业务判断 |
+| Entry carrier | Route handler, slot component, tool `execute`, CLI command | Parse input, call services, write the response/render | Business rules, reading the medium directly |
+| Service orchestration | `Service` subclass, registry | Registration, routing, lifecycle, transaction boundaries | Pure computation, building message text |
+| Domain | Pure fold, parse, format, policy | Rules, conversion, state transitions | IO, clock, randomness, DOM |
+| Medium adapter | storage backend, LLM adapter, HTTP client, bridge | Serialization, persistence, protocol | Business judgment |
 
-- 依赖单向：carrier → service → domain；adapter 由 service 调用；domain 不依赖任何层。
-- 按需分层：小插件不强行四层，但 **domain 不得依赖 carrier**。
-- 模块头写非目标，官方写法是“owns only X, never Y”。
-- 同一结果给多处消费时，结构化数据只构造一次，渲染各自做薄映射。
+- Dependencies are one-way: carrier → service → domain; the adapter is called by the service; the domain depends on no layer.
+- Layer on demand: a small plugin need not force all four layers, but **the domain must not depend on the carrier**.
+- The module header states non-goals; the canonical wording is "owns only X, never Y".
+- When one result has several consumers, build the structured data once and let each renderer do a thin mapping.
 
-### 9.5 副作用与错误位置
+### 9.5 Side effects and error placement
 
-- 副作用集中在入口与 adapter；领域函数不读时钟、不写盘、不发请求。
-- 时间、随机、IO 通过参数注入，便于测试。
-- 领域抛语义错误（带 `cause`），入口转成结构化结果；不在中间层重复包装。
+- Side effects are concentrated in the entry and the adapter; domain functions do not read the clock, write to disk, or send requests.
+- Time, randomness, and IO are injected as parameters to make testing easier.
+- The domain throws semantic errors (with `cause`); the entry turns them into a structured result; no repeated wrapping in middle layers.
 
-### 9.6 调用依赖
+### 9.6 Call dependencies
 
-- 依赖分两种：import 边与调用边。import 环用工具禁，调用环由装配根拉直。
-- 双向通信只能经装配根注入的函数或事件，禁止两个模块互相 import。
-- 下层通知上层：注入回调或发事件，不 import 上层。
-- `let` + 延迟引用只允许出现在装配根，业务模块禁止。
-- 命名区分“请求”与“执行”：`requestRestart()` 不等于 `restart()`。
+- Dependencies come in two kinds: import edges and call edges. Import cycles are banned by tooling; call cycles are straightened out by the wiring root.
+- Two-way communication goes only through functions or events injected by the wiring root; two modules must never import each other.
+- A lower layer notifies an upper one by injected callback or event, never by importing it.
+- `let` + deferred references are allowed only in the wiring root, never in business modules.
+- Naming distinguishes "request" from "execute": `requestRestart()` is not `restart()`.
 
-### 9.7 实时驱动
+### 9.7 Real-time drivers
 
-rAF 循环、指针状态机、定时器泵这类实时设施共用一套骨架，按这张表走，不要在同一仓库里各自发明：
+rAF loops, pointer state machines, and timer pumps share one skeleton; follow this table instead of inventing your own in each part of the repo:
 
-| 要素 | 做法 | 为什么 |
+| Element | Practice | Why |
 |---|---|---|
-| 帧句柄 | 驱动内部持有 `frame: number \| null` | 必须跨渲染存活；放组件里，重渲染后就失去了取消能力 |
-| 世代号 | 起跑/停止时 `token++`，帧首 `if (token !== own) return` | 迟到的帧自弃，旧循环不会改到新状态 |
-| 实例 | 组件里 `xxxRef.current ??= createXxx({...})` | 每渲染重建会丢句柄；只建一次，则依赖必须全走 getter |
-| 依赖 | 全部 getter（`box()`/`physics()`/`viewport()`），不传快照 | 驱动活过多次渲染，快照会陈旧 |
-| 停止 | `stop()` 取消帧、清句柄、清派生状态；要停谁由调用方决定 | 一条驱动只管自己，不 import 兄弟驱动 |
-| 写入 | 帧内同步写 DOM 与实时值，落定才提交框架状态 | 把写入推迟到回调里，重渲染会读到旧值，只在特定渲染节奏下暴露 |
+| Frame handle | The driver holds `frame: number \| null` internally | It must survive across renders; kept in a component, it loses the ability to cancel after a re-render |
+| Generation counter | `token++` on start/stop; `if (token !== own) return` at the top of the frame | A late frame drops itself; an old loop cannot mutate the new state |
+| Instance | `xxxRef.current ??= createXxx({...})` in the component | Rebuilding every render loses the handle; create it once, and then all dependencies must go through getters |
+| Dependencies | All getters (`box()`/`physics()`/`viewport()`), never snapshots | The driver outlives many renders; snapshots go stale |
+| Stop | `stop()` cancels the frame, clears the handle, clears derived state; the caller decides what to stop | A driver manages only itself and never imports sibling drivers |
+| Writes | Write DOM and real-time values synchronously inside the frame; commit framework state only once settled | Deferring writes into a callback makes re-renders read old values, surfacing only at certain render rhythms |
 
-组件侧只留三件事：把 getter 束装配起来、把驱动方法接到视图、在卸载时 stop。
+The component side keeps only three things: wire up the getter bundle, connect driver methods to the view, and stop on unmount.
 
-判据：**这块有没有独立的失败模式**（帧不取消会漏帧、句柄不跨渲染会丢循环、快照会陈旧）——有就抽成驱动；只是“行数多”不构成理由。
+Criterion: **does this part have an independent failure mode** (a frame not cancelled drops frames, a handle not surviving renders loses the loop, a snapshot goes stale) — if so, extract it into a driver; "many lines" alone is not a reason.
 
-### 9.8 运行时注入的 React
+### 9.8 Runtime-injected React
 
-组件库由宿主注入 react 能力（`h`、`useState`、`useEffect`、`useRef`）而不是直接 import 时，按这个模具写，不要每次重新设计：
+When the host injects react capabilities (`h`, `useState`, `useEffect`, `useRef`) into a component library instead of importing react directly, follow this mold instead of redesigning it every time:
 
 ```ts
-/** 注入的 react 能力；类型只取用到的子集。 */
+/** Injected react capabilities; the type includes only the subset in use. */
 export interface XxxRuntime {
-  /** 创建元素。 */
+  /** Create an element. */
   h: typeof jsx;
-  /** 状态。 */
+  /** State. */
   useState: <T>(init: T) => [T, Dispatch<SetStateAction<T>>];
-  /** 引用。 */
+  /** Ref. */
   useRef: <T>(initial: T) => ReactNS.MutableRefObject<T>;
 }
 
 /**
- * 造 hook。
+ * Build a hook.
  *
- * @param rt - 注入的 react 能力。
- * @returns 接收视图输入的 hook。
+ * @param rt - injected react capabilities.
+ * @returns a hook that accepts view input.
  */
 export function createXxx(rt: XxxRuntime) {
   return function useXxx(input: XxxInput): Xxx {
@@ -455,202 +455,202 @@ export function createXxx(rt: XxxRuntime) {
 }
 ```
 
-- hook 定义在工厂闭包里，组件里无条件调用一次；返回的方法不依赖 `this`，可以在视图里直接传 `onClick: xxx.onClick`。
-- 必须有 `useRef` 才能跨渲染存活的状态，一律用 `useRef` 持有；不要用模块级变量（会串到别的实例）。
-- 注入类型用「只取用到的子集」，不要整份 `typeof React`——测试替身也得跟着实现全部方法，成本会翻倍。
+- The hook is defined inside the factory closure and called unconditionally once in the component; the returned methods do not depend on `this`, so the view can pass `onClick: xxx.onClick` directly.
+- State that needs `useRef` to survive across renders is always held with `useRef`; never use module-level variables (they leak into other instances).
+- The injected type uses "only the subset in use", not the whole `typeof React` — test doubles would then have to implement every method as well, doubling the cost.
 
-## 10. 配置与状态
+## 10. Configuration and state
 
-配置：
+Configuration:
 
-- 一份 schema 是唯一真源：类型、默认值、校验、文档都由它派生。
-- 未知字段默认拒绝（`strict`），要放行必须显式并写明理由。
-- 优先级固定并写进模块头：内置默认 → bundle patch → profile patch → 用户覆盖 → CLI。
-- 字段改名/改语义必须提供迁移与版本号；迁移幂等；失败不写半成品。
-- 敏感项标 `secret`：不回显、不落日志、不进 dump。
-- 配置变更必须走同一条重载路径；重载失败保留旧值并报错。
+- One schema is the single source of truth: types, defaults, validation, and docs all derive from it.
+- Unknown fields are rejected by default (`strict`); allowing them must be explicit and justified.
+- Precedence is fixed and documented in the module header: built-in defaults → bundle patch → profile patch → user overrides → CLI.
+- Renaming a field or changing its semantics requires a migration and a version number; migrations are idempotent; a failure writes no half-finished state.
+- Sensitive items are marked `secret`: not echoed, not logged, not dumped.
+- Config changes must go through the same reload path; on a failed reload keep the previous values and report an error.
 
-状态：
+State:
 
-- 持久化状态必须有 `stateVersion`；升版提供相邻迁移，旧数据可回放。
-- 投影 `apply` 必须是纯同步函数：`(state, event) => state`，禁止 IO/时钟/随机。
-- 未关心的事件返回**同一引用**，让框架用 `Object.is` 短路。
-- 持久化状态必须是 plain JSON。
-- 携带状态的日志事件必须给完整变更后状态，禁止裸 delta。
-- 写链语义：先等持久化成功 → 再改内存 → 再发变更事件；失败则内存不动。
-- 持久化行只是“fold 捷径”，版本不符或 seq 超界就丢弃，不当权威。
+- Persisted state must have `stateVersion`; a version bump provides adjacent migrations, and old data can be replayed.
+- A projection's `apply` must be a pure synchronous function: `(state, event) => state`; IO/clock/randomness are forbidden.
+- For events it does not care about, return **the same reference** so the framework can short-circuit with `Object.is`.
+- Persisted state must be plain JSON.
+- A log event carrying state must include the complete post-change state; bare deltas are forbidden.
+- Write-chain semantics: first wait for persistence to succeed → then mutate memory → then emit the change event; on failure memory stays untouched.
+- A persisted row is only a "fold shortcut"; discard it when the version mismatches or seq is out of bounds, and never treat it as authoritative.
 
-## 11. 并发与资源
+## 11. Concurrency and resources
 
-- 所有等待有超时；超时常量命名并注明依据。
-- 异步入口接受 `AbortSignal` 并贯穿到最内层；取消后不再写响应/状态。
-- 禁止 floating promise：要么 `await`，要么 `void` + 注释说明，要么进队列。
-- 同一资源的并发写必须串行化（队列/锁/单飞）；读可以并发。
-- 流式输出必须有界；队列必须有上限与丢弃策略。
-- 清理顺序固定并写进模块头：摘监听 → 停定时器 → 关流/子进程 → 落盘。
-- 子进程用 `stopAndWait` 语义；重启退避 + 熔断；禁止新旧进程重叠。
-- 定时器统一 `unref` 策略；请求级与长驻级分开。
-- 注册返回的 disposer 必须交给 `ctx.effect`；不允许“注册了但没人清理”。
+- Every wait has a timeout; timeout constants are named and state their basis.
+- Async entry points accept `AbortSignal` and thread it to the innermost layer; after cancellation, write no response/state.
+- Floating promises are forbidden: either `await`, or `void` + a comment explaining why, or enqueue it.
+- Concurrent writes to the same resource must be serialized (queue/lock/single-flight); reads may run concurrently.
+- Streaming output must be bounded; queues must have a limit and a drop policy.
+- Cleanup order is fixed and documented in the module header: detach listeners → stop timers → close streams/child processes → flush to disk.
+- Child processes use `stopAndWait` semantics; restart backoff + circuit breaker; old and new processes must never overlap.
+- Timers share one `unref` policy; request-scoped and long-lived timers are kept separate.
+- A disposer returned by registration must be handed to `ctx.effect`; "registered but nobody cleans it up" is not allowed.
 
-## 12. 错误与日志
+## 12. Errors and logging
 
-错误分三类：
+Errors fall into three classes:
 
-| 类型 | 例 | 处理 |
+| Type | Example | Handling |
 |---|---|---|
-| 用户错误 | 参数非法、配置非法 | 4xx / 明确文案；不记 error |
-| 系统错误 | IO、网络、超时 | 5xx / 归一化 code；记 warn/error；可重试 |
-| 依赖错误 | 服务缺失、凭证缺失 | 降级或明确不可用；严禁冒充成功 |
+| User error | Invalid parameters, invalid configuration | 4xx / explicit message; not logged as error |
+| System error | IO, network, timeout | 5xx / normalized code; log warn/error; retryable |
+| Dependency error | Missing service, missing credential | Degrade or report explicitly unavailable; never fake success |
 
-- 抛错带 `cause`：`throw new TypeError(msg, { cause })`。
-- 错误信息写“期望什么、收到什么”，不写“出错了”。
-- 安全相关错误只回分类文案，绝不回显凭据、完整 URL、请求体。
-- 日志用 `ctx.logger`，禁裸 `console.*`（客户端可用，但统一前缀）。
-- 日志结构化：级别 + `event` + 关键字段 + `durationMs`；不打印用户内容。
-- 每个插件一个日志前缀；请求级日志带 session/trace id。
+- Throw with `cause`: `throw new TypeError(msg, { cause })`.
+- Error messages say "what was expected, what was received", never "something went wrong".
+- Security-related errors return a category message only, never echoing credentials, full URLs, or request bodies.
+- Log with `ctx.logger`; bare `console.*` is forbidden (allowed on the client, but with a unified prefix).
+- Structured logs: level + `event` + key fields + `durationMs`; never print user content.
+- One log prefix per plugin; request-level logs carry a session/trace id.
 
-## 13. 安全
+## 13. Security
 
-- 输入：长度上限、类型白名单、枚举白名单；路径拼接后校验前缀；URL 只允许 http/https。
-- 凭据：只驻内存；错误脱敏；不写日志、不落盘；读取时校验文件权限。
-- 命令：禁止 shell 拼接；参数数组传递；命令固定时也要防路径含引号。
-- HTML：外部文本一律转义；富文本走白名单节点树 + 容量上限；CSP 默认拒绝。
-- 网络：默认只监听回环；跨源默认拒绝；令牌比较用 timing-safe。
-- 供应链：lockfile 入库；依赖构建脚本默认禁用；发布 job 与构建 job 权限分离。
+- Input: length limits, type allowlists, enum allowlists; validate the prefix after path joining; URLs allow only http/https.
+- Credentials: memory only; errors are redacted; never logged, never written to disk; validate file permissions when reading.
+- Commands: no shell interpolation; pass arguments as an array; even for fixed commands, guard against quotes in paths.
+- HTML: external text is always escaped; rich text goes through an allowlisted node tree + a size limit; CSP denies by default.
+- Network: listen on loopback only by default; deny cross-origin by default; compare tokens with a timing-safe comparison.
+- Supply chain: the lockfile is committed; dependency build scripts are disabled by default; the release job and the build job have separate permissions.
 
-## 14. 客户端 UI
+## 14. Client UI
 
-- 插槽由 owner 声明 `kind`（single/list/keyed/chain）与 `scope`（root/session-maybe/session），registrant 只消费。
-- props 由框架三段合成：`PropsRuntime<slot>` + `InjectFace<...>` + `PropsLocale<ns>`；组件不自己造 `t`。
-- 每个导出组件 props 字段：语义不显然的写一行，坐标/尺寸/名字这类不写（细则见 `dsh-plugin-comment-spec`）；返回类型显式 `JSX.Element | null`。
-- locale：`locales.ts` 里 `zh` 是 key 集真源，`en` 键集必须一致；`type Key = keyof typeof zh`；key 用 `<域>.<对象>.<角色>`。
-- `locale/zh.json` 只放市场元数据（`meta.title`/`meta.description`），不放 UI 文案。
-- 组件拆分：展示组件单组件 ≤150 行；`useState` ≤5；`useEffect` ≤6；派生状态抽纯函数。实时组件（rAF / 指针 / 状态机）按 §9.7 把驱动外置，面板本身仍受 150 行约束，`useState`/`useEffect` 的额度只算面板自己的。
-- 样式只用 `--dsw-*` 设计 token，禁止字面色值；优先用 primitives，不重复造按钮/菜单/弹窗。
-- 尺寸、间距、圆角走 token 或共享常量；CSS 注入只允许一个 `injectStyleOnce(key, css)` 入口。
-- 无障碍：可点元素用原生语义或 `role="button" tabIndex={0}` + Enter/Space；图标按钮有 `aria-label`；状态用 `aria-expanded`/`aria-live`；焦点可见；键盘可达。
+- The slot's `kind` (single/list/keyed/chain) and `scope` (root/session-maybe/session) are declared by the owner; the registrant only consumes them.
+- Props are composed by the framework in three parts: `PropsRuntime<slot>` + `InjectFace<...>` + `PropsLocale<ns>`; components do not build their own `t`.
+- For every exported component's props fields: add one line where the meaning is not obvious; skip coordinates/size/name and the like (details in `dsh-plugin-comment-spec`); the return type is explicitly `JSX.Element | null`.
+- locale: in `locales.ts`, `zh` is the source of truth for the key set, and the `en` key set must match; `type Key = keyof typeof zh`; keys use `<domain>.<object>.<role>`.
+- `locale/zh.json` holds marketplace metadata only (`meta.title`/`meta.description`), not UI copy.
+- Component splitting: a presentational component ≤150 lines; `useState` ≤5; `useEffect` ≤6; derived state extracted into pure functions. Real-time components (rAF / pointer / state machine) externalize the driver per §9.7; the panel itself is still bound by 150 lines, and the `useState`/`useEffect` budget covers only the panel.
+- Styles use only `--dsw-*` design tokens; literal color values are forbidden; prefer primitives and do not rebuild buttons/menus/dialogs.
+- Sizes, spacing, and radii go through tokens or shared constants; CSS injection has exactly one entry point, `injectStyleOnce(key, css)`.
+- Accessibility: clickable elements use native semantics or `role="button" tabIndex={0}` + Enter/Space; icon buttons have `aria-label`; state uses `aria-expanded`/`aria-live`; focus is visible; everything is keyboard-reachable.
 
-## 15. 注释与文档
+## 15. Comments and documentation
 
-注释细则见同目录的 `dsh-plugin-comment-spec`，这里只列硬约束：
+Comment details live in `dsh-plugin-comment-spec` in the same directory; only the hard constraints are listed here:
 
-- 文件头按角色分档：入口/装配/驱动/带状态 hook 写 4–8 行（职责、非目标、依赖、不变量），普通模块 1 行，纯函数叶子可省略。
-- 每个导出一行摘要；复杂函数写 `@param name - 语义`、`@returns 边界`、`@throws 条件`。
-- 只写“为什么”，不写“做了什么”；禁历史叙述、文件路径引用、无主 TODO。
-- 覆盖率豁免必须带原因：`/* v8 ignore next N -- 原因 */`。
-- 注释语言跟随项目，标签与结构不变。
+- The file header is graded by role: entry/wiring/driver/stateful hooks get 4–8 lines (responsibility, non-goals, dependencies, invariants), regular modules get 1 line, pure-function leaves may omit it.
+- A one-line summary per export; complex functions document `@param name - meaning`, `@returns boundary`, `@throws condition`.
+- Write only "why", never "what"; historical narrative, file path references, and ownerless TODOs are forbidden.
+- Coverage exemptions must carry a reason: `/* v8 ignore next N -- reason */`.
+- Comment language follows the project; tags and structure stay unchanged.
 
-文档：
+Documentation:
 
-- `README.md` 与 `README.zh.md` 成对，顶部互链。
-- frontmatter 固定 `description` + `kind: "package-reference"`。
-- 章节固定：概述 → 使用本包 → 理解实现（含源码地图、导出形状）→ 进一步探索 → 模型体验（工具类）→ 已知限制 → 开发备注。
-- 章节锚点用 `<a id="kebab-case"></a>`；长实现说明放 `<details>`。
-- 双语 README 用 `README.i18n.yaml` 记录每个 heading 的中英哈希；改一侧必须同步另一侧并重录。
-- 设计决策写进 `notes/<date>-<topic>.md` 或 ADR，README 链接过去，不塞进代码注释。
+- `README.md` and `README.zh.md` come in pairs and cross-link at the top.
+- The frontmatter is fixed at `description` + `kind: "package-reference"`.
+- Fixed sections: Overview → Using this package → Understanding the implementation (source map, export shape) → Going further → Model experience (tool packages) → Known limitations → Development notes.
+- Section anchors use `<a id="kebab-case"></a>`; long implementation notes go into `<details>`.
+- A bilingual README records the zh/en hash of every heading in `README.i18n.yaml`; changing one side requires syncing the other and re-recording.
+- Design decisions go into `notes/<date>-<topic>.md` or an ADR and are linked from the README; they are not stuffed into code comments.
 
-## 16. 测试
+## 16. Testing
 
-### 16.1 测试类型
+### 16.1 Test types
 
-| 类型 | 测什么 | 放哪 | 占比 |
+| Type | What it tests | Where it lives | Share |
 |---|---|---|---|
-| 单元 | 纯函数：parse / format / 换算 / 状态转移 | 与被测同目录 | ~70% |
-| 契约 | 插件注册了什么、清理了什么 | 与被测同目录 | ~20% |
-| 集成 | 组件 + slot + locale 的组合行为 | `tests/integration/` | 少量 |
-| 端到端 | 启动、路由、失败矩阵 | `tests/*.expected.e2e.ts` | ~10% |
+| Unit | Pure functions: parse / format / conversion / state transitions | Same directory as the code under test | ~70% |
+| Contract | What the plugin registers and what it cleans up | Same directory as the code under test | ~20% |
+| Integration | Combined behavior of component + slot + locale | `tests/integration/` | A few |
+| End-to-end | Startup, routing, failure matrix | `tests/*.expected.e2e.ts` | ~10% |
 
-- 组件测试用真实渲染，不用大快照。
-- 需要 HTTP 的测试用可控替身：本机 stub、`nock`/`msw`、注入的 fetch 任一即可；断言请求形状、超时、重试与失败归一化，不依赖真实账号与当前时间。
-- 默认测试套件不访问公网与真实服务商；需要真实服务商的用例单独放 `*.live.test.ts`（默认 skip、需显式环境变量、不进 CI）。
+- Component tests use real rendering, not large snapshots.
+- Tests that need HTTP use a controllable double: a local stub, `nock`/`msw`, or an injected fetch — any one will do; assert the request shape, timeouts, retries, and failure normalization without depending on real accounts or the current time.
+- The default test suite does not access the public internet or real service providers; cases that need a real provider live separately in `*.live.test.ts` (skipped by default, require an explicit environment variable, and stay out of CI).
 
-### 16.2 文件与目录
+### 16.2 Files and directories
 
-- 一个源文件对应一个测试文件：`foo.ts` ↔ `foo.test.ts`，同目录。
-- 跨模块集成放 `tests/integration/`；e2e 放 `tests/*.expected.e2e.ts`。
-- fixture 放 `tests/fixtures/`，只读；需要写入的用每个 test 自建的临时目录。
-- 测试辅助函数放 `tests/support/`，不叫 `utils.ts`。
-- 测试文件 ≤600 行；超过按行为分组拆，不按“第 1 部分 / 第 2 部分”拆。
+- One source file corresponds to one test file: `foo.ts` ↔ `foo.test.ts`, in the same directory.
+- Cross-module integration goes in `tests/integration/`; e2e goes in `tests/*.expected.e2e.ts`.
+- Fixtures go in `tests/fixtures/` and are read-only; anything that needs writing uses a temp directory created by each test.
+- Test helper functions go in `tests/support/`, never `utils.ts`.
+- Test files are ≤600 lines; beyond that, split by behavior group, not into "part 1 / part 2".
 
-### 16.3 写法
+### 16.3 Style
 
-- `describe('<模块/函数>')`；`test('<行为>：<条件> → <结果>')`，中文。
-- AAA：准备、执行、断言；一个 test 只验证一个行为。
-- 断言消息写“应该是什么”，失败时能直接定位。
-- 每个 test 自建 ctx / store / 临时目录；测试之间不共享可变状态、不依赖执行顺序。
-- 时间、随机、网络、文件系统通过参数注入。
-- 契约测试至少断言两件事：注册成功、dispose 后清理干净。
-- 网络测试：每个 test 自建 server、随机端口、结束时关闭；断言请求头/路径/超时，不依赖公网。
+- `describe('<module/function>')`; `test('<behavior>: <condition> → <result>')`, in English.
+- AAA: arrange, act, assert; one test verifies one behavior.
+- Assertion messages state "what it should be" so a failure pinpoints the cause.
+- Each test builds its own ctx / store / temp directory; tests share no mutable state and do not depend on execution order.
+- Time, randomness, network, and the filesystem are injected as parameters.
+- A contract test asserts at least two things: registration succeeded, and everything is cleaned up after dispose.
+- Network tests: each test builds its own server on a random port and closes it at the end; assert request headers/paths/timeouts without depending on the public internet.
 
-### 16.4 禁止
+### 16.4 Forbidden
 
-- 新增读源码的正则守卫（如“这个文件里必须出现某个符号”）：它测的是文本不是行为，重构一动就红。存量守卫登记进 baseline，只减不增；改到相关文件时把守卫换成断言行为的测试。
-- mock 被测模块的内部函数。
-- 大对象快照。
-- `sleep` 等待；用条件轮询或注入时钟。
-- 测试之间传状态（全局变量、模块级缓存）。
-- 断言实现细节（私有字段、调用次数）而非行为。
+- New regex guards that read source code (e.g. "this file must contain a certain symbol"): they test text, not behavior, and go red on any refactor. Register existing guards in a baseline and only decrease them; when touching a related file, replace the guard with a test that asserts behavior.
+- Mocking internal functions of the module under test.
+- Large object snapshots.
+- `sleep` waiting; use conditional polling or an injected clock.
+- Passing state between tests (globals, module-level caches).
+- Asserting implementation details (private fields, call counts) instead of behavior.
 
-### 16.5 覆盖率
+### 16.5 Coverage
 
-- 新增/改动行 ≥80%；纯函数 ≥90%；不追全量数字。
-- 未覆盖的存量登记 baseline，只降不升。
-- 覆盖率豁免必须写原因。
-- 测试行数 : 源码行数 ≈ 0.8–1.2。
+- New/changed lines ≥80%; pure functions ≥90%; do not chase an overall number.
+- Uncovered existing code is registered in a baseline and may only decrease, never increase.
+- Coverage exemptions must state a reason.
+- Test lines : source lines ≈ 0.8–1.2.
 
-## 17. 构建与发布
+## 17. Build and release
 
-- 构建用 tsdown，产物 `lib/`；客户端 bundle 形态为 `window.__ModuleLoader__.load({ id, factory })`，`react`/`react-dom`/`@deepseek-ai/*` 外部化。
-- 发布前必须跑：`typecheck → lint → format:check → test → prepack-check`。
-- `files` 白名单只能有一个来源；生成器、打包器、检查脚本都从它派生或对它断言。
-- 生成物（`lib/types/**`、bundle、schema dump、catalog、i18n 哈希）标 `@generated` + 生成命令；CI diff 校验。
-- 版本与 DSH release 同步；打 tag 前校验 `package.json.version` 与 tag 一致。
-- CI：PR 跑全量门禁；发布独立 job，`contents: write` 只给它；构建 job 用只读权限。
+- The build uses tsdown, output in `lib/`; the client bundle takes the form `window.__ModuleLoader__.load({ id, factory })`, with `react`/`react-dom`/`@deepseek-ai/*` externalized.
+- Before release, run: `typecheck → lint → format:check → test → prepack-check`.
+- The `files` allowlist may have only one source; generators, bundlers, and check scripts either derive from it or assert against it.
+- Generated artifacts (`lib/types/**`, bundles, schema dumps, catalogs, i18n hashes) are marked `@generated` + the generating command; CI verifies them by diff.
+- Versions are synced with the DSH release; before tagging, verify that `package.json.version` matches the tag.
+- CI: PRs run the full gate; releases are a separate job, and only it gets `contents: write`; the build job runs with read-only permissions.
 
-## 18. 性能
+## 18. Performance
 
-- 预算：bundle 大小、启动时间、单次请求内存、首屏时间，各有阈值并进 CI。
-- 缓存：只缓存纯计算结果；有 key、有上限、有失效；缓存不改变语义。
-- 懒加载：SDK、解析器一类重依赖动态 import，不进启动路径。
-- 热路径（rAF、轮询）禁止每帧新建大对象/闭包；派生值缓存。
-- IO：批量读、避免重复 stat；文件监听去抖。
+- Budgets: bundle size, startup time, per-request memory, and first-paint time each have a threshold enforced in CI.
+- Caching: cache only pure computation results; with a key, a limit, and invalidation; caching does not change semantics.
+- Lazy loading: heavy dependencies such as SDKs and parsers are dynamically imported and stay off the startup path.
+- Hot paths (rAF, polling) must not allocate large objects/closures every frame; cache derived values.
+- IO: batch reads, avoid redundant stat calls; debounce file watching.
 
-## 19. 禁止清单
+## 19. Forbidden list
 
-1. 函数式插件导出 `default`（会让 Loader 丢 `inject`）。
-2. 客户端插件缺 host 半边 `apply()`。
-3. 只声明 `exports["./client"]` 而漏 `dsh.client`。
-4. `dsh.client.inject` 的包漏出 `devDependencies`。
-5. 手写第二份配置默认值。
-6. 用字面色值/硬编码 px，不用 `--dsw-*`。
-7. `utils.ts`/`common.ts` 杂物袋。
-8. 跨插件复制类型/常量/协议。
-9. 单文件 >300 行、单函数 >60 行、单组件 >150 行（实时组件的“驱动外置”见 §9.7，面板部分同样受此限）。
-10. 注册了资源却没有 disposer 归属。
-11. floating promise、无超时的等待、无法取消的异步。
-12. 用 `console.*` 取代 `ctx.logger`。
-13. 用注释写历史、写路径、写无主 TODO。
-14. 发布清单与构建脚本各自维护。
-15. 迁移没有版本号，或改格式不 bump `stateVersion`。
+1. A functional plugin exporting `default` (it makes the Loader lose `inject`).
+2. A client plugin missing the host-side `apply()`.
+3. Declaring only `exports["./client"]` and omitting `dsh.client`.
+4. A package in `dsh.client.inject` that is missing from `devDependencies`.
+5. Hand-writing a second copy of config defaults.
+6. Literal color values / hard-coded px instead of `--dsw-*`.
+7. `utils.ts`/`common.ts` junk drawers.
+8. Copying types/constants/protocol across plugins.
+9. A file >300 lines, a function >60 lines, a component >150 lines (for "external driver" of real-time components see §9.7; the panel part is bound by this limit too).
+10. Registering a resource with no disposer ownership.
+11. Floating promises, waits without timeouts, async work that cannot be cancelled.
+12. `console.*` instead of `ctx.logger`.
+13. Writing history, paths, or ownerless TODOs in comments.
+14. Maintaining the release list and the build script separately.
+15. A migration without a version number, or changing the format without bumping `stateVersion`.
 
-## 20. 提交前检查
+## 20. Pre-commit checklist
 
-- [ ] 插件类型明确，入口四件套齐全。
-- [ ] `exports`/`files`/依赖三分/`dsh` 字段正确。
-- [ ] 文件 ≤300 行、函数 ≤60 行、组件 ≤150 行；超限的先问“有没有独立变化原因”，没有就写明不拆，有才拆。
-- [ ] 实时组件（rAF / 指针 / 状态机）的驱动已外置，帧句柄与世代号在驱动内部（§9.7）。
-- [ ] 注入 react 的 hook 走 `createXxx(rt)` 模具，跨渲染状态用 `useRef` 而非模块级变量（§9.8）。
-- [ ] 没有第二份常量/类型/规则/清单。
-- [ ] 变量按种类放对位置；句柄与定时器有清理归属。
-- [ ] 配置默认值只在 schema；未知字段被拒绝。
-- [ ] 持久化状态有 `stateVersion` 与相邻迁移。
-- [ ] 异步有超时/取消；没有 floating promise。
-- [ ] 错误分类、带 `code`/`cause`、已脱敏。
-- [ ] 日志结构化，不打印用户内容与凭据。
-- [ ] 输入校验长度/枚举/路径/URL。
-- [ ] 客户端只用 `--dsw-*` token，优先用 primitives。
-- [ ] locale 的 zh/en 键集一致；键盘可用。
-- [ ] 测试同目录、测行为、覆盖新增行。
-- [ ] 生成物标 `@generated` 并被 CI 校验。
-- [ ] README 有源码地图、双语成对、i18n 哈希已更新。
-- [ ] 废弃/兼容有声明与迁移说明。
+- [ ] The plugin type is explicit and the four-piece entry contract is complete.
+- [ ] `exports`/`files`/the three dependency buckets/the `dsh` field are correct.
+- [ ] File ≤300 lines, function ≤60 lines, component ≤150 lines; when over the limit, first ask "is there an independent reason to change" — if not, state why you are not splitting; only split if there is.
+- [ ] The driver of a real-time component (rAF / pointer / state machine) is externalized, with the frame handle and generation counter inside the driver (§9.7).
+- [ ] The react-injected hook follows the `createXxx(rt)` mold, and cross-render state uses `useRef` rather than module-level variables (§9.8).
+- [ ] There is no second copy of constants/types/rules/lists.
+- [ ] Variables sit in the right place by kind; handles and timers have cleanup ownership.
+- [ ] Config defaults live only in the schema; unknown fields are rejected.
+- [ ] Persisted state has `stateVersion` and adjacent migrations.
+- [ ] Async work has timeouts/cancellation; there are no floating promises.
+- [ ] Errors are classified, carry a `code`/`cause`, and are redacted.
+- [ ] Logs are structured and do not print user content or credentials.
+- [ ] Input validates length/enums/paths/URLs.
+- [ ] The client uses only `--dsw-*` tokens and prefers primitives.
+- [ ] The locale zh/en key sets match; keyboard access works.
+- [ ] Tests sit next to the source, test behavior, and cover new lines.
+- [ ] Generated artifacts are marked `@generated` and verified by CI.
+- [ ] The README has a source map, comes in a bilingual pair, and the i18n hashes are updated.
+- [ ] Deprecation/compatibility has a declaration and migration notes.
