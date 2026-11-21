@@ -10,6 +10,14 @@
       "reason": "Chinese locale dictionary; the i18n layer is out of scope by fork decision"
     },
     {
+      "path": "dsh-pet/src/client/settings/locales/ja.ts",
+      "reason": "Japanese locale dictionary; the i18n layer is out of scope by fork decision"
+    },
+    {
+      "path": "dsh-pet/src/client/chat/locales/ja.ts",
+      "reason": "Japanese locale dictionary; the i18n layer is out of scope by fork decision"
+    },
+    {
       "path": "dsh-pet/scripts/english-allowlist.json",
       "reason": "The allowlist necessarily contains the allowed Chinese tokens"
     }
