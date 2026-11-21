@@ -105,7 +105,7 @@ describe('generateWhisper —— 配置模型优先、失败回落当前对话',
   test('两边都拿不到模型 → provider-missing，且一次都不调用 LLM', async () => {
     const { ctx, calls } = fakeCtx('throw', {});
     const r = await generateWhisper(ctx, { system: '人设' });
-    assert.deepEqual(r, { ok: false, reason: 'provider-missing', message: '当前对话未配置模型' });
+    assert.deepEqual(r, { ok: false, reason: 'provider-missing', message: 'The current chat has no model configured' });
     assert.deepEqual(calls, []);
   });
 
@@ -156,7 +156,7 @@ describe('generateChat —— 同一套回落规则（chatModel）', () => {
       pool: [],
       preferred: undefined,
     });
-    assert.deepEqual(r, { ok: false, reason: 'provider-missing', message: '当前对话未配置模型' });
+    assert.deepEqual(r, { ok: false, reason: 'provider-missing', message: 'The current chat has no model configured' });
     assert.deepEqual(calls, []);
   });
 });
