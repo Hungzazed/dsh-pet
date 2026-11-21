@@ -81,7 +81,7 @@ export function registerPetChatTab(
 ): () => void {
   const tabs = ctx.get?.('sidebarRightTabs') as SidebarTabRegistry | undefined;
   if (tabs === undefined || typeof tabs.register !== 'function') {
-    console.warn('[dsh-pet] 右侧栏不可用：没有 sidebarRightTabs 服务，桌宠对话标签未注册');
+    console.warn('[dsh-pet] Sidebar unavailable: no sidebarRightTabs service, pet chat tab not registered');
     return () => {};
   }
   const disposeCss = injectPanelCss();

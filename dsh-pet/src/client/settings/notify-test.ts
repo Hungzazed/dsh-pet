@@ -34,14 +34,17 @@ export async function runNotificationTest(deps: NotificationTestDeps): Promise<v
           ? t('notifyDenyBlocked')
           : result.reason === 'rejected'
             ? t('notifyDenyRejected')
-            : t('notifyDenyError') + (result.message ? '：' + result.message : '');
+            : t('notifyDenyError') + (result.message ? ': ' + result.message : '');
     report({ kind: 'err', text: reason + (result.reason === 'unsupported' ? '' : ' ' + t('notifyGuide')) });
     return;
   }
   try {
     // 绕过聚焦门直接发一条测试通知；点击行为与真实事件通知共用 wireNotificationClick。
     wireNotificationClick(
-      new Notification('测试通知', { body: '【dsh-pet】系统通知已就绪。', icon: NOTIFY_ICONS.test }),
+      new Notification('Test notification', {
+        body: '[dsh-pet] System notifications are ready.',
+        icon: NOTIFY_ICONS.test,
+      }),
     );
   } catch {
     /* 个别环境构造失败：仍按已授权提示。 */

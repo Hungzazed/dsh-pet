@@ -262,7 +262,8 @@ export function composerNode(h: ChatPanelRuntime['h'], t: ChatPanelRuntime['t'],
         onChange: (event: { target: { value: string } }) => state.setDraft(event.target.value),
         onPaste: (event: { clipboardData: DataTransfer | null; preventDefault: () => void }) => {
           const file = event.clipboardData?.files?.[0];
-          if (file === undefined) return; // 纯文本粘贴照旧
+          // 纯文本粘贴照旧
+          if (file === undefined) return;
           event.preventDefault();
           state.pickFile(file);
         },

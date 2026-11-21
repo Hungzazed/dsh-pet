@@ -38,7 +38,7 @@ export function makeFactory(): (require: (mod: string) => any) => any {
     try {
       primitives = require('@deepseek-ai/dsh-client-ui-primitives');
     } catch (error) {
-      console.warn('[dsh-pet] 图标模块不可用：' + (error instanceof Error ? error.message : String(error)));
+      console.warn('[dsh-pet] Icon module unavailable: ' + (error instanceof Error ? error.message : String(error)));
     }
 
     // react-dom 也是平台种子模块，仅用于把图标同步渲成 SVG 供 CSS mask 使用。
@@ -60,7 +60,8 @@ export function makeFactory(): (require: (mod: string) => any) => any {
       };
     } catch (error) {
       console.warn(
-        '[dsh-pet] 图标渲染器不可用（react-dom 缺失）：' + (error instanceof Error ? error.message : String(error)),
+        '[dsh-pet] Icon renderer unavailable (react-dom missing): ' +
+          (error instanceof Error ? error.message : String(error)),
       );
     }
 
@@ -121,7 +122,9 @@ export function makeFactory(): (require: (mod: string) => any) => any {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- DSH 注入服务无静态类型
         const commandUi = (ctx as any).get?.('commandUi');
         if (!commandUi || typeof commandUi.decorate !== 'function') {
-          console.warn('[dsh-pet] 命令选择框不可用：commandUi 服务缺失（/pet 仍可手输 id 或名字）');
+          console.warn(
+            '[dsh-pet] Command picker unavailable: commandUi service is missing (/pet still accepts an id or name)',
+          );
           return () => {};
         }
         return commandUi.decorate({
@@ -153,7 +156,7 @@ export function makeFactory(): (require: (mod: string) => any) => any {
         const commandUi = (ctx as any).get?.('commandUi') as CommandUiLike | undefined;
         const icons = primitives;
         if (commandUi === undefined || icons === undefined) {
-          console.warn('[dsh-pet] 命令图标不可用（命令本身仍可用，只是没有图标）');
+          console.warn('[dsh-pet] Command icons unavailable (commands still work, they just have no icon)');
           return () => {};
         }
         return installCommandFaces(
@@ -175,7 +178,7 @@ export function makeFactory(): (require: (mod: string) => any) => any {
         const renderIcon = renderIconSvg;
         const icon = primitives?.IconSlidersTwoOutlineMedium;
         if (renderIcon === undefined || icon === undefined) {
-          console.warn('[dsh-pet] 设置页导航图标不可用（那一行仍是齿轮）');
+          console.warn('[dsh-pet] Settings nav icon unavailable (that row keeps the gear)');
           return () => {};
         }
         return installSectionNavIcon({ label: () => t('nav'), renderSvg: () => renderIcon(icon) });
@@ -241,7 +244,10 @@ export function makeFactory(): (require: (mod: string) => any) => any {
             sidebarChatReady ? { commandId: PET_CHAT_COMMAND_ID } : {},
           );
         } catch (error) {
-          console.error('[dsh-pet] 右侧栏对话面板注册失败（已忽略，不影响启动）：', error);
+          console.error(
+            '[dsh-pet] Failed to register the sidebar chat panel (ignored; startup is unaffected): ',
+            error,
+          );
           return () => {};
         }
       }, 'dsh-pet: sidebar chat tab');

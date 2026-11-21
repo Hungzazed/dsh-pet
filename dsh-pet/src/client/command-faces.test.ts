@@ -156,7 +156,7 @@ describe('installCommandFaces —— 包装 commandUi.candidates', () => {
     assert.equal(rows[0].description, '来自宿主');
     // 降级必须留痕，否则「静默失效」没人守
     assert.equal(warn.messages.length, 1);
-    assert.match(warn.messages[0], /退回原始菜单行/);
+    assert.match(warn.messages[0], /original menu row/);
     assert.match(warn.messages[0], /label 炸了/);
 
     dispose();
@@ -203,7 +203,7 @@ describe('installCommandFaces —— 包装 commandUi.candidates', () => {
     assert.equal(ui.candidates, undefined);
     assert.equal(typeof dispose, 'function');
     assert.equal(warn.messages.length, 1);
-    assert.match(warn.messages[0], /commandUi\.candidates 缺失/);
+    assert.match(warn.messages[0], /commandUi\.candidates is missing/);
 
     dispose();
     warn.restore();

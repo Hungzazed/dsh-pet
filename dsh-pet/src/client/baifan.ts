@@ -70,7 +70,9 @@ export function mountBaifan(ctx: BaifanContext, host: HTMLElement): () => void {
     retryMs: RETRY_MS,
   });
 
-  void menu.ensureMenu().catch((error: unknown) => console.warn('[dsh-pet] 吃白饭注册菜单失败 ' + String(error)));
+  void menu
+    .ensureMenu()
+    .catch((error: unknown) => console.warn('[dsh-pet] Rice time menu registration failed ' + String(error)));
   const timer = window.setInterval(menu.tick, POLL_MS);
 
   return () => {

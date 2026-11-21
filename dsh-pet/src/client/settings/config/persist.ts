@@ -47,7 +47,8 @@ export async function persistSettings(
     else failed.push(write.entry);
   }
   petBridge.reload(merged);
-  void reloadNotifications(); // 保存后即时生效，无需刷新。
+  // 保存后即时生效，无需刷新。
+  void reloadNotifications();
   return failed.length > 0 ? { kind: 'partial', failed } : { kind: 'ok' };
 }
 

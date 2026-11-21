@@ -34,7 +34,8 @@ export function formatStamp(ts: number, now: number, t: ChatTranslate): string {
   const today = new Date(now);
   const days = Math.round((startOfDay(today) - startOfDay(date)) / DAY_MS);
   const clock = clockOf(date);
-  if (days <= 0) return clock; // 今天（以及时钟偏差导致的「未来」都按今天处理）
+  // 今天（以及时钟偏差导致的「未来」都按今天处理）
+  if (days <= 0) return clock;
   if (days === 1) return t('stampYesterday') + ' ' + clock;
   const monthDay = t('stampMonthDay', { month: date.getMonth() + 1, day: date.getDate() });
   if (date.getFullYear() === today.getFullYear()) return monthDay + ' ' + clock;

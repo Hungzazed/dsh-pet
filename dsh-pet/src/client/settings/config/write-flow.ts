@@ -87,7 +87,7 @@ export function createWriteFlow(deps: WriteFlowDeps): WriteFlow {
       }
       // main 已落盘、部分种类没写成功：必须如实说，否则用户会以为整包都没保存。
       if (result.kind === 'partial') {
-        setMsg({ kind: 'err', text: t('savePartial').replace('{names}', result.failed.join('、')) });
+        setMsg({ kind: 'err', text: t('savePartial').replace('{names}', result.failed.join(', ')) });
         return;
       }
       setMsg({ kind: 'err', text: t(result.kind === 'invalid' ? 'saveInvalid' : 'saveError') });

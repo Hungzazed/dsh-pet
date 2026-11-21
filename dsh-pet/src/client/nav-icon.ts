@@ -104,7 +104,7 @@ export function symbolIn(find: (id: string) => Element | null): SymbolLookup {
 /** 换字形用的 CSS：盖住齿轮，用 `::before` + mask 画上我们的图标。 */
 function cssFor(glyph: string): string {
   return [
-    '/* 「桌宠配置」行的导航图标：盖住齿轮，换成本模块的图形 */',
+    '/* Settings nav icon for the "Pet Config" row: cover the gear with the glyph from this module */',
     '[' + MARK + '] [class*="navIcon"]{display:none}',
     '[' +
       MARK +
@@ -141,7 +141,9 @@ export function installSectionNavIcon(target: SectionNavIcon): () => void {
   const doc = typeof document === 'undefined' ? undefined : document;
   const Observer = typeof MutationObserver === 'undefined' ? undefined : MutationObserver;
   if (doc === undefined || Observer === undefined || doc.body === null) {
-    console.warn('[dsh-pet] 设置页导航图标不可用：缺少 document / body / MutationObserver（齿轮照旧）');
+    console.warn(
+      '[dsh-pet] Settings nav icon unavailable: document / body / MutationObserver is missing (the gear stays)',
+    );
     return () => {};
   }
 
@@ -153,7 +155,7 @@ export function installSectionNavIcon(target: SectionNavIcon): () => void {
   const warnGlyph = (reason: string): void => {
     if (warnedGlyph) return;
     warnedGlyph = true;
-    console.warn('[dsh-pet] 设置页导航图标不可用：' + reason + '（齿轮照旧）');
+    console.warn('[dsh-pet] Settings nav icon unavailable: ' + reason + ' (the gear stays)');
   };
 
   /** 解析并注入换字形样式；成功一次后不再重算，失败时留待面板下次出现再试。 */
@@ -166,16 +168,16 @@ export function installSectionNavIcon(target: SectionNavIcon): () => void {
         symbolIn((id) => doc.getElementById(id)),
       );
       if (expanded === undefined) {
-        warnGlyph('sprite 里找不到引用的 <symbol>');
+        warnGlyph('the sprite has no <symbol> for the referenced id');
         return;
       }
       glyph = svgMaskUri(expanded);
     } catch (error) {
-      warnGlyph('图标渲染失败：' + describe(error));
+      warnGlyph('icon rendering failed: ' + describe(error));
       return;
     }
     if (glyph === '') {
-      warnGlyph('图标渲成了空 SVG');
+      warnGlyph('the icon rendered as an empty SVG');
       return;
     }
     injectCss(doc, glyph);
@@ -199,7 +201,9 @@ export function installSectionNavIcon(target: SectionNavIcon): () => void {
     } catch (error) {
       if (!warned) {
         warned = true;
-        console.warn('[dsh-pet] 设置页导航图标补丁异常，本次跳过（齿轮照旧）：' + describe(error));
+        console.warn(
+          '[dsh-pet] Settings nav icon patch failed, skipping this time (the gear stays): ' + describe(error),
+        );
       }
     }
   };

@@ -58,8 +58,8 @@ export const PANEL_CSS = `
 }
 
 /* 人设卷帘：展开时把消息列表顶下去，而不是浮在对话上——人设可以很长，浮层会挡住内容。
-   0fr → 1fr 是唯一不用量高度的展开过渡；夹层负责裁剪，正文层才放内边距与边框，
-   否则收起时 padding 与 border 仍在，留下一道缝。 */
+ * 0fr → 1fr 是唯一不用量高度的展开过渡；夹层负责裁剪，正文层才放内边距与边框，
+ * 否则收起时 padding 与 border 仍在，留下一道缝。 */
 .pet-chat-persona {
   display: grid;
   grid-template-rows: 0fr;
@@ -373,7 +373,7 @@ export const PANEL_CSS = `
 }
 
 /* 动作键图标：内联 SVG 单色三角，颜色跟行内文字走。
-   换成 emoji（▶️）会渲染成一块彩色方块，和喇叭放在一起就是两种风格。 */
+ * 换成 emoji（▶️）会渲染成一块彩色方块，和喇叭放在一起就是两种风格。 */
 .pet-chat-action-icon {
   display: block;
   width: ${px(SIZE.hairline * 5)};
@@ -381,8 +381,8 @@ export const PANEL_CSS = `
 }
 
 /* 生成中：只有上半圈带色的细环，靠旋转表达「在生成」。
-   尺寸与时间文字同高；border-box + flex:none 是必须的：默认 content-box 会把描边算在尺寸外，
-   而在 flex 行里被压缩时环会变成椭圆，看着就是个「奇怪的圆角方块」。 */
+ * 尺寸与时间文字同高；border-box + flex:none 是必须的：默认 content-box 会把描边算在尺寸外，
+ * 而在 flex 行里被压缩时环会变成椭圆，看着就是个「奇怪的圆角方块」。 */
 .pet-chat-speak.is-loading {
   opacity: 0.9;
   cursor: default;
@@ -552,13 +552,13 @@ export const PANEL_CSS = `
 }
 
 /* 生成中：输入的文字压成三级色，与转圈一起说明「这句已经发出去了，在等回复」。
-   输入框本身仍可编辑（可以先把下一句打好），所以只改颜色、不 pointer-events: none。 */
+ * 输入框本身仍可编辑（可以先把下一句打好），所以只改颜色、不 pointer-events: none。 */
 .pet-chat-composer.is-busy .pet-chat-input {
   color: var(--dsw-alias-label-tertiary);
 }
 
 /* 发送键里的转圈：与播报按钮共用 pet-chat-spin，只画半圈弧。
-   box-sizing 必须 border-box，否则 1.5px 描边会把 12px 撑大，在 34px 的圆钮里显得偏大。 */
+ * box-sizing 必须 border-box，否则 1.5px 描边会把 12px 撑大，在 34px 的圆钮里显得偏大。 */
 .pet-chat-send-spinner {
   box-sizing: border-box;
   width: ${px(SIZE.spinner)};
@@ -571,7 +571,7 @@ export const PANEL_CSS = `
 }
 
 /* 悬浮提示气泡：挂在 body 上按光标定位（见 ./tooltip），不在 .pet-chat 里，
-   所以字体与颜色全部自带——气泡是深色底，两种主题下都靠白字与背景的对比度读。 */
+ * 所以字体与颜色全部自带——气泡是深色底，两种主题下都靠白字与背景的对比度读。 */
 .pet-chat-tip {
   position: fixed;
   z-index: 2147483000;

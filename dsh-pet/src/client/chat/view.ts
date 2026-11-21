@@ -33,7 +33,8 @@ function tabsNode(h: ChatPanelRuntime['h'], state: ChatPanelState): unknown {
  * 内存里没有更早的轮时，同一个位置换成一行说明——不然按钮消失后用户不知道是「到底了」还是「坏了」。
  */
 function olderNode(h: ChatPanelRuntime['h'], t: ChatPanelRuntime['t'], state: ChatPanelState): unknown {
-  if (state.rounds.length === 0) return null; // 空态由列表里的提示负责
+  // 空态由列表里的提示负责
+  if (state.rounds.length === 0) return null;
   if (state.hasOlder) {
     return h('div', {
       className: 'pet-chat-older',

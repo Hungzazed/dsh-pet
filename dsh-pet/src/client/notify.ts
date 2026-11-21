@@ -151,7 +151,7 @@ function toast(title: string, body?: string, icon?: string, sessionId?: string):
   // 开关关着时维持「聚焦不打扰」；打开后照常弹，不再看页面是否活跃。
   if (!shouldRemind(notifyWhenFocused, isPageActive())) return;
   if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
-  console.log('[dsh-pet] 【弹窗】' + title + (body ? '：' + body : ''));
+  console.log('[dsh-pet] [Toast] ' + title + (body ? ': ' + body : ''));
   try {
     const opts: NotificationOptions = {};
     if (body) opts.body = truncate(body);
@@ -192,7 +192,7 @@ export async function requestNotificationPermission(): Promise<PermissionResult>
     if (p === 'granted') return { ok: true };
     if (p === 'denied') return { ok: false, reason: 'rejected' };
     // 弹窗被直接关掉 / 未选择：浏览器仍是 default。
-    return { ok: false, reason: 'error', message: '权限未授予（' + p + '）' };
+    return { ok: false, reason: 'error', message: 'Permission not granted (' + p + ')' };
   } catch (e) {
     return { ok: false, reason: 'error', message: e instanceof Error ? e.message : String(e) };
   }

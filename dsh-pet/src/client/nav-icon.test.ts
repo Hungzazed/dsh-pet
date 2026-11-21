@@ -511,7 +511,7 @@ describe('installSectionNavIcon —— 设置面板导航换图标', () => {
 
       assert.equal(doc.head.querySelectorAll('style').length, 0);
       assert.equal(warn.messages.length, 1);
-      assert.ok(warn.messages[0].includes('空 SVG'));
+      assert.ok(warn.messages[0].includes('empty SVG'));
       dispose();
     } finally {
       warn.restore();
