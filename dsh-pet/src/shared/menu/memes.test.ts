@@ -7,6 +7,7 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 
+import { memeLabel } from './labels.ts';
 import { buildMemeBranch, groupMemes, memeThumbUrl } from './memes.ts';
 import type { MenuBranch, MenuLeaf } from './types.ts';
 
@@ -78,20 +79,31 @@ describe('buildMemeBranch —— 菜单形状', () => {
   test('开关开启 + 分界：两级结构，组内每项都带图名与 whisper 动作', () => {
     const branch = buildMemeBranch({ memes: THREE, chatImageEnabled: true, chatImageLimit: 2 });
     assert.ok(branch, '有可用图时必须给出分支');
-    assert.equal(branch.label, '配图');
+    assert.equal(branch.label, 'Memes');
     assert.deepEqual(
       branch.children.map((group) => group.label),
-      ['纳入对话的配图', '其他'],
+      ['Memes in chat', 'Other'],
     );
     const leaves = leavesOf(branch);
     assert.deepEqual(
       leaves.map((entry) => entry.leaf.label),
-      ['甲', '乙', '丙'],
+      Object.keys(THREE),
+      'unknown meme names fall back to the name itself',
+    );
+    assert.deepEqual(
+      leaves.map((entry) => entry.leaf.image),
+      Object.keys(THREE),
+      'image is always the name from the config',
     );
     for (const { leaf } of leaves) {
       assert.equal(leaf.action, 'whisper', '点图 = 用这张图说一句');
-      assert.equal(leaf.image, leaf.label, '图名既是显示名也是传给宿主的名称');
     }
+    // A name present in the label map: the menu shows English, image keeps the config name.
+    const known = buildMemeBranch({ memes: { 吃白饭的大肥鱼: 'has description' }, chatImageEnabled: true });
+    assert.ok(known);
+    const [knownLeaf] = leavesOf(known);
+    assert.equal(knownLeaf.leaf.label, memeLabel('吃白饭的大肥鱼'), 'known meme must show the English label');
+    assert.equal(knownLeaf.leaf.image, '吃白饭的大肥鱼', 'image keeps the Chinese config name');
   });
 
   test('开关关闭：只剩「其他」一组，不出现空的对话组', () => {
@@ -99,7 +111,7 @@ describe('buildMemeBranch —— 菜单形状', () => {
     assert.ok(branch);
     assert.deepEqual(
       branch.children.map((group) => group.label),
-      ['其他'],
+      ['Other'],
     );
     assert.equal(leavesOf(branch).length, 3);
   });
@@ -109,7 +121,7 @@ describe('buildMemeBranch —— 菜单形状', () => {
     assert.ok(branch);
     assert.deepEqual(
       branch.children.map((group) => group.label),
-      ['纳入对话的配图'],
+      ['Memes in chat'],
     );
   });
 
@@ -138,8 +150,7 @@ describe('buildMemeBranch —— 缩略图', () => {
     const branch = buildMemeBranch({ memes: THREE, chatImageEnabled: true, chatImageLimit: 1 }, (name) => 'u:' + name);
     assert.ok(branch);
     for (const { leaf } of leavesOf(branch)) {
-      assert.equal(leaf.thumb, 'u:' + leaf.label, 'thumb 必须由名称生成，不能错位');
-      assert.equal(leaf.image, leaf.label);
+      assert.equal(leaf.thumb, 'u:' + leaf.image, 'thumb must be generated from the name, never from the label');
     }
   });
 
