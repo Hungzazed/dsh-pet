@@ -106,17 +106,17 @@ function tabButton(text, selected, onClick) {
 }
 
 function cornerLabel(corner) {
-  if (corner === 'top-left') return '左上角';
-  if (corner === 'top-right') return '右上角';
-  if (corner === 'bottom-left') return '左下角';
-  return '右下角';
+  if (corner === 'top-left') return 'Top-left';
+  if (corner === 'top-right') return 'Top-right';
+  if (corner === 'bottom-left') return 'Bottom-left';
+  return 'Bottom-right';
 }
 
 function displayLabel(display) {
-  if (display === 'web') return '仅浏览器';
-  if (display === 'desktop') return '仅桌面';
-  if (display === 'both') return '两者都显示';
-  return '都不显示';
+  if (display === 'web') return 'Browser only';
+  if (display === 'desktop') return 'Desktop only';
+  if (display === 'both') return 'Both';
+  return 'Neither';
 }
 
 function clampNumber(value, min, max, fallback) {

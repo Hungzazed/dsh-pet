@@ -18,7 +18,7 @@ function mountProtocolSelect() {
   if (!host) return;
   protocolSelect = createSelect(
     [
-      { value: 'openai-compatible', label: 'OpenAI 兼容' },
+      { value: 'openai-compatible', label: 'OpenAI compatible' },
       { value: 'anthropic', label: 'Anthropic' },
     ],
     'openai-compatible',
@@ -32,7 +32,7 @@ function mountServiceSelect() {
   const host = byId('service-host');
   if (!host) return;
   // 选项由 populateAi 读到的服务商目录重填；这里先给一项，避免首帧空白。
-  serviceSelect = createSelect([{ value: 'custom', label: '自定义' }], 'custom', (picked) => {
+  serviceSelect = createSelect([{ value: 'custom', label: 'Custom' }], 'custom', (picked) => {
     onServicePicked(picked);
   });
   serviceSelect.root.firstElementChild.setAttribute('aria-labelledby', 'service-label');
@@ -103,11 +103,11 @@ async function loadVoiceCatalog() {
 
 async function loadPets() {
   const status = byId('pet-status');
-  setStatus(status, '正在读取本机配置…');
+  setStatus(status, 'Loading local config…');
   try {
     const config = await callApi('GET', '/config');
     const meta = await callApi('GET', '/config/meta').catch(() => null);
-    if (!config || config.ok === false || !config.main) throw new Error('读取配置失败：宿主没有返回可用的配置。');
+    if (!config || config.ok === false || !config.main) throw new Error('Failed to load config: the host returned no usable config.');
     state.meta = meta;
     initDrafts(config);
     renderPetsPanel();
@@ -123,7 +123,7 @@ async function loadAi() {
   try {
     populateAi(await aiRequest('GET'));
     byId('save').disabled = false;
-    setStatus(status, '设置只在本机保存。');
+    setStatus(status, 'Settings are saved on this machine only.');
   } catch (error) {
     setStatus(status, (error && error.message) || String(error), 'error');
   }

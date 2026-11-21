@@ -34,7 +34,7 @@ function fileToBase64(file) {
       const url = String(reader.result || '');
       resolve(url.slice(url.indexOf(',') + 1));
     };
-    reader.onerror = () => reject(new Error('读取图片失败'));
+    reader.onerror = () => reject(new Error('Failed to read the image'));
     reader.readAsDataURL(file);
   });
 }
@@ -48,7 +48,7 @@ async function encodeAvatar(file) {
   canvas.width = Math.max(1, Math.round(bitmap.width * scale));
   canvas.height = Math.max(1, Math.round(bitmap.height * scale));
   const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('浏览器不支持缩放这张图');
+  if (!ctx) throw new Error('This browser cannot resize the image');
   ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
   const dataUrl = canvas.toDataURL('image/png');
   return dataUrl.slice(dataUrl.indexOf(',') + 1);
@@ -80,7 +80,7 @@ async function loadAvatar(image, assetRoot) {
 }
 
 async function uploadAvatar(assetRoot, file, result, image) {
-  setStatus(result, '正在上传…');
+  setStatus(result, 'Uploading…');
   try {
     const base64 = await encodeAvatar(file);
     const response = await fetch(API + '/pet-avatar?root=' + encodeURIComponent(assetRoot), {
@@ -90,14 +90,14 @@ async function uploadAvatar(assetRoot, file, result, image) {
       headers: { 'X-DSH-Pet-Token': TOKEN, 'Content-Type': 'application/json' },
       body: JSON.stringify({ base64: base64 }),
     });
-    if (response.status === 403) throw new Error('打开凭据已失效。请从桌宠菜单重新打开设置。');
+    if (response.status === 403) throw new Error('The page credential has expired. Reopen settings from the pet menu.');
     const data = await response.json().catch(() => null);
-    if (!data) throw new Error('本机接口没有返回结果，请重试。');
-    if (data.ok !== true) throw new Error(data.message || '上传失败');
+    if (!data) throw new Error('The local endpoint returned nothing. Try again.');
+    if (data.ok !== true) throw new Error(data.message || 'Upload failed');
     // 用自增而不是 Date.now()：同一毫秒内连着传两张时，版本号必须仍然变化。
     avatarVersion += 1;
     await loadAvatar(image, assetRoot);
-    setStatus(result, '头像已更新。', 'ok');
+    setStatus(result, 'Avatar updated', 'ok');
   } catch (error) {
     setStatus(result, error && error.message ? error.message : String(error), 'error');
   }
@@ -108,20 +108,20 @@ function avatarRow(pet) {
   const assetRoot = pet.assetRoot || state.entry;
   // pet/ 只归 pet pack：内置条目用包内 logo，只给预览不给上传，与服务端的拒绝保持一致。
   const editable = assetRoot !== 'main';
-  const image = make('img', { class: 'avatarImg', alt: '头像' });
+  const image = make('img', { class: 'avatarImg', alt: 'Avatar' });
   void loadAvatar(image, editable ? assetRoot : '');
   const result = make('p', { class: 'status' });
   const children = [
     make('p', {
       class: 'fieldHint',
       text: editable
-        ? '头像按素材根保存，同一素材根的宠物共用一张；支持 PNG / JPEG / WebP / GIF，超过长边 ' + AVATAR_MAX_SIDE + ' 会自动缩小。'
-        : '内置条目固定用包里的 logo，不能单独换；要给文件宠物换头像，请切到它所在的条目。',
+        ? 'The avatar is saved per asset root, so pets with the same root share one image; PNG / JPEG / WebP / GIF are supported, and images whose long side exceeds ' + AVATAR_MAX_SIDE + ' px are scaled down automatically.'
+        : 'Built-in entries always use the bundled logo and cannot be changed on their own; to change the avatar of a file pet, switch to its entry.',
     }),
   ];
   if (editable) {
     const input = make('input', { type: 'file', accept: 'image/png,image/jpeg,image/webp,image/gif', hidden: true });
-    const upload = make('button', { class: 'btn', type: 'button', text: '上传头像' });
+    const upload = make('button', { class: 'btn', type: 'button', text: 'Upload avatar' });
     upload.addEventListener('click', () => input.click());
     input.addEventListener('change', () => {
       const file = input.files && input.files[0];

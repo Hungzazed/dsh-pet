@@ -14,7 +14,7 @@ const AI_MODELS_URL = '/standalone-ai/models';
 let modelOptions = null;
 
 function modelLabel(model) {
-  return model.name && model.name !== model.id ? model.name + '（' + model.id + '）' : model.id;
+  return model.name && model.name !== model.id ? model.name + ' (' + model.id + ')' : model.id;
 }
 
 function openModelMenu(trigger) {
@@ -26,11 +26,11 @@ function openModelMenu(trigger) {
     (picked) => {
       byId('model').value = picked;
       markDirty(true);
-      setStatus(byId('model-result'), '已填入模型名称，记得保存。', 'ok');
+      setStatus(byId('model-result'), 'Model name filled in; save to apply.', 'ok');
     },
     byId('model-combo'),
     // 上百个模型时手翻不现实：顶部给一个过滤框，输入即筛。
-    '搜索模型 ID 或名称',
+    'Search model ID or name',
   );
 }
 
@@ -42,7 +42,7 @@ function forgetModelOptions() {
 async function fetchModelOptions(trigger) {
   const result = byId('model-result');
   trigger.disabled = true;
-  setStatus(result, '正在向端点请求模型列表…');
+  setStatus(result, 'Requesting the model list from the endpoint…');
   try {
     const response = await fetch(AI_MODELS_URL, {
       method: 'POST',
@@ -55,17 +55,17 @@ async function fetchModelOptions(trigger) {
         apiKey: byId('apiKey').value,
       }),
     });
-    if (response.status === 403) throw new Error('打开凭据已失效。请从桌宠菜单重新打开设置。');
+    if (response.status === 403) throw new Error('The page credential has expired. Reopen settings from the pet menu.');
     const data = await response.json().catch(() => null);
-    if (!data) throw new Error('本机接口没有返回结果，请重试。');
-    if (!data.ok) throw new Error(data.message || '拉取失败');
+    if (!data) throw new Error('The local endpoint returned nothing. Try again.');
+    if (!data.ok) throw new Error(data.message || 'Fetch failed');
     const models = data.models || [];
     if (!models.length) {
-      setStatus(result, '端点没有返回任何模型，请手动填写。', 'error');
+      setStatus(result, 'The endpoint returned no models. Enter one by hand.', 'error');
       return;
     }
     modelOptions = models.map((model) => ({ value: model.id, label: modelLabel(model) }));
-    setStatus(result, '已拉取 ' + models.length + ' 个模型，选中即可填入。', 'ok');
+    setStatus(result, 'Fetched ' + models.length + ' models. Pick one to fill the model field.', 'ok');
     openModelMenu(trigger);
   } catch (error) {
     setStatus(result, error && error.message ? error.message : String(error), 'error');

@@ -111,9 +111,9 @@ async function callApi(method, path, body) {
   });
   const data = await response.json().catch(() => null);
   if (!response.ok) {
-    if (response.status === 403) throw new Error('打开凭据已失效，请从桌宠菜单重新打开设置。');
-    if (response.status === 429) throw new Error('保存过于频繁，请稍等一分钟再试。');
-    throw new Error((data && (data.message || data.error)) || '本机接口暂时无法处理请求');
+    if (response.status === 403) throw new Error('The page credential has expired. Reopen settings from the pet menu.');
+    if (response.status === 429) throw new Error('Saving too often. Wait a minute and try again.');
+    throw new Error((data && (data.message || data.error)) || 'The local endpoint cannot handle the request right now');
   }
   return data;
 }
