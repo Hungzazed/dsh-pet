@@ -11,7 +11,7 @@ import { parseTodoItem, parseTodoList, sortTodoItems } from './types.ts';
 /** 造一条合法记录。 */
 const valid = {
   id: 'todo-1',
-  text: '交周报',
+  text: 'Weekly report',
   dueAt: 1000,
   done: false,
   createdAt: 10,
@@ -19,12 +19,12 @@ const valid = {
   completedAt: null,
 };
 
-describe('parseTodoItem —— 单条收窄', () => {
-  test('合法记录逐字段读出', () => {
+describe('parseTodoItem — narrowing a single record', () => {
+  test('reads every field of a valid record', () => {
     const todo = parseTodoItem(valid);
     assert.deepEqual(todo, {
       id: 'todo-1',
-      text: '交周报',
+      text: 'Weekly report',
       dueAt: 1000,
       done: false,
       createdAt: 10,
@@ -33,13 +33,13 @@ describe('parseTodoItem —— 单条收窄', () => {
     });
   });
 
-  test('dueAt 可以缺省或 null；done 只认布尔', () => {
+  test('dueAt may be missing or null; done only accepts a boolean', () => {
     assert.equal(parseTodoItem({ ...valid, dueAt: null })?.dueAt, null);
     assert.equal(parseTodoItem({ ...valid, dueAt: undefined })?.dueAt, null);
     assert.equal(parseTodoItem({ ...valid, done: 'yes' })?.done, false);
   });
 
-  test('缺 id / 缺正文 / dueAt 非数字 → null', () => {
+  test('missing id / missing text / non-numeric dueAt → null', () => {
     assert.equal(parseTodoItem({ ...valid, id: '' }), null);
     assert.equal(parseTodoItem({ ...valid, text: 42 }), null);
     assert.equal(parseTodoItem({ ...valid, dueAt: '1000' }), null);
@@ -48,8 +48,8 @@ describe('parseTodoItem —— 单条收窄', () => {
   });
 });
 
-describe('parseTodoList —— 整张清单', () => {
-  test('不是数组 → 空清单；坏条目跳过，好条目保留', () => {
+describe('parseTodoList — the whole list', () => {
+  test('not an array → empty list; bad entries are skipped, good ones kept', () => {
     assert.deepEqual(parseTodoList(null), []);
     assert.deepEqual(parseTodoList({ todos: [] }), []);
     const list = parseTodoList([valid, { id: '' }, { ...valid, id: 'todo-2' }]);
@@ -60,14 +60,14 @@ describe('parseTodoList —— 整张清单', () => {
   });
 });
 
-describe('sortTodoItems —— 展示顺序', () => {
-  test('未完成在前按到期先后，无期限垫底，已完成最后', () => {
+describe('sortTodoItems — display order', () => {
+  test('pending first by nearest due date, undated last among pending, done at the end', () => {
     const base = { done: false, createdAt: 1, updatedAt: 1, completedAt: null as number | null };
     const list = sortTodoItems([
-      { ...base, id: 'done', text: '已完成', dueAt: 1, done: true, completedAt: 9 },
-      { ...base, id: 'undated', text: '无期限', dueAt: null },
-      { ...base, id: 'late', text: '晚', dueAt: 300 },
-      { ...base, id: 'early', text: '早', dueAt: 200 },
+      { ...base, id: 'done', text: 'Done', dueAt: 1, done: true, completedAt: 9 },
+      { ...base, id: 'undated', text: 'No due date', dueAt: null },
+      { ...base, id: 'late', text: 'Late', dueAt: 300 },
+      { ...base, id: 'early', text: 'Early', dueAt: 200 },
     ]);
     assert.deepEqual(
       list.map((item) => item.id),
@@ -75,7 +75,7 @@ describe('sortTodoItems —— 展示顺序', () => {
     );
   });
 
-  test('同一到期时刻按创建先后', () => {
+  test('same due date falls back to creation order', () => {
     const list = sortTodoItems([
       { id: 'b', text: 'b', dueAt: 5, done: false, createdAt: 2, updatedAt: 2, completedAt: null },
       { id: 'a', text: 'a', dueAt: 5, done: false, createdAt: 1, updatedAt: 1, completedAt: null },

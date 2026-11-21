@@ -17,36 +17,39 @@ function panelHeightPx(font: FontConfig | undefined, size: number): number {
   return (m.head + m.form + lower) * resolveFontPx(font, size).bubble * TODO_FONT_SCALE;
 }
 
-describe('todoPanelTopMarginPx —— 桌面窗口上边距', () => {
-  test('默认配置：面板比纯气泡预算高，窗口要按面板加高', () => {
+describe('todoPanelTopMarginPx — desktop window top margin', () => {
+  test('default config: the panel is taller than a bare bubble budget, so the window grows', () => {
     const px = todoPanelTopMarginPx(DEFAULT_FONT, 462);
-    assert.ok(px > bubbleTopMarginPx(DEFAULT_FONT, 462), '面板比气泡高，窗口要按面板加高');
-    assert.ok(px < 400, `不该离谱，实得 ${px}px`);
+    assert.ok(px > bubbleTopMarginPx(DEFAULT_FONT, 462), 'the panel is taller than the bubble, the window must grow');
+    assert.ok(px < 400, `should not be absurd, got ${px}px`);
   });
 
-  test('字号调大：上边距跟着面板等比变大', () => {
+  test('larger font: the top margin grows with the panel', () => {
     const base = todoPanelTopMarginPx(DEFAULT_FONT, 462);
     const big = todoPanelTopMarginPx({ ...DEFAULT_FONT, size: 42 }, 462);
-    assert.ok(big > base * 1.5, `字号翻倍后上边距应显著变大，实得 ${big}px`);
+    assert.ok(big > base * 1.5, `the top margin should grow noticeably when the font doubles, got ${big}px`);
   });
 
-  test('宠物调小且字号不跟随：面板预算超过气泡预算，窗口必须按面板加高', () => {
+  test('small pet without font following: the panel budget beats the bubble budget, the window grows', () => {
     const font = { ...DEFAULT_FONT, followPet: false };
     const panel = todoPanelTopMarginPx(font, 200);
-    assert.ok(panel > bubbleTopMarginPx(font, 200), `面板更高，实得 ${panel}px`);
-    assert.ok(panel >= panelHeightPx(font, 200) - 200 * BUBBLE_OVERLAP_RATIO, '上边距应覆盖面板减去底边探出的部分');
+    assert.ok(panel > bubbleTopMarginPx(font, 200), `the panel is taller, got ${panel}px`);
+    assert.ok(
+      panel >= panelHeightPx(font, 200) - 200 * BUBBLE_OVERLAP_RATIO,
+      'the top margin should cover the panel minus the bottom overhang',
+    );
   });
 
-  test('font 缺失：按默认口径换算，不产出 NaN 或负数', () => {
+  test('missing font: falls back to the default scale, no NaN or negative values', () => {
     const px = todoPanelTopMarginPx(undefined, 462);
-    assert.ok(Number.isFinite(px) && px > 0, `实得 ${px}`);
+    assert.ok(Number.isFinite(px) && px > 0, `got ${px}`);
   });
 });
 
-describe('TODO_CSS —— 尺寸锚字号', () => {
-  test('字号与宽度都从 --f 派生，不再写死像素', () => {
-    assert.ok(TODO_CSS.includes('var(--f)'), '面板尺寸应锚 --f');
-    assert.ok(!TODO_CSS.includes('font-size:13px'), '不应再写死 13px 字号');
-    assert.ok(!TODO_CSS.includes('width:308px'), '不应再写死 308px 宽度');
+describe('TODO_CSS — sizes anchored to the font size', () => {
+  test('font size and width both derive from --f, no hard-coded pixels left', () => {
+    assert.ok(TODO_CSS.includes('var(--f)'), 'panel sizes should be anchored to --f');
+    assert.ok(!TODO_CSS.includes('font-size:13px'), 'the 13px font size should not be hard-coded anymore');
+    assert.ok(!TODO_CSS.includes('width:308px'), 'the 308px width should not be hard-coded anymore');
   });
 });
