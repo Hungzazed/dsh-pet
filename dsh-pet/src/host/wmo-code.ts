@@ -2,34 +2,34 @@
 
 /** 码 → 中文；只收 Open-Meteo 的 current / daily 会用到的那些码。 */
 const TEXT_BY_CODE: Record<number, string> = {
-  0: '晴',
-  1: '晴间多云',
-  2: '多云',
-  3: '阴',
-  45: '雾',
-  48: '雾凇',
-  51: '小毛毛雨',
-  53: '毛毛雨',
-  55: '大毛毛雨',
-  56: '冻毛毛雨',
-  57: '强冻毛毛雨',
-  61: '小雨',
-  63: '中雨',
-  65: '大雨',
-  66: '冻雨',
-  67: '强冻雨',
-  71: '小雪',
-  73: '中雪',
-  75: '大雪',
-  77: '雪粒',
-  80: '小阵雨',
-  81: '阵雨',
-  82: '强阵雨',
-  85: '小阵雪',
-  86: '强阵雪',
-  95: '雷阵雨',
-  96: '雷阵雨伴冰雹',
-  99: '强雷阵雨伴冰雹',
+  0: 'Clear',
+  1: 'Mostly clear',
+  2: 'Partly cloudy',
+  3: 'Overcast',
+  45: 'Fog',
+  48: 'Depositing rime fog',
+  51: 'Light drizzle',
+  53: 'Drizzle',
+  55: 'Dense drizzle',
+  56: 'Light freezing drizzle',
+  57: 'Dense freezing drizzle',
+  61: 'Slight rain',
+  63: 'Moderate rain',
+  65: 'Heavy rain',
+  66: 'Light freezing rain',
+  67: 'Heavy freezing rain',
+  71: 'Slight snow',
+  73: 'Moderate snow',
+  75: 'Heavy snow',
+  77: 'Snow grains',
+  80: 'Slight rain showers',
+  81: 'Moderate rain showers',
+  82: 'Violent rain showers',
+  85: 'Slight snow showers',
+  86: 'Heavy snow showers',
+  95: 'Thunderstorm',
+  96: 'Thunderstorm with slight hail',
+  99: 'Thunderstorm with heavy hail',
 };
 
 /**
@@ -38,5 +38,5 @@ const TEXT_BY_CODE: Record<number, string> = {
  * @returns 对应说法；未收录的码返回“未知天气”。
  */
 export function wmoText(code: number): string {
-  return TEXT_BY_CODE[code] ?? '未知天气';
+  return TEXT_BY_CODE[code] ?? 'Unknown weather';
 }

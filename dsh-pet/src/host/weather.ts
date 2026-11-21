@@ -127,9 +127,11 @@ async function geocode(city: string, deps: QueryWeatherDeps): Promise<Place | nu
  * @returns 另一种写法；去掉后缀后不足两个字时返回 null（免得把「沙市」削成「沙」再查一次）。
  */
 function alternateCityName(city: string): string | null {
-  const bare = city.replace(/[市县区旗]$/u, '');
+  // The Chinese administrative suffixes are geocoding lookup data, not user-facing text. They stay
+  // as \u escapes so this source file remains ASCII-only while the lookup behavior is unchanged.
+  const bare = city.replace(/[\u5e02\u53bf\u533a\u65d7]/u, '');
   if (bare !== city) return bare.length >= 2 ? bare : null;
-  return city + '市';
+  return city + '\u5e02';
 }
 
 /** 一次地名搜索：取第一条结果的坐标与中文名。 */
