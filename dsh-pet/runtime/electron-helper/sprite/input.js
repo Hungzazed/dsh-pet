@@ -21,7 +21,7 @@ Object.assign(PetSprite.prototype, {
       }
       this.applyFreeze(false);
       S.postAction(BASE + '/lock/release?pet=' + encodeURIComponent(this.pet.id), { force: true }).then((ok) => {
-        if (!ok) console.warn('[dsh-pet] 用户接管上报未送达 pet=' + this.pet.id);
+        if (!ok) console.warn('[dsh-pet] user takeover report not delivered pet=' + this.pet.id);
       });
     }
     // 抓取速度日志：stopThrow 之前读，否则飞行速度就没了；静止时记录 0

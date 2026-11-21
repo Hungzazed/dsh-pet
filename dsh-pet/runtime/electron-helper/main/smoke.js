@@ -61,15 +61,15 @@ function runSmokeCheck({ app, windows, windowIgnore, setPointerFallbackPaused })
             return out;
           })(),
           releaseKeptPosition: await (async function () {
-            // 独立不变量：把宠物先拖到工作区内的固定安全点（600,300），松手后窗口位置必须原地不动。
-            // 拖拽抛掷物理（弹簧跟手+甩抛）下：指针长距跳跃后弹簧需要 ~0.3s 收敛，
-            // 松手前停留超过 RELEASE_STALE_MS(150ms) 判为「温柔放下」（估速 null，不抛掷）——
-            // 所以先等弹簧到位、再停留才松手，只测"释放瞬间是否位移"。
+            // Independent invariant: drag the pet to a fixed safe point (600,300) inside the work area; after release the window position must not move.
+            // With drag/throw physics (spring follow + fling), the spring needs ~0.3s to settle after a long pointer jump,
+            // so holding still for more than RELEASE_STALE_MS(150ms) before release counts as a gentle drop (estimated velocity null, no throw) —
+            // therefore wait for the spring to settle, then hold still before releasing; this checks only whether the position moves at the moment of release.
             var d = window.__dshPetDebug;
             var hit = document.querySelector('.pet-hit');
             if (!d || !d.dragPos || !hit) return null;
             var P = { x: d.dragPos.x, y: d.dragPos.y };
-            var T = { x: 600, y: 300 }; // 目标窗口左上角（1708×1020 工作区内，远离四边）
+            var T = { x: 600, y: 300 }; // target window top-left (inside the 1708×1020 work area, far from all edges)
             var upX = 1000 + (T.x - P.x);
             var upY = 600 + (T.y - P.y);
             var sleep = function (ms) {
@@ -79,11 +79,11 @@ function runSmokeCheck({ app, windows, windowIgnore, setPointerFallbackPaused })
             };
             hit.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: 1000, clientY: 600, screenX: 1000, screenY: 600, pointerId: 93 }));
             hit.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, clientX: upX, clientY: upY, screenX: upX, screenY: upY, pointerId: 93 }));
-            await sleep(400); // 弹簧跟随收敛
+            await sleep(400); // spring follow settles
             var during = { x: d.dragPos.x, y: d.dragPos.y };
-            await sleep(200); // 轨迹过期 → 估速 null → 温柔放下（不抛掷）
+            await sleep(200); // trail expires -> estimated velocity null -> gentle drop (no throw)
             window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, clientX: upX, clientY: upY, screenX: upX, screenY: upY, pointerId: 93 }));
-            await sleep(80); // 释放处理完成
+            await sleep(80); // release handling done
             var released = d.lastDragRelease ? { x: d.lastDragRelease.x, y: d.lastDragRelease.y } : null;
             return {
               during: during,
@@ -92,8 +92,8 @@ function runSmokeCheck({ app, windows, windowIgnore, setPointerFallbackPaused })
             };
           })(),
           interactiveFlip: (function () {
-            // 点击穿透命中判定：光标在命中区内→可交互；移出→穿透；拖拽中（pointer 已捕获）→强制可交互。
-            // hitRect 是 sprite 坐标，mousemove 用窗口坐标——测试事件需加上本体在窗口内的偏移 winOffset。
+            // Click-through hit test: cursor inside the hit area -> interactive; moved out -> transparent; dragging (pointer captured) -> force interactive.
+            // hitRect uses sprite coordinates while mousemove uses window coordinates — test events must add the body offset inside the window (winOffset).
             var d = window.__dshPetDebug;
             var hit = document.querySelector('.pet-hit');
             if (!d || !d.hitRect || !d.winOffset || !hit) return null;
@@ -116,10 +116,10 @@ function runSmokeCheck({ app, windows, windowIgnore, setPointerFallbackPaused })
           })(),
           videoSrcA: (document.querySelectorAll('.pet-sprite video')[0] || { src: '' }).src,
           videoSrcB: (document.querySelectorAll('.pet-sprite video')[1] || { src: '' }).src,
-          // 右键菜单自检：在命中区派发 contextmenu → 校验菜单挂载/根文案/子面板/运行错误
+          // Context menu self-check: dispatch contextmenu on the hit area -> verify menu mount / root text / subpanels / runtime errors
           menuSmoke: await (async function () {
-            // 前面 drag/release/interactive 测试刚拖过宠：justDragged 100ms 内屏蔽右键，
-            // 真实用户不会拖完立刻右键——先等 250ms 消除该时序影响
+            // The drag/release/interactive tests above just dragged the pet: right click is blocked for 100ms by justDragged,
+            // a real user does not right click right after dragging — wait 250ms to remove that timing effect
             await new Promise(function (resolve) {
               setTimeout(resolve, 250);
             });
@@ -156,7 +156,7 @@ function runSmokeCheck({ app, windows, windowIgnore, setPointerFallbackPaused })
                 };
                 out.panelCount = panels.length;
                 out.lvl2AfterHoverRoot = visible().length;
-                // 二级：悬停「动作」下的第一个分类 → 打开三级面板（具体动画）
+                // Level 2: hover the first category under "Actions" -> open the level 3 panel (concrete animations)
                 var panel1 = visible().filter(function (p) {
                   return p !== panels[0];
                 })[0];
@@ -168,8 +168,8 @@ function runSmokeCheck({ app, windows, windowIgnore, setPointerFallbackPaused })
                       setTimeout(resolve, 50);
                     });
                     out.lvl3AfterHoverCat = visible().length;
-                    // 重放用户路径：鼠标从分类项移向三级面板（先离开分类项进入 4px 缝隙，
-                    // 再进入三级面板）——缝隙里 mouseleave 会排 160ms 关闭定时器
+                    // Replay the user path: move the mouse from the category item toward the level 3 panel (first leave the category item into the 4px gap,
+                    // then enter the level 3 panel) — the mouseleave in the gap schedules a 160ms close timer
                     cat.dispatchEvent(
                       new MouseEvent('mouseleave', { bubbles: false, relatedTarget: document.body }),
                     );
@@ -184,7 +184,7 @@ function runSmokeCheck({ app, windows, windowIgnore, setPointerFallbackPaused })
                       setTimeout(resolve, 220);
                     });
                     out.lvl3SurvivedAfterReenter = visible().length;
-                    // 极端情况：缝隙停留超过关闭延时（鼠标犹豫）
+                    // Extreme case: lingering in the gap longer than the close delay (hesitating mouse)
                     cat.dispatchEvent(
                       new MouseEvent('mouseleave', { bubbles: false, relatedTarget: document.body }),
                     );

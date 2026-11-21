@@ -172,7 +172,7 @@ function createDpi({ app, screen, mainPath, linuxPointer, dpiProbe, dpiMark, for
       }
     } catch (error) {
       console.error(
-        '[dsh-pet-desktop-helper] dpi 探测失败，按不补偿继续:',
+        '[dsh-pet-desktop-helper] dpi probe failed, continuing without compensation:',
         String(error && error.message ? error.message : error),
       );
       PRIMARY_SCALE = 0;

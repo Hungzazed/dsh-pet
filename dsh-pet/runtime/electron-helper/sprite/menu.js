@@ -8,7 +8,7 @@
 'use strict';
 
 // 菜单首项文案随宿主形态变：桌面应用唤起主窗口，独立模式打开本机 AI 设置页，web 宿主打开站点。
-const OPEN_LABEL = { desktop: '打开软件', standalone: '打开 AI 设置', web: '打开网站' };
+const OPEN_LABEL = { desktop: 'Open', standalone: 'Open AI settings', web: 'Open website' };
 
 /** 睡觉拒绝台词的气泡时长（ms）：比默认 10s 略短，它只是「被打扰了」的一句回绝。 */
 const SLEEP_REFUSE_BUBBLE_MS = 8000;
@@ -30,13 +30,13 @@ Object.assign(PetSprite.prototype, {
         hint: OPEN_SHORTCUT_HINT,
       },
       // 「查看余额」无条件显示：关了 balanceEnabled 的宠物也能点，手动请求不受开关限制，点了一定给答复。
-      { label: '查看余额', action: 'show-balance' },
+      { label: 'Balance', action: 'show-balance' },
       // 「查询天气」与余额同一类：宿主强制刷新并写 sections.env，气泡由 /state 驱动。
-      { label: '查询天气', action: 'show-environment' },
+      { label: 'Weather', action: 'show-environment' },
       // 「待办事项」是待办面板的唯一入口（单击宠物不再弹面板），排在余额之后。
-      { label: '待办事项', action: 'todo', hint: S.TODO_HOTKEY_HINT },
-      { label: '碎碎念', action: 'whisper' },
-      { label: '对话', action: 'chat', hint: S.CHAT_HOTKEY_HINT },
+      { label: 'Todos', action: 'todo', hint: S.TODO_HOTKEY_HINT },
+      { label: 'Whisper', action: 'whisper' },
+      { label: 'Chat', action: 'chat', hint: S.CHAT_HOTKEY_HINT },
     ];
     // 「配图」：与浏览器端同一份分支（纳入对话的配图 / 其他），点一张就用它说一句；没有可用图时
     // 返回 null，整项不出现。数据来自拍平层吹入的条目级字段（this.pet.memes / chatImageEnabled /
@@ -48,8 +48,8 @@ Object.assign(PetSprite.prototype, {
     // 排在「配图」之后、动作树之前（与浏览器端的菜单同一排法）。
     // 该条目没配 animations.sleep 就整项不出现——与配置注释「不写 = 没有睡觉功能」一致。
     if (Array.isArray(this.animations.sleep) && this.animations.sleep.length > 0) {
-      if (this.sleeping) tools.push({ label: '起来', action: 'wake', hint: S.SLEEP_HOTKEY_HINT });
-      else tools.push({ label: '睡觉', action: 'sleep', hint: S.SLEEP_HOTKEY_HINT });
+      if (this.sleeping) tools.push({ label: 'Wake up', action: 'wake', hint: S.SLEEP_HOTKEY_HINT });
+      else tools.push({ label: 'Sleep', action: 'sleep', hint: S.SLEEP_HOTKEY_HINT });
     }
     // 动作树之后是维护类：显示位置 → 重载配置 → 回到初始位置。
     const tail = [
@@ -58,8 +58,8 @@ Object.assign(PetSprite.prototype, {
       // DSH_PET_PETS 一次性建的，就地增删既改不了磁盘配置也改不了窗口数量。
       S.displayMenuBranch(),
       // 重载配置：请宿主重启桌面 Helper，全部窗口按最新配置重建。维护动作，排在回到初始位置之前。
-      { label: '重载配置', action: 'reload' },
-      { label: '回到初始位置', action: 'home' },
+      { label: 'Reload config', action: 'reload' },
+      { label: 'Reset position', action: 'home' },
     ];
     // 第三方菜单项统一收在「更多」下：label 唯一的直接平铺，label 重名的按 owner 分子菜单。
     // 放在最后——「更多」不插在工具项与动作之间。
@@ -189,10 +189,10 @@ Object.assign(PetSprite.prototype, {
   showBalanceFromMenu() {
     S.postAction(BALANCE_URL + '?pet=' + encodeURIComponent(this.pet.id) + '&surface=desktop')
       .then((ok) => {
-        if (!ok) console.warn('[dsh-pet] 菜单查看余额：刷新动作未成功');
+        if (!ok) console.warn('[dsh-pet] menu balance: refresh action failed');
       })
       .catch((e) => {
-        console.error('[dsh-pet] 菜单查看余额异常', e);
+        console.error('[dsh-pet] menu balance error', e);
       });
   },
 
@@ -202,10 +202,10 @@ Object.assign(PetSprite.prototype, {
   showEnvironmentFromMenu() {
     S.postAction(ENVIRONMENT_URL + '?pet=' + encodeURIComponent(this.pet.id) + '&surface=desktop&fresh=1')
       .then((ok) => {
-        if (!ok) console.warn('[dsh-pet] 菜单查询天气：刷新动作未成功 pet=' + this.pet.id);
+        if (!ok) console.warn('[dsh-pet] menu weather: refresh action failed pet=' + this.pet.id);
       })
       .catch((e) => {
-        console.error('[dsh-pet] 菜单查询天气异常', e);
+        console.error('[dsh-pet] menu weather error', e);
       });
   },
 
@@ -222,10 +222,12 @@ Object.assign(PetSprite.prototype, {
     S.postAction(WHISPER_URL + '?pet=' + encodeURIComponent(this.pet.id) + '&surface=desktop' + pic)
       .then((ok) => {
         if (!ok)
-          console.warn('[dsh-pet] 菜单碎碎念：生成动作未成功 pet=' + this.pet.id + (image ? ' image=' + image : ''));
+          console.warn(
+            '[dsh-pet] menu whisper: generate action failed pet=' + this.pet.id + (image ? ' image=' + image : ''),
+          );
       })
       .catch((e) => {
-        console.warn('[dsh-pet] 菜单碎碎念异常', e);
+        console.warn('[dsh-pet] menu whisper error', e);
       });
   },
 
@@ -252,10 +254,10 @@ Object.assign(PetSprite.prototype, {
   /** 截一帧（主进程取宠物所在屏）；形状与浏览器侧 EncodedImage 一致，拿不到就抛给调用方决定。 */
   async captureEncoded() {
     if (!window.petBridge || typeof window.petBridge.captureScreen !== 'function') {
-      throw new Error('当前环境不支持截屏');
+      throw new Error('Screen capture is not supported in this environment');
     }
     const shot = await window.petBridge.captureScreen();
-    if (!shot) throw new Error('没有取到屏幕画面');
+    if (!shot) throw new Error('No screen image was captured');
     return {
       base64: shot.data,
       mediaType: shot.mediaType,
@@ -273,7 +275,7 @@ Object.assign(PetSprite.prototype, {
     try {
       encoded = await this.captureEncoded();
     } catch (error) {
-      const reason = '截屏失败：' + (error && error.message ? error.message : error);
+      const reason = 'Screen capture failed: ' + (error && error.message ? error.message : error);
       if (this.chatMount) {
         this.chatMount.flash(reason);
         return;
@@ -313,7 +315,7 @@ Object.assign(PetSprite.prototype, {
       clamp: this.visibleClampRect(),
       onSent: () => {
         // 发送成功：回复已写进 S → 版本号变 → 挂着的长轮询立刻返回并弹气泡
-        console.info('[dsh-pet] 对话已发送 pet=' + this.pet.id);
+        console.info('[dsh-pet] chat sent pet=' + this.pet.id);
       },
       onClose: () => {
         this.chatMount = null;
@@ -392,7 +394,7 @@ Object.assign(PetSprite.prototype, {
   // 不重试，失败只记日志——重载本身就是把本进程换掉。
   reloadDesktop() {
     fetch(BASE + '/reload', { method: 'POST' }).catch((e) => {
-      console.warn('[dsh-pet] 重载配置请求失败（宿主不可达？）', e);
+      console.warn('[dsh-pet] reload config request failed (host unreachable?)', e);
     });
   },
 
@@ -406,7 +408,7 @@ Object.assign(PetSprite.prototype, {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ id: this.pet.id, display }),
     }).catch((e) => {
-      console.warn('[dsh-pet] 显示位置请求失败（宿主不可达？）', e);
+      console.warn('[dsh-pet] display position request failed (host unreachable?)', e);
     });
   },
 

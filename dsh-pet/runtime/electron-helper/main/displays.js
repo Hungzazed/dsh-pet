@@ -46,7 +46,7 @@ function createDisplaySync({ screen, petWindows, dpi }) {
           ' -> ' +
           real +
           '; rebuilt windows' +
-          (written ? '' : '（写缓存失败，下次启动会再自查）'),
+          (written ? '' : ' (cache write failed; will verify again on next start)'),
       );
     });
   };
