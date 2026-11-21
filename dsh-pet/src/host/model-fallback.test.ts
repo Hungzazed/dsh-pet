@@ -203,6 +203,6 @@ describe('调用形状 —— 调用身份与真实失败原因', () => {
       pool: [],
       preferred: CONFIGURED,
     });
-    assert.equal(r.ok === false && r.message, '模型未返回文本');
+    assert.equal(r.ok === false && r.message, 'The model returned no text');
   });
 });
