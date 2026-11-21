@@ -154,7 +154,7 @@ describe('TodoStore —— 坏文件', () => {
     writeFileSync(file, '{ not json', 'utf8');
     const store = makeStore();
     assert.deepEqual(await store.list(), []);
-    assert.ok(warnings.some((line) => line.includes('解析失败')));
+    assert.ok(warnings.some((line) => line.includes('Failed to parse')));
     // 下一次写入自然覆盖：不再有坏文件
     await store.create({ text: '恢复', dueAt: null });
     assert.equal((await store.list()).length, 1);
