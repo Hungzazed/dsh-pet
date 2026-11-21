@@ -13,14 +13,14 @@ const PAGE_LIMIT = 1000;
 
 /** 失败分类对应的可操作说明；响应正文与密钥一律不进文案。 */
 const FAILURE_TEXT: Record<string, string | undefined> = {
-  input: '请先填写接口地址与 API 密钥',
-  auth: '身份验证失败 (HTTP 401/403)：请检查 API 密钥是否正确',
-  'rate-limit': '请求受限或配额超限 (HTTP 429)：请检查账户余额或调用频率',
-  'not-found': '该地址下没有模型列表 (HTTP 404)：请检查地址是否以 /v1 结尾',
-  contract: '端点返回的不是模型列表：请确认协议选择与服务商一致',
-  timeout: '连接超时（10 秒未响应）：请检查网络连通性或服务器状态',
-  network: '无法连接到目标服务器：请检查地址与端口是否正确',
-  http: '接口返回了错误状态：请检查地址与凭据',
+  input: 'Enter the endpoint URL and API key first',
+  auth: 'Authentication failed (HTTP 401/403): check that the API key is correct',
+  'rate-limit': 'Request limited or quota exceeded (HTTP 429): check the account balance or request rate',
+  'not-found': 'No model list at this URL (HTTP 404): check that the URL ends with /v1',
+  contract: 'The endpoint did not return a model list: make sure the selected protocol matches the provider',
+  timeout: 'Connection timed out (no response within 10 s): check network connectivity or server status',
+  network: 'Cannot reach the target server: check the URL and port',
+  http: 'The endpoint returned an error status: check the URL and credentials',
 };
 
 /** 判定一个值是不是普通对象。 */
@@ -128,7 +128,11 @@ async function requestList(
   } catch {
     return failure('contract');
   }
-  if (text.length > MAX_DISCOVERY_BYTES) return failure('contract', '端点返回的模型列表过大，请改用支持分页的地址');
+  if (text.length > MAX_DISCOVERY_BYTES)
+    return failure(
+      'contract',
+      'The endpoint returned a model list that is too large; use a URL that supports pagination',
+    );
   let payload: unknown;
   try {
     payload = JSON.parse(text);
@@ -155,10 +159,14 @@ export async function discoverModels(
     input.protocol === 'anthropic' || input.protocol === 'openai-compatible' ? input.protocol : current.protocol;
   const rawBase = (input.baseUrl !== undefined ? input.baseUrl : current.baseUrl).trim();
   const apiKey = (input.apiKey !== undefined && input.apiKey !== '' ? input.apiKey : current.apiKey).trim();
-  if (rawBase === '') return failure('input', '请先填写接口地址（Base URL）');
-  if (apiKey === '') return failure('input', '请先填写 API 密钥');
+  if (rawBase === '') return failure('input', 'Enter the endpoint URL (Base URL) first');
+  if (apiKey === '') return failure('input', 'Enter the API key first');
   const base = parseEndpoint(rawBase);
-  if (base === undefined) return failure('input', '接口地址必须是 HTTP(S) 地址，且不能含账号、查询参数或片段');
+  if (base === undefined)
+    return failure(
+      'input',
+      'The endpoint URL must be an HTTP(S) URL without credentials, query parameters or fragments',
+    );
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), DISCOVERY_TIMEOUT_MS);

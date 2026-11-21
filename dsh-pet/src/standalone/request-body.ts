@@ -25,7 +25,7 @@ export async function boundedRequest(
 ): Promise<IncomingMessage | undefined> {
   const length = req.headers['content-length'];
   if (length !== undefined && (!/^\d+$/.test(length) || Number(length) > limit)) {
-    rejectRequest(res, 413, '请求正文过大');
+    rejectRequest(res, 413, 'Request body too large');
     return undefined;
   }
   const chunks: Buffer[] = [];
@@ -41,7 +41,11 @@ export async function boundedRequest(
         // 先暂停原请求再回错误，避免继续读取对端仍在发送的正文。
         req.pause();
         if (!res.writableEnded && !res.destroyed)
-          rejectRequest(res, status, status === 408 ? '读取请求超时' : '请求正文无效或过大');
+          rejectRequest(
+            res,
+            status,
+            status === 408 ? 'Request body read timed out' : 'Invalid or oversized request body',
+          );
         resolve(undefined);
       } else resolve(Buffer.concat(chunks));
     };

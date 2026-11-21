@@ -56,7 +56,7 @@ export function sendIcon(res: ServerResponse, icon: Buffer): void {
 /** 记录并回一个不含细节的 500。 */
 export function fail(res: ServerResponse, _error: unknown, logger: StandaloneLogger): void {
   // 绝不回显或记录服务商错误：其中可能有 API 密钥或带凭据的地址。
-  logger.error('独立模式路由处理失败（详细内容已省略以保护凭据）');
+  logger.error('Standalone route handler failed (details omitted to protect credentials)');
   if (res.headersSent) res.destroy();
-  else sendJson(res, 500, { error: '本机服务暂时无法处理请求' });
+  else sendJson(res, 500, { error: 'The local server cannot handle the request right now' });
 }

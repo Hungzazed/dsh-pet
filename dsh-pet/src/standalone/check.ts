@@ -40,14 +40,16 @@ export function runCheck(logger: StandaloneLogger): number {
   const paths = configPathsFor(packageRoot, home);
   const electron = resolveElectronPath();
   const lines: string[] = [
-    `Node            ${process.version}（${process.platform}-${process.arch}）`,
-    `插件            dsh-pet@${packageVersion(packageRoot)}  ${packageRoot}`,
+    `Node            ${process.version} (${process.platform}-${process.arch})`,
+    `Plugin          dsh-pet@${packageVersion(packageRoot)}  ${packageRoot}`,
     `DSH_HOME        ${home}`,
-    `用户配置        ${paths.userFile}${existsSync(paths.userFile) ? '' : '（不存在 → 用包内默认）'}`,
-    `文件宠物目录    ${paths.petDir}${existsSync(paths.petDir) ? '' : '（不存在）'}`,
-    `内置默认配置    ${paths.defaultFile}${existsSync(paths.defaultFile) ? '' : '  ✗ 缺失'}`,
-    `Electron        ${electron ?? `未发现（首次运行会下载到 ${electronLandingDir()}）`}`,
-    `图形显示环境    ${hasGraphicalDisplay() ? '有' : '无（桌面小窗会跳过；远程桌面/Xvfb 可设 DSH_PET_DESKTOP_FORCE=1）'}`,
+    `User config     ${paths.userFile}${existsSync(paths.userFile) ? '' : ' (missing → using bundled default)'}`,
+    `File pet dir    ${paths.petDir}${existsSync(paths.petDir) ? '' : ' (missing)'}`,
+    `Bundled config  ${paths.defaultFile}${existsSync(paths.defaultFile) ? '' : '  ✗ missing'}`,
+    `Electron        ${electron ?? `not found (downloaded on first run to ${electronLandingDir()})`}`,
+    `Display         ${
+      hasGraphicalDisplay() ? 'yes' : 'no (desktop window skipped; set DSH_PET_DESKTOP_FORCE=1 for remote desktop/Xvfb)'
+    }`,
   ];
 
   const fail = (message: string): number => {
@@ -60,34 +62,37 @@ export function runCheck(logger: StandaloneLogger): number {
   if (!existsSync(paths.defaultFile)) {
     // 直接跑源码时包根会指向 src/，这里提示改用构建产物。
     return fail(
-      '包内默认配置读不到：很可能是在**直接跑源码**（包根被解析成了 src/）。' +
-        '独立模式请用构建产物：npm run bundle 后 node lib/standalone.js，或 npm run standalone。',
+      'Bundled default config is unreadable: you are most likely running the source directly ' +
+        '(the package root resolved to src/). For standalone mode use the build output: ' +
+        'run npm run bundle, then node lib/standalone.js, or npm run standalone.',
     );
   }
 
   try {
     const merged = readAllConfig(paths);
     const entries = Object.keys(merged);
-    lines.push(`配置条目        ${entries.length} 个：${entries.join(', ') || '（空）'}`);
+    lines.push(`Config entries  ${entries.length}: ${entries.join(', ') || '(none)'}`);
     for (const entry of entries) {
       // 按条目汇总宠物数与 idle 动画数，便于发现空配置。
       const conf = merged[entry] ?? {};
       const pets = Array.isArray(conf.pets) ? (conf.pets as Record<string, unknown>[]) : [];
       const animations = conf.animations as { idle?: unknown[] } | undefined;
       const idle = Array.isArray(animations?.idle) ? animations.idle.length : 0;
-      lines.push(`  条目 ${entry}：宠物 ${pets.length} 只  ${describePets(pets)}｜idle 动画 ${idle} 个`);
+      lines.push(`  entry ${entry}: ${pets.length} pet(s)  ${describePets(pets)} | idle animations ${idle}`);
     }
     const desktopVisible = flattenPetList(merged).filter(isDesktopVisible);
     // 只有 display 为 desktop 或 both 的宠物会真的出现在桌面上。
     lines.push(
-      `桌面小窗        ${desktopVisible.length} 只${
-        desktopVisible.length === 0 ? '（display 需要 desktop 或 both，否则独立模式没有可显示的宠物）' : ''
+      `Desktop window  ${desktopVisible.length} pet(s)${
+        desktopVisible.length === 0
+          ? ' (display must be desktop or both, otherwise standalone mode has no pet to show)'
+          : ''
       }`,
     );
     for (const line of lines) logger.info(line);
-    logger.info('结论：配置与 Electron 就绪，可以直接启动（npm run standalone）。');
+    logger.info('Ready: config and Electron are in place — start with npm run standalone.');
     return 0;
   } catch (error) {
-    return fail(`读配置失败：${error instanceof Error ? error.message : String(error)}`);
+    return fail(`Failed to read config: ${error instanceof Error ? error.message : String(error)}`);
   }
 }

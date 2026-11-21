@@ -40,7 +40,7 @@ export function settingsHandler(
   let count = 0;
   return async (req, res) => {
     if (!ai) {
-      rejectRequest(res, 503, '本机 AI 设置尚未就绪');
+      rejectRequest(res, 503, 'Local AI settings are not ready yet');
       return;
     }
     if (req.method === 'GET') {
@@ -48,7 +48,7 @@ export function settingsHandler(
       return;
     }
     if (req.method !== 'POST') {
-      rejectRequest(res, 405, '仅支持 GET 或 POST');
+      rejectRequest(res, 405, 'Only GET or POST is supported');
       return;
     }
     if (Date.now() - windowStart >= 60000) {
@@ -58,18 +58,22 @@ export function settingsHandler(
     count += 1;
     // 保存是重操作，按一分钟窗口限流，避免设置页反复重试打爆磁盘。
     if (count > 20) {
-      rejectRequest(res, 429, '保存过于频繁，请稍后再试');
+      rejectRequest(res, 429, 'Saving too often; try again later');
       return;
     }
     if (req.headers['content-type']?.split(';')[0].trim().toLowerCase() !== 'application/json') {
-      rejectRequest(res, 415, '请使用 JSON 保存设置');
+      rejectRequest(res, 415, 'Send settings as JSON');
       return;
     }
     try {
       const input = validateSettings(await readJsonBody(req));
       sendJson(res, 200, publicSettings(await ai.saveSettings(input)));
     } catch {
-      rejectRequest(res, 400, '设置未保存：请检查接口地址、模型名称、密钥和数值范围');
+      rejectRequest(
+        res,
+        400,
+        'Settings were not saved: check the endpoint URL, model name, API key and numeric ranges',
+      );
     }
   };
 }
@@ -84,15 +88,15 @@ export function testHandler(
 ): (req: IncomingMessage, res: ServerResponse) => Promise<void> {
   return async (req, res) => {
     if (req.method !== 'POST') {
-      rejectRequest(res, 405, '仅支持 POST');
+      rejectRequest(res, 405, 'Only POST is supported');
       return;
     }
     try {
       const input = asDraft(await readJsonBody(req));
       if (ai?.testConnection) sendJson(res, 200, await ai.testConnection(input));
-      else sendJson(res, 200, { ok: false, message: '当前环境未配置测试能力' });
+      else sendJson(res, 200, { ok: false, message: 'Connection testing is not configured in this environment' });
     } catch {
-      sendJson(res, 400, { ok: false, message: '请求格式无效' });
+      sendJson(res, 400, { ok: false, message: 'Invalid request format' });
     }
   };
 }
@@ -107,17 +111,17 @@ export function modelsHandler(
 ): (req: IncomingMessage, res: ServerResponse) => Promise<void> {
   return async (req, res) => {
     if (req.method !== 'POST') {
-      rejectRequest(res, 405, '仅支持 POST');
+      rejectRequest(res, 405, 'Only POST is supported');
       return;
     }
     if (!ai?.discoverModels) {
-      sendJson(res, 200, { ok: false, code: 'input', message: '当前环境未配置模型清单能力' });
+      sendJson(res, 200, { ok: false, code: 'input', message: 'Model listing is not configured in this environment' });
       return;
     }
     try {
       sendJson(res, 200, await ai.discoverModels(asDraft(await readJsonBody(req))));
     } catch {
-      sendJson(res, 400, { ok: false, code: 'input', message: '请求格式无效' });
+      sendJson(res, 400, { ok: false, code: 'input', message: 'Invalid request format' });
     }
   };
 }
@@ -134,7 +138,7 @@ export function balanceHandler(
 ): (req: IncomingMessage, res: ServerResponse) => Promise<void> {
   return async (req, res) => {
     if (req.method !== 'POST') {
-      rejectRequest(res, 405, '仅支持 POST');
+      rejectRequest(res, 405, 'Only POST is supported');
       return;
     }
     if (!ai?.queryBalance) {
@@ -144,7 +148,7 @@ export function balanceHandler(
     try {
       sendJson(res, 200, await ai.queryBalance());
     } catch {
-      sendJson(res, 200, { ok: false, provider: '', reason: 'fetch-error', message: '余额查询失败' });
+      sendJson(res, 200, { ok: false, provider: '', reason: 'fetch-error', message: 'Balance query failed' });
     }
   };
 }

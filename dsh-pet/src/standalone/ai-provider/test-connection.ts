@@ -16,23 +16,26 @@ const PROBE_MAX_CHARS = 40;
 
 /** 三项必填的提示文案；都填了返回 null。 */
 function missingField(baseUrl: string, model: string, apiKey: string): string | null {
-  if (!baseUrl) return '请先填写接口地址（Base URL）';
-  if (!model) return '请先填写模型名称';
-  if (!apiKey) return '请先填写 API 密钥';
+  if (!baseUrl) return 'Enter the endpoint URL (Base URL) first';
+  if (!model) return 'Enter the model name first';
+  if (!apiKey) return 'Enter the API key first';
   return null;
 }
 
 /** 把探测失败翻成可操作的一句话；原始 message 只在兜底分支透出。 */
 function describeFailure(error: unknown, controller: AbortController): string {
-  if (controller.signal.aborted) return '连接超时（15 秒未响应）：请检查网络连通性或服务器状态';
-  if (isAuthenticationFailure(error)) return '身份验证失败 (HTTP 401/403)：请检查 API 密钥是否正确';
-  if (isRateLimitFailure(error)) return '请求受限或配额超限 (HTTP 429)：请检查 API 账户余额或调用频率';
+  if (controller.signal.aborted)
+    return 'Connection timed out (no response within 15 s): check network connectivity or server status';
+  if (isAuthenticationFailure(error)) return 'Authentication failed (HTTP 401/403): check that the API key is correct';
+  if (isRateLimitFailure(error))
+    return 'Request limited or quota exceeded (HTTP 429): check the API account balance or request rate';
   const raw = error instanceof Error ? error.message : String(error);
-  if (raw.includes('404')) return '接口路径或模型不存在 (HTTP 404)：请检查接口地址（通常以 /v1 结尾）与模型名称';
+  if (raw.includes('404'))
+    return 'Endpoint path or model not found (HTTP 404): check the endpoint URL (usually ends with /v1) and the model name';
   if (raw.includes('ECONNREFUSED') || raw.includes('fetch failed')) {
-    return '无法连接到目标服务器：请检查地址与端口是否正确、服务器是否正在运行';
+    return 'Cannot reach the target server: check the URL and port, and that the server is running';
   }
-  return `连接失败：${raw}`;
+  return `Connection failed: ${raw}`;
 }
 
 /**
@@ -74,14 +77,18 @@ export async function testAiConnection(
     );
     let reply = '';
     for await (const chunk of probe) {
-      if (chunk.refusal) return { ok: false, message: '模型拒绝回答该测试请求' };
+      if (chunk.refusal) return { ok: false, message: 'The model refused the test request' };
       if (!chunk.text) continue;
       reply += chunk.text;
       if (reply.length >= PROBE_MAX_CHARS) break;
     }
     return reply.trim()
-      ? { ok: true, message: '连接成功！模型响应正常。', reply: reply.trim() }
-      : { ok: true, message: '连接成功！接口已成功响应。', reply: '(模型返回了空白内容)' };
+      ? { ok: true, message: 'Connection successful! The model responded normally.', reply: reply.trim() }
+      : {
+          ok: true,
+          message: 'Connection successful! The endpoint responded.',
+          reply: '(the model returned blank content)',
+        };
   } catch (error) {
     return { ok: false, message: describeFailure(error, controller) };
   } finally {

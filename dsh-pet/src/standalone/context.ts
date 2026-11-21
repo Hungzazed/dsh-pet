@@ -100,7 +100,7 @@ function createEffectRunner(
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       failures.push(message);
-      logger.error(`初始化某项失败（已跳过）：${message}`);
+      logger.error(`Initialization step failed (skipped): ${message}`);
       return undefined;
     }
   };
@@ -188,7 +188,7 @@ export function createStandaloneContext(options: StandaloneContextOptions): Stan
         try {
           await dispose();
         } catch (error) {
-          logger.warn(`释放某项失败：${error instanceof Error ? error.message : String(error)}`);
+          logger.warn(`Failed to release a resource: ${error instanceof Error ? error.message : String(error)}`);
         }
       }
     },

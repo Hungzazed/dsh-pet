@@ -19,19 +19,19 @@ export interface CliOptions {
 }
 
 /** --help 正文。 */
-export const USAGE = `dsh-pet 独立模式（不需要 DSH）
+export const USAGE = `dsh-pet standalone mode (no DSH required)
 
-用法：dsh-pet-standalone [选项]
+Usage: dsh-pet-standalone [options]
 
-选项：
-  --port <端口>   监听端口（默认 ${DEFAULT_STANDALONE_PORT}；被占用时自动向后顺延）
-  --check         只体检：打印配置来源、宠物清单与 Electron 状态，不启动窗口
-  -h, --help      显示本帮助
+Options:
+  --port <port>   Listen port (default ${DEFAULT_STANDALONE_PORT}; scans forward when taken)
+  --check         Health check only: print config sources, pet list and Electron status; open no window
+  -h, --help      Show this help
 
-说明：
-  桌宠在独立模式下以「透明置顶小窗」运行；浏览器内浮层需要有 DSH 网页，独立模式不提供。
-  对话与碎碎念可在本机 AI 设置页配置 API 后显式启用；未配置时不发送模型请求。
-  余额 / DSH 会话工作状态 / 系统通知仍需要 DSH 宿主。
+Notes:
+  Standalone mode runs the pet in a transparent always-on-top window; the in-browser overlay needs a DSH web page, which standalone mode does not provide.
+  Chat and whispers become available after an API is configured on the local AI settings page; no model requests are sent until then.
+  Balance / DSH session working state / system notifications still require the DSH host.
 `;
 
 /**
@@ -52,11 +52,11 @@ export function parseArgs(argv: string[]): { options: CliOptions } | { error: st
       if (arg === '--port') index += 1;
       const value = Number(raw);
       if (!Number.isInteger(value) || value < 1 || value > 65535) {
-        return { error: `--port 需要 1..65535 的整数端口，收到 ${JSON.stringify(raw)}` };
+        return { error: `--port expects an integer port in 1..65535, got ${JSON.stringify(raw)}` };
       }
       options.port = value;
     } else {
-      return { error: `未知参数：${arg}` };
+      return { error: `Unknown argument: ${arg}` };
     }
   }
   return { options };
@@ -80,7 +80,7 @@ export function configPathsFor(root: string, home: string): ConfigPaths {
 
 /** 宠物列表的展示串：display 原样打印，供用户确认。 */
 export function describePets(pets: Record<string, unknown>[]): string {
-  if (pets.length === 0) return '（没有宠物：配置里 pets 为空）';
+  if (pets.length === 0) return '(no pets: the config pets list is empty)';
   return pets
     .map((pet) => `${String(pet.id ?? '?')}(size=${String(pet.size ?? '?')}, display=${String(pet.display ?? '?')})`)
     .join('  ');

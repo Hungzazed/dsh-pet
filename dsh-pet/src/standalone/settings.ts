@@ -39,7 +39,7 @@ const endpoint = z
     } catch {
       return false;
     }
-  }, '接口地址必须是 HTTP(S) 地址，且不能含账号、查询参数或片段');
+  }, 'The endpoint URL must be an HTTP(S) URL without credentials, query parameters or fragments');
 /** 设置补丁的契约：未知字段一律拒绝。 */
 const settingsSchema = z
   .object({
@@ -77,7 +77,10 @@ const settingsSchema = z
 /** 校验设置补丁。 */
 export function validateSettings(input: unknown): z.infer<typeof settingsSchema> {
   const result = settingsSchema.safeParse(input);
-  if (!result.success) throw new Error('设置无效：请检查协议、接口地址、间隔（至少 60 秒）和输出上限（128–4096）');
+  if (!result.success)
+    throw new Error(
+      'Invalid settings: check the protocol, endpoint URL, interval (at least 60 s) and output limit (128–4096)',
+    );
   return result.data;
 }
 

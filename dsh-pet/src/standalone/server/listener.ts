@@ -36,7 +36,7 @@ function dispatch(
     }
     if (pathname === '/' || pathname === '/health') {
       if (method !== 'GET' && method !== 'HEAD') {
-        rejectRequest(res, 405, '仅支持 GET');
+        rejectRequest(res, 405, 'Only GET is supported');
         return;
       }
       sendJson(res, 200, options.status?.() ?? { name: 'dsh-pet-standalone' }, true);
@@ -44,7 +44,7 @@ function dispatch(
     }
     if (pathname === '/shutdown') {
       if (method !== 'POST') {
-        rejectRequest(res, 405, '停机请使用 POST');
+        rejectRequest(res, 405, 'Use POST to shut down');
         return;
       }
       if (shutdownSecurity) {
@@ -54,7 +54,7 @@ function dispatch(
           !/^[A-Za-z0-9_-]{43}$/.test(supplied) ||
           !timingSafeEqual(Buffer.from(supplied), Buffer.from(shutdownSecurity.token))
         ) {
-          rejectRequest(res, 403, '停机需要提供令牌');
+          rejectRequest(res, 403, 'Shutting down requires a token');
           return;
         }
       }
@@ -69,12 +69,12 @@ function dispatch(
     };
     if (pathname === '/standalone-ai/icon.png') {
       if (method !== 'GET' && method !== 'HEAD') {
-        rejectRequest(res, 405, '仅支持 GET');
+        rejectRequest(res, 405, 'Only GET is supported');
         return;
       }
       const icon = readSettingsIcon();
       if (!icon) {
-        rejectRequest(res, 404, '图标缺失');
+        rejectRequest(res, 404, 'Icon missing');
         return;
       }
       sendIcon(res, icon);
@@ -82,13 +82,13 @@ function dispatch(
     }
     if (pathname === '/standalone-ai/chat-panel.js') {
       if (method !== 'GET' && method !== 'HEAD') {
-        rejectRequest(res, 405, '仅支持 GET');
+        rejectRequest(res, 405, 'Only GET is supported');
         return;
       }
       // 构建产物随包发布；缺失只可能是没跑 bundle，明确回 404 而不是给空脚本。
       const chatPanel = readChatPanelScript();
       if (chatPanel === undefined) {
-        rejectRequest(res, 404, '对话面板脚本缺失，请重新构建（npm run bundle）');
+        rejectRequest(res, 404, 'Chat panel script missing; rebuild with npm run bundle');
         return;
       }
       sendAsset(res, chatPanel, 'text/javascript');
@@ -97,7 +97,7 @@ function dispatch(
     const asset = assets[pathname];
     if (asset) {
       if (method !== 'GET' && method !== 'HEAD') {
-        rejectRequest(res, 405, '仅支持 GET');
+        rejectRequest(res, 405, 'Only GET is supported');
         return;
       }
       sendAsset(res, asset[0], asset[1]);
@@ -123,7 +123,7 @@ function dispatch(
     if (!route) {
       res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
       res.end(
-        `dsh-pet-standalone: 没有匹配的路由（已注册：${options.routes.map((item) => item.path).join(', ') || '无'}）`,
+        `dsh-pet-standalone: no matching route (registered: ${options.routes.map((item) => item.path).join(', ') || 'none'})`,
       );
       return;
     }
@@ -152,13 +152,13 @@ export function createRequestListener(
     try {
       pathname = new URL(req.url ?? '/', 'http://127.0.0.1').pathname;
     } catch {
-      rejectRequest(res, 400, '请求地址无效');
+      rejectRequest(res, 400, 'Invalid request URL');
       return;
     }
     secureResponse(res, pathname);
     if (security && !security.authorize(req, res)) return;
     // 不记录路径、片段、查询、正文与鉴权头，避免把令牌写进日志。
-    options.logger.debug('收到本机 HTTP 请求');
+    options.logger.debug('Local HTTP request received');
     const hasBody = req.headers['transfer-encoding'] !== undefined || Number(req.headers['content-length'] ?? 0) > 0;
     const bodyMethod = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method ?? '');
     // 有正文或写方法都要先走有界读取，避免插件自己无限读。
@@ -193,13 +193,13 @@ async function bindFirstFree(server: HttpServer, preferred: number, logger: Stan
       const address = server.address();
       const bound = typeof address === 'object' && address !== null ? address.port : port;
       // 端口顺延时提示一次，读者才知道最终地址与请求的不同。
-      if (preferred > 0 && bound !== preferred) logger.warn(`端口 ${preferred} 被占用，改用 ${bound}`);
+      if (preferred > 0 && bound !== preferred) logger.warn(`Port ${preferred} is in use; using ${bound}`);
       return bound;
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== 'EADDRINUSE') throw error;
     }
   }
-  throw new Error(`从 ${preferred} 起连续 ${PORT_SCAN_LIMIT} 个端口都被占用`);
+  throw new Error(`All ${PORT_SCAN_LIMIT} ports starting at ${preferred} are in use`);
 }
 
 /**
@@ -215,7 +215,7 @@ export async function listenStandaloneServer(options: StandaloneServerOptions): 
   server.headersTimeout = 10000;
   server.on('clientError', (_error, socket) => socket.destroy());
   const port = await bindFirstFree(server, options.port ?? DEFAULT_STANDALONE_PORT, options.logger);
-  options.logger.info(`独立模式服务已监听 http://127.0.0.1:${port}/`);
+  options.logger.info(`Standalone server listening on http://127.0.0.1:${port}/`);
   return {
     port,
     security: security ?? createRequestSecurity(),

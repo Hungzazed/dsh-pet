@@ -156,6 +156,6 @@ describe('服务替身的降级口径 —— 显式失败，不假装成功', ()
     assert.equal(typeof streamed[Symbol.asyncIterator], 'function');
     await assert.rejects(async () => {
       for await (const chunk of streamed) void chunk;
-    }, /独立模式未接入模型/);
+    }, /no model is attached/);
   });
 });

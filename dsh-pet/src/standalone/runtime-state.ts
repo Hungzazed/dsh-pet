@@ -41,7 +41,9 @@ export function writeStandaloneRuntime(home: string, details: RuntimeDetails): (
       ...details,
     });
   } catch (error) {
-    throw new Error('无法安全写入桌宠运行状态，请检查数据目录的访问权限。', { cause: error });
+    throw new Error('Cannot write the pet runtime state safely; check access permissions on the data directory.', {
+      cause: error,
+    });
   }
   let released = false;
   // 只删 pid 与令牌都匹配的文件，避免误删另一个实例的状态。
@@ -53,7 +55,10 @@ export function writeStandaloneRuntime(home: string, details: RuntimeDetails): (
       if (current.pid === process.pid && current.token === details.token) unlinkSync(file);
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === 'ENOENT') return;
-      throw new Error('清理桌宠运行状态失败；请检查数据目录，未删除其他进程的状态。', { cause: error });
+      throw new Error(
+        'Failed to clean up the pet runtime state; check the data directory. No other process state was deleted.',
+        { cause: error },
+      );
     }
   };
 }

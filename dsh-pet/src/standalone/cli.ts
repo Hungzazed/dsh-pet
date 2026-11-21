@@ -33,8 +33,9 @@ async function run(logger: StandaloneLogger, options: { port: number }): Promise
   // 包内默认配置缺失时宿主半侧每个请求都会失败，先给可操作的诊断。
   if (!existsSync(paths.defaultFile)) {
     logger.error(
-      `包内默认配置缺失：${paths.defaultFile}。若你是在直接跑源码（包根被解析成了 src/），` +
-        '请改用构建产物：npm run bundle 后 node lib/standalone.js（或 npm run standalone）。',
+      `Bundled default config is missing: ${paths.defaultFile}. If you are running the source directly ` +
+        '(the package root resolved to src/), use the build output instead: run npm run bundle, ' +
+        'then node lib/standalone.js (or npm run standalone).',
     );
     process.exitCode = 1;
     return;
@@ -92,7 +93,7 @@ async function run(logger: StandaloneLogger, options: { port: number }): Promise
   const shutdown = async (reason: string): Promise<void> => {
     if (shuttingDown) return;
     shuttingDown = true;
-    logger.info(`收尾（${reason}）…`);
+    logger.info(`Shutting down (${reason})…`);
     // 先释放插件注册的 effect（停 Helper、清周期定时器），再关服务。
     try {
       await context.dispose();
@@ -100,13 +101,13 @@ async function run(logger: StandaloneLogger, options: { port: number }): Promise
       await server.close();
       releaseRuntime();
     }
-    logger.info('已退出。');
+    logger.info('Exited.');
   };
   const requestShutdown = (reason: string): void => {
     shutdown(reason)
       .then(() => process.exit(0))
       .catch((error: unknown) => {
-        logger.error(`收尾失败：${error instanceof Error ? error.message : String(error)}`);
+        logger.error(`Shutdown failed: ${error instanceof Error ? error.message : String(error)}`);
         process.exit(1);
       });
   };
@@ -121,37 +122,41 @@ async function run(logger: StandaloneLogger, options: { port: number }): Promise
   let configSource = paths.userFile;
   try {
     pets = flattenPetList(readAllConfig(paths));
-    if (!existsSync(paths.userFile)) configSource = `${paths.userFile}（不存在 → 用包内默认）`;
+    if (!existsSync(paths.userFile)) configSource = `${paths.userFile} (missing → using bundled default)`;
   } catch (error) {
     logger.warn(
-      `读配置失败（服务照常运行，相关端点会显式报错）：${error instanceof Error ? error.message : String(error)}`,
+      `Failed to read config (the server keeps running; the affected endpoints will report errors): ${
+        error instanceof Error ? error.message : String(error)
+      }`,
     );
   }
   const desktopVisible = pets.filter(isDesktopVisible);
   for (const line of [
     '',
-    '===== dsh-pet 独立模式（不需要 DSH）=====',
-    `  插件        dsh-pet@${packageVersion(packageRoot)}  ${packageRoot}`,
-    `  路由        http://127.0.0.1:${server.port}${ROUTE_SEGMENT}/`,
-    `  配置        ${configSource}`,
-    `  宠物        ${describePets(pets)}`,
+    '===== dsh-pet standalone mode (no DSH required) =====',
+    `  Plugin      dsh-pet@${packageVersion(packageRoot)}  ${packageRoot}`,
+    `  Routes      http://127.0.0.1:${server.port}${ROUTE_SEGMENT}/`,
+    `  Config      ${configSource}`,
+    `  Pets        ${describePets(pets)}`,
     desktopVisible.length === 0
-      ? '  桌面小窗    0 只：display 需要 desktop 或 both 才会出现透明小窗（服务仍在运行）'
-      : `  桌面小窗    ${desktopVisible.length} 只`,
+      ? '  Desktop     0 pets: display must be desktop or both for the transparent window to appear (the server keeps running)'
+      : `  Desktop     ${desktopVisible.length} pet(s)`,
     ai.isReady()
-      ? '  AI          本机 API 已启用；自动碎碎念遵循设置页开关'
-      : '  AI          未配置或未启用，不发送模型请求；右键“打开 AI 设置”后在本机填写',
+      ? '  AI          local API enabled; automatic whispers follow the settings toggle'
+      : '  AI          not configured or disabled; no model requests are sent; right-click "Open AI settings" to configure it locally',
     ai.getSettings().service === 'custom'
-      ? '  余额        自定义服务商没有余额接口；要查余额就把服务商换成 DeepSeek 官方 / opencode Go / commandcode'
-      : `  余额        跟随服务商 ${serviceLabel(ai.getSettings().service)}，设置页点「查询余额」取数`,
-    '  不可用      会话工作状态 / DSH 系统通知',
-    '  退出        Ctrl+C、POST /shutdown，或桌面托盘菜单的「退出」',
+      ? '  Balance     custom providers have no balance endpoint; to check balance, switch the provider to DeepSeek official / opencode Go / commandcode'
+      : `  Balance     follows the ${serviceLabel(ai.getSettings().service)} provider; click "Query balance" on the settings page`,
+    '  Unavailable Session working state / DSH system notifications',
+    '  Exit        Ctrl+C, POST /shutdown, or "Exit" in the desktop tray menu',
     '',
   ]) {
     logger.info(line);
   }
   if (context.failures.length > 0) {
-    logger.warn(`初始化期间有 ${context.failures.length} 项失败（见上方日志）；路由仍可用，相关端点会显式报错`);
+    logger.warn(
+      `${context.failures.length} item(s) failed during initialization (see the log above); routes still work and the affected endpoints will report errors`,
+    );
   }
 }
 

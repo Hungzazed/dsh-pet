@@ -416,7 +416,7 @@ test('拉取模型：用表单草稿请求端点，选中后写回输入框并�
     apiKey: 'draft-key',
   });
   assert.equal(modelRequests()[0].options.headers['X-DSH-Pet-Token'], 'process-capability');
-  assert.match(page.element('model-result').textContent, /已拉取 2 个模型/);
+  assert.match(page.element('model-result').textContent, /Fetched 2 models/);
   assert.equal(page.element('model').value, 'x', '拉取本身不得改动已填的模型');
 
   const menus = page.body.children.filter((kid) => kid.className === 'selectMenu');
