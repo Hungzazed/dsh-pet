@@ -7,7 +7,16 @@
  */
 
 /** 时段文案：一天分 9 档（划分见 SLOTS）。 */
-export type TimeSlot = '凌晨' | '清晨' | '早上' | '上午' | '中午' | '下午' | '傍晚' | '晚上' | '深夜';
+export type TimeSlot =
+  | 'late night'
+  | 'dawn'
+  | 'early morning'
+  | 'mid-morning'
+  | 'noon'
+  | 'afternoon'
+  | 'early evening'
+  | 'evening'
+  | 'deep night';
 
 /**
  * 时段划分表：[起始小时, 时段]，按起始小时从晚到早排列——匹配时取第一个不超过当前小时的档。
@@ -15,19 +24,35 @@ export type TimeSlot = '凌晨' | '清晨' | '早上' | '上午' | '中午' | '�
  * 下午 13–16、傍晚 17–18、晚上 19–22、深夜 23。
  */
 const SLOTS: ReadonlyArray<readonly [number, TimeSlot]> = [
-  [23, '深夜'],
-  [19, '晚上'],
-  [17, '傍晚'],
-  [13, '下午'],
-  [11, '中午'],
-  [9, '上午'],
-  [7, '早上'],
-  [5, '清晨'],
-  [0, '凌晨'],
+  [23, 'deep night'],
+  [19, 'evening'],
+  [17, 'early evening'],
+  [13, 'afternoon'],
+  [11, 'noon'],
+  [9, 'mid-morning'],
+  [7, 'early morning'],
+  [5, 'dawn'],
+  [0, 'late night'],
 ];
 
 /** 星期文案：索引 = Date.getDay()（0 = 周日）。 */
-export const WEEKDAYS = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'] as const;
+export const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] as const;
+
+/** Month names: index = Date.getMonth() (0 = January). */
+export const MONTHS = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+] as const;
 
 /** 一天毫秒数（日期算术用 UTC 毫秒，避开本地时区）。 */
 export const DAY_MS = 86_400_000;
@@ -60,7 +85,7 @@ export function timeSlotOf(hour: number): TimeSlot {
   for (const [start, slot] of SLOTS) {
     if (hour >= start) return slot;
   }
-  return '凌晨';
+  return 'late night';
 }
 
 /**
@@ -68,6 +93,6 @@ export function timeSlotOf(hour: number): TimeSlot {
  * @param day - Date.getDay()（0 = 周日）。
  * @returns 「周末」（周六/周日）或「工作日」。
  */
-export function dayKindOf(day: number): '工作日' | '周末' {
-  return day === 0 || day === 6 ? '周末' : '工作日';
+export function dayKindOf(day: number): 'weekday' | 'weekend' {
+  return day === 0 || day === 6 ? 'weekend' : 'weekday';
 }

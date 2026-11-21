@@ -34,42 +34,53 @@ export type Entry = EntryBase &
  * 节日说话，7/1 这类与纪念日撞车的日子则由暑假说话。`ahead / span / after` 缺省 3 / 1 / 3。
  */
 const PRIORITY: readonly Entry[] = [
-  { kind: 'solar', key: '2-14', name: '情人节', after: 0 }, // 不让春节的 3 天前窗吃掉情人节当天
-  { kind: 'solar', key: '12-31', name: '跨年夜', after: 0 }, // 排在元旦前：12/31 说跨年夜，1/1 说元旦
-  { kind: 'solar', key: '4-1', name: '愚人节', after: 0 }, // 排在清明前，否则 4/1 会说「快要过清明节了」
-  { kind: 'solar', key: '5-4', name: '青年节', ahead: 0, after: 0 }, // 排在劳动节前，否则 5/4 被劳动节回味压掉；不留前后窗，免得抢 5/3 的最后一天
+  // 不让春节的 3 天前窗吃掉情人节当天
+  { kind: 'solar', key: '2-14', name: "Valentine's Day", after: 0 },
+  // 排在元旦前：12/31 说跨年夜，1/1 说元旦
+  { kind: 'solar', key: '12-31', name: "New Year's Eve", after: 0 },
+  // 排在清明前，否则 4/1 会说「快要过清明节了」
+  { kind: 'solar', key: '4-1', name: "April Fools' Day", after: 0 },
+  // 排在劳动节前，否则 5/4 被劳动节回味压掉；不留前后窗，免得抢 5/3 的最后一天
+  { kind: 'solar', key: '5-4', name: 'Youth Day', ahead: 0, after: 0 },
 
   // ahead:1 → 2/15 起才预热，免得 2/14 就说「快要过除夕了」；after:0 → 2/17 交给春节当天，不说「除夕刚过完」
-  { kind: 'lunarEve', name: '除夕', ahead: 1, after: 0 },
-  { kind: 'lunar', key: '1-15', name: '元宵节' },
-  { kind: 'lunar', key: '1-1', name: '春节', spoken: '大年初一', span: 15 }, // 正月初一 → 正月十五
+  { kind: 'lunarEve', name: "Lunar New Year's Eve", ahead: 1, after: 0 },
+  { kind: 'lunar', key: '1-15', name: 'Lantern Festival' },
+  // 正月初一 → 正月十五
+  { kind: 'lunar', key: '1-1', name: 'Spring Festival', spoken: 'the first day of the Lunar New Year', span: 15 },
 
-  { kind: 'lunar', key: '8-15', name: '中秋节', span: 3, after: 2 }, // 中秋假期 3 天；小节过去就过去了
-  { kind: 'solar', key: '10-1', name: '国庆节', span: 7 }, // 国庆假期 7 天
-  { kind: 'solar', key: '1-1', name: '元旦', spoken: '新年第一天', span: 3 }, // 元旦假期 3 天
-  { kind: 'lunar', key: '5-5', name: '端午节', span: 3 },
-  { kind: 'solar', key: '4-4', name: '清明节', span: 3, ahead: 1 }, // 大致 4/4 起 3 天（真日期为节气 4/4 或 4/5）；ahead:1 让出 4/1–4/2 给愚人节
-  { kind: 'solar', key: '5-1', name: '劳动节', span: 3 },
-  { kind: 'solar', key: '6-1', name: '儿童节' },
+  // 中秋假期 3 天；小节过去就过去了
+  { kind: 'lunar', key: '8-15', name: 'Mid-Autumn Festival', span: 3, after: 2 },
+  // 国庆假期 7 天
+  { kind: 'solar', key: '10-1', name: 'National Day', span: 7 },
+  // 元旦假期 3 天
+  { kind: 'solar', key: '1-1', name: "New Year's Day", spoken: 'the first day of the new year', span: 3 },
+  { kind: 'lunar', key: '5-5', name: 'Dragon Boat Festival', span: 3 },
+  // 大致 4/4 起 3 天（真日期为节气 4/4 或 4/5）；ahead:1 让出 4/1–4/2 给愚人节
+  { kind: 'solar', key: '4-4', name: 'Qingming Festival', span: 3, ahead: 1 },
+  { kind: 'solar', key: '5-1', name: 'Labor Day', span: 3 },
+  { kind: 'solar', key: '6-1', name: "Children's Day" },
 
-  { kind: 'lunar', key: '7-7', name: '七夕' },
-  { kind: 'lunar', key: '7-15', name: '中元节' },
-  { kind: 'lunar', key: '2-2', name: '龙抬头' },
-  { kind: 'lunar', key: '9-9', name: '重阳节' },
-  { kind: 'lunar', key: '12-8', name: '腊八节' },
-  { kind: 'lunar', key: '12-23', name: '小年' },
+  { kind: 'lunar', key: '7-7', name: 'Qixi Festival' },
+  { kind: 'lunar', key: '7-15', name: 'Ghost Festival' },
+  { kind: 'lunar', key: '2-2', name: 'Longtaitou Festival' },
+  { kind: 'lunar', key: '9-9', name: 'Double Ninth Festival' },
+  { kind: 'lunar', key: '12-8', name: 'Laba Festival' },
+  { kind: 'lunar', key: '12-23', name: 'Little New Year' },
 
-  { kind: 'season', from: '1-20', to: '2-18', name: '寒假' }, // 30 天
-  { kind: 'season', from: '7-1', to: '8-29', name: '暑假' }, // 60 天
+  // 30 天
+  { kind: 'season', from: '1-20', to: '2-18', name: 'winter vacation' },
+  // 60 天
+  { kind: 'season', from: '7-1', to: '8-29', name: 'summer vacation' },
 
-  { kind: 'solar', key: '3-8', name: '妇女节' },
-  { kind: 'solar', key: '9-10', name: '教师节' },
-  { kind: 'solar', key: '7-1', name: '建党节' },
-  { kind: 'solar', key: '8-1', name: '建军节' },
-  { kind: 'solar', key: '10-31', name: '万圣夜' },
+  { kind: 'solar', key: '3-8', name: "Women's Day" },
+  { kind: 'solar', key: '9-10', name: "Teachers' Day" },
+  { kind: 'solar', key: '7-1', name: 'CPC Founding Day' },
+  { kind: 'solar', key: '8-1', name: 'Army Day' },
+  { kind: 'solar', key: '10-31', name: 'Halloween' },
   // 平安夜排在圣诞节之前（12/24 说平安夜），after:0 让它别用回味吃掉 12/25 的圣诞节当天
-  { kind: 'solar', key: '12-24', name: '平安夜', after: 0 },
-  { kind: 'solar', key: '12-25', name: '圣诞节' },
+  { kind: 'solar', key: '12-24', name: 'Christmas Eve', after: 0 },
+  { kind: 'solar', key: '12-25', name: 'Christmas' },
 ];
 
 /** 带优先级的条目（priority = 在 PRIORITY 里的下标，越小越优先）。 */

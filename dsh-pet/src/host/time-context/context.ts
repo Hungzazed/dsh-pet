@@ -11,6 +11,7 @@ import {
   DEFAULT_AFTER,
   DEFAULT_AHEAD,
   DEFAULT_SPAN,
+  MONTHS,
   SEASON_AFTER,
   SEASON_AHEAD,
   SEASON_ENDING_AHEAD,
@@ -52,16 +53,21 @@ export interface WeatherFacts {
  */
 function phraseOf(entry: Entry, delta: number): string {
   const span = entry.span ?? DEFAULT_SPAN;
-  if (delta > 0) return delta === 1 ? '明天就是' + entry.name : '快要过' + entry.name + '了';
-  if (delta === 0) return '今天是' + (entry.spoken ?? entry.name);
+  if (delta > 0) return delta === 1 ? entry.name + ' is tomorrow' : entry.name + ' is coming up soon';
+  if (delta === 0) return 'Today is ' + (entry.spoken ?? entry.name);
   // 节期内（长假分段说，避免十几天重复同一句）：进入节日体的第 daysIn + 1 天
   const daysIn = -delta;
   if (daysIn < span) {
-    return span - daysIn === 1 ? entry.name + '假期最后一天了' : '还在' + entry.name + '假期里';
+    return span - daysIn === 1
+      ? 'Today is the last day of the ' + entry.name + ' holiday'
+      : 'It is still the ' + entry.name + ' holiday';
   }
   // 节后：rest 是「结束后第几天」（0 起）
   const rest = daysIn - span;
-  return rest <= 1 ? entry.name + '刚过完' : entry.name + '这么快就过完了';
+  if (rest <= 1) {
+    return span > 1 ? 'The ' + entry.name + ' holiday has just ended' : entry.name + ' has just passed';
+  }
+  return span > 1 ? 'The ' + entry.name + ' holiday is over already' : entry.name + ' is over already';
 }
 
 /**
@@ -95,16 +101,16 @@ function seasonCandidateOf(date: Date): Candidate | undefined {
     if (today < from) {
       const ahead = from - today;
       if (ahead > SEASON_AHEAD) continue;
-      return { clause: ahead === 1 ? '明天就放' + name + '了' : '快要放' + name + '了', priority };
+      return { clause: ahead === 1 ? name + ' starts tomorrow' : name + ' starts soon', priority };
     }
     if (today <= to) {
-      if (today === from) return { clause: name + '开始了', priority };
-      if (to - today < SEASON_ENDING_AHEAD) return { clause: name + '快结束了', priority };
-      return { clause: '正在放' + name, priority };
+      if (today === from) return { clause: name + ' has started', priority };
+      if (to - today < SEASON_ENDING_AHEAD) return { clause: name + ' is almost over', priority };
+      return { clause: 'It is ' + name + ' right now', priority };
     }
     const rest = today - to - 1;
     if (rest >= SEASON_AFTER) continue;
-    return { clause: rest <= 1 ? name + '刚结束' : name + '这么快就过完了', priority };
+    return { clause: rest <= 1 ? name + ' has just ended' : name + ' is over already', priority };
   }
   return undefined;
 }
@@ -161,19 +167,21 @@ function placeTextOf(region: string | undefined, city: string | undefined): stri
 
 /** 天气从句：有数据时拼一句口语，没有时给出“别编”的交代。 */
 function weatherClauseOf(weather: WeatherFacts | undefined): string {
-  if (weather === undefined) return '外面的天气这次没查到，主人问起就说不知道、别编';
+  if (weather === undefined) {
+    return 'The weather outside was not available this time; if the owner asks, say you do not know and do not make it up';
+  }
   return (
-    '外面' +
+    'Outside it is ' +
     weather.summary +
-    '，气温 ' +
+    ', ' +
     numText(weather.temperatureC) +
-    '°C，体感 ' +
+    '°C, feels like ' +
     numText(weather.apparentC) +
-    '°C，湿度 ' +
+    '°C, ' +
     numText(weather.humidityPercent) +
-    '%，风速 ' +
+    '% humidity, ' +
     numText(weather.windKph) +
-    ' km/h'
+    ' km/h wind'
   );
 }
 
@@ -193,32 +201,34 @@ export function timeContextOf(date: Date, env?: TimeContextEnv): string {
   const holiday = holidayClauseOf(date);
   // 地点带“粗估”括号：城市来自 IP 而不是主人亲口说的，不说明的话模型会当成事实报出来
   const placeName = placeTextOf(env?.region, env?.city);
-  const place = placeName === undefined ? '' : '你在' + placeName + '（按网络粗估，不一定准），';
-  const weather = env === undefined ? '' : '，' + weatherClauseOf(env.weather);
+  const place = placeName === undefined ? '' : 'You are in ' + placeName + ' (a rough network estimate, may be off). ';
+  const weather = env === undefined ? '' : weatherClauseOf(env.weather) + '. ';
+  const kind = dayKindOf(day);
   return (
-    '【当下】' +
+    '[Now] ' +
     place +
-    '现在是' +
-    date.getFullYear() +
-    '年' +
-    (date.getMonth() + 1) +
-    '月' +
-    date.getDate() +
-    '日' +
-    (WEEKDAYS[day] ?? '星期?') +
-    ' ' +
+    'It is ' +
     pad2(hour) +
     ':' +
     pad2(date.getMinutes()) +
-    '，' +
+    ' on ' +
+    (WEEKDAYS[day] ?? 'weekday?') +
+    ', ' +
+    MONTHS[date.getMonth()] +
+    ' ' +
+    date.getDate() +
+    ', ' +
+    date.getFullYear() +
+    ' (' +
     timeSlotOf(hour) +
-    '，' +
-    dayKindOf(day) +
-    (holiday ? '，' + holiday : '') +
+    '), ' +
+    (kind === 'weekend' ? 'a weekend' : 'a weekday') +
+    '. ' +
+    (holiday ? holiday + '. ' : '') +
     weather +
-    '。这只是背景，不必刻意报时，也别句句都提节日' +
-    (env === undefined ? '' : '或天气') +
-    '——多数时候正常说话就好，真贴切时才顺口带一句。'
+    'This is only background: no need to announce the time, and do not bring up holidays' +
+    (env === undefined ? '' : ' or the weather') +
+    ' in every sentence - most of the time just talk normally, and mention one only when it genuinely fits.'
   );
 }
 
@@ -234,11 +244,15 @@ export function timeContextOf(date: Date, env?: TimeContextEnv): string {
 export function historyStampOf(ts: number, now: Date): string {
   const at = new Date(ts);
   if (Number.isNaN(at.getTime()) || Number.isNaN(now.getTime())) return '';
-  const date =
-    (at.getFullYear() === now.getFullYear() ? '' : at.getFullYear() + '年') +
-    (at.getMonth() + 1) +
-    '月' +
-    at.getDate() +
-    '日';
-  return date + ' ' + pad2(at.getHours()) + ':' + pad2(at.getMinutes());
+  return (
+    at.getFullYear() +
+    '-' +
+    pad2(at.getMonth() + 1) +
+    '-' +
+    pad2(at.getDate()) +
+    ' ' +
+    pad2(at.getHours()) +
+    ':' +
+    pad2(at.getMinutes())
+  );
 }

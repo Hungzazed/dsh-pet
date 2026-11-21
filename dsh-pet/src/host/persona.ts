@@ -17,7 +17,7 @@ import { timeContextOf, type TimeContextEnv } from './time-context.ts';
  * 标在 assistant 上时模型会照抄成自己的说话格式（出现过回复以 `[11:54]` 开头）。
  */
 const HISTORY_TIMES_LINE =
-  '[History] In the conversation log, each message from the user is prefixed with a [MM-DD HH:mm] timestamp — that is the moment when the message was said. It is only a timestamp in the conversation log, not the format of your reply. When judging "how long ago" something was or "how many days apart" two things are, convert using it, and do not treat a message from long ago as if it had just been said. Your reply starts directly with the text — do not write a time and do not add a bracketed prefix.';
+  '[History] In the conversation log, each message from the user is prefixed with a [YYYY-MM-DD HH:mm] timestamp — that is the moment when the message was said. It is only a timestamp in the conversation log, not the format of your reply. When judging "how long ago" something was or "how many days apart" two things are, convert using it, and do not treat a message from long ago as if it had just been said. Your reply starts directly with the text — do not write a time and do not add a bracketed prefix.';
 
 /**
  * 某宠物最终生效的人设正文（不含名字与时间）：实例 whisperPrompt → 条目 whisperPrompt → 空串。
