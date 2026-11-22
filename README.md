@@ -2,333 +2,342 @@
 
 <p align="center">
   <a href="https://www.npmjs.com/package/dsh-pet"><img alt="npm version" src="https://img.shields.io/npm/v/dsh-pet?label=npm&color=blue"></a>
-  <a href="https://www.npmjs.com/package/dsh-pet"><img alt="npm monthly downloads" src="https://img.shields.io/npm/dm/dsh-pet?label=%E6%9C%88%E4%B8%8B%E8%BD%BD&color=brightgreen"></a>
-  <a href="https://www.npmjs.com/package/dsh-pet"><img alt="total downloads" src="https://img.shields.io/npm/dt/dsh-pet?label=%E6%80%BB%E4%B8%8B%E8%BD%BD&color=success"></a>
-  <a href="https://github.com/PC2005-cloud/dsh-pet/releases"><img alt="release downloads" src="https://img.shields.io/github/downloads/PC2005-cloud/dsh-pet/total?label=Release%20%E4%B8%8B%E8%BD%BD&color=5C6BC0"></a>
-  <a href="https://github.com/PC2005-cloud/dsh-pet"><img alt="stars" src="https://img.shields.io/github/stars/PC2005-cloud/dsh-pet?style=social"></a>
-  <a href="https://github.com/PC2005-cloud/dsh-pet/blob/main/LICENSE"><img alt="license" src="https://img.shields.io/github/license/PC2005-cloud/dsh-pet?color=orange"></a>
+  <a href="https://www.npmjs.com/package/dsh-pet"><img alt="npm monthly downloads" src="https://img.shields.io/npm/dm/dsh-pet?label=monthly%20downloads&color=brightgreen"></a>
+  <a href="https://www.npmjs.com/package/dsh-pet"><img alt="npm total downloads" src="https://img.shields.io/npm/dt/dsh-pet?label=total%20downloads&color=success"></a>
+  <a href="https://github.com/hametovbr/dsh-pet"><img alt="stars" src="https://img.shields.io/github/stars/hametovbr/dsh-pet?style=social"></a>
+  <a href="https://github.com/hametovbr/dsh-pet/blob/main/LICENSE"><img alt="license" src="https://img.shields.io/github/license/hametovbr/dsh-pet?color=orange"></a>
   <a href="https://awesome-dsh-plugin.com"><img alt="awesome dsh plugin" src="https://awesome-dsh-plugin.com/badge.svg"></a>
-  <a href="https://github.com/PC2005-cloud/dsh-pet"><img alt="repo size" src="https://img.shields.io/github/repo-size/PC2005-cloud/dsh-pet"></a>
-  <a href="https://github.com/PC2005-cloud/dsh-pet/issues"><img alt="issues" src="https://img.shields.io/github/issues/PC2005-cloud/dsh-pet"></a>
   <img alt="platform" src="https://img.shields.io/badge/platform-DeepSeek%20Harness%20Web-8A2BE2">
   <img alt="assets" src="https://img.shields.io/badge/assets-dynamic%20animations-ff69b4">
-  <a href="https://atomgit.com/PC2005-cloud/dsh-pet"><img alt="AtomGit" src="https://img.shields.io/badge/AtomGit-%E9%95%9C%E5%83%8F%E5%90%8C%E6%AD%A5-4B8BBE"></a>
-  <a href="https://pet.lxpavilion.top"><img alt="数据看板" src="https://img.shields.io/badge/%E6%95%B0%E6%8D%AE%E7%9C%8B%E6%9D%BF-pet.lxpavilion.top-4C8DF6"></a>
 </p>
 
-一只住在 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 里的桌面宠物：待机呼吸、随机动作（打瞌睡、玩魔方、吃火锅……）、左右转向、屏幕漫游、点击 Q 弹、拖拽甩抛反弹、右键菜单点播——一百余个透明动画随时无缝衔接；还能跟随 DSH 会话事件切换工作状态动画、按档位播放余额动画 + 头顶气泡、碎碎念与对话聊天、窗口失焦时弹系统通知。可多开同屏，能脱离浏览器住上**桌面**（透明置顶小窗），也能自己添加**全新宠物种类**（pet pack）。
+**English-localization fork** of [PC2005-cloud/dsh-pet](https://github.com/PC2005-cloud/dsh-pet). The plugin's visible runtime interface is English; the character, artwork, asset pipeline and prompt recipes come from the upstream project and remain its authors' work.
 
-这不是一个普通插件，而是**完整的三件套项目**：
+A desktop pet that lives inside [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness): idle breathing, random actions (dozing off, solving a Rubik's cube, eating hotpot…), turning left and right, roaming the screen, squishy click reactions, drag-and-throw with bounce and rebound, right-click menu playback — more than a hundred transparent animations that blend seamlessly at any moment. It follows DSH session events to switch its work-status animation, plays a balance animation for the current tier with a speech bubble overhead, mutters to itself and chats with you, and raises a system notification when the window loses focus. Several pets can share one screen, it can leave the browser and live on the **desktop** (a transparent always-on-top window), and you can add **brand-new pet species** (pet packs).
+
+This is not an ordinary plugin but a **complete three-part project**:
 
 ```
-① 提示词（配方）    →  ② 素材生成链（引擎）  →  ③ 插件（成品）
-AI 生成动画的配方     源视频 → 透明动画的管线    运行在 DSH 里的宠物
+① Prompt recipes          →  ② Asset pipeline                  →  ③ Plugin
+   AI animation recipes        source video → transparent            the pet running inside DSH
+                                animation pipeline
 ```
 
-任何人 clone 本仓库，都可以**从零生成自己的桌面宠物**——换角色、换动作、换风格，全流程可复现。
+Anyone who clones this repository can **generate their own desktop pet from scratch** — swap the character, the moves, the style; the whole pipeline is reproducible.
+
+## Localization status
+
+The plugin's visible runtime interface is already English: menus, speech bubbles, tool messages, the settings page, and the default voice (`en-US-AriaNeural`). The comic memes and the animation identifiers keep their original names, because those names are configuration keys and asset file names.
+
+The rest of this repository's documentation is **still Chinese**: [INSTALL.md](INSTALL.md), [FEATURES.md](FEATURES.md), [CONFIG.md](CONFIG.md), [API.md](API.md), [CORDIS.md](CORDIS.md), [CORDIS-API.md](CORDIS-API.md), [MAKE-YOUR-OWN-PET.md](MAKE-YOUR-OWN-PET.md), the OpenAPI spec and the recipes under `prompts/`. This README is the English entry point for now; translating those documents is deferred work, so the Chinese links in the sections below are intentional. The localization process itself and its acceptance evidence are documented in `docs/english-rework/` in Russian — internal fork documents rather than user documentation.
+
+The npm package `dsh-pet@0.4.9` matches upstream, so what npm installs today is the Chinese build. The English localization is currently installed from **this repository** with a source install (see [INSTALL.md](INSTALL.md), still Chinese); publishing the English build to npm is a separate step.
 
 ---
 
-## 快速开始（安装插件）
+## Quick start (install the plugin)
 
-两种装法，任选一种：
+Two ways to install it, pick either:
 
-- **图形化（桌面应用内）**：打开「插件管理」页，在安装框里填 `dsh-pet`，不用开终端。
-- **命令行**：`dsh plugin --profile <profile> add dsh-pet`，`<profile>` 按你在用的界面填——`dsh web` 填 `web`，桌面应用（Electron 版）填 `desktop`。
+- **Graphical (inside the desktop app)**: open the Plugins page and type `dsh-pet` into the install box — no terminal needed.
+- **Command line**: `dsh plugin --profile <profile> add dsh-pet`, with `<profile>` matching the UI you use — `web` for `dsh web`, `desktop` for the desktop (Electron) app.
 
-**不想装 DSH？** Release 里提供 Windows x64 绿色包 `dsh-pet-win-x64.zip`，解压后双击 `dsh-pet.exe` 就能跑——那是独立模式，不依赖 DSH 环境。
+> The command above installs from npm, which is the upstream Chinese build. For the English interface, install from this repository's source: clone it, run `npm run build` inside the plugin directory, then `dsh plugin --profile <profile> add file:/path/to/dsh-pet/dsh-pet`; the full walkthrough is in [INSTALL.md](INSTALL.md).
 
-装完**重开 DSH**（`dsh web` 用户则重启 `dsh web`）才生效——运行中的进程持有内存里的旧插件。宠物默认落在界面右上角。
+**Don't want DSH?** Standalone mode needs no DSH at all: package the portable Windows x64 bundle from source with `npm run dist` and double-click the `dsh-pet.exe` in `dist-app/win-unpacked/`, or install the CLI globally from npm (`npm install -g dsh-pet`, then run `dsh-pet-standalone`). Both paths are in [INSTALL.md](INSTALL.md) — remember that the npm package is the upstream build, so the English UI comes from the source install described above.
 
-前置要求、源码安装、独立模式的用法与打包、Electron 首次下载、装完会看到什么，见 **[INSTALL.md](INSTALL.md)**。
+Restart DSH after installing (restart `dsh web` if that is what you use) for it to take effect — a running process keeps the old plugin in memory. The pet lands in the top-right corner of the interface by default.
 
-## 插件功能
+Prerequisites, the source install, standalone mode usage and packaging, the first Electron download, and what you will see after installing are all covered in **[INSTALL.md](INSTALL.md)** (Chinese for now).
 
-只做桌宠本身，不碰 DSH 内核；能力就下面这些。
+## Plugin features
 
-- **100+ 段动画资产**：待机、走动漫游、玩耍、工作、对话等全部表现都由视频动画驱动，按权重首尾相接，也可换成自己的素材。
-- **多开与种类**：同时养多只，各自大小与位置；也能自定义宠物种类（pet pack），一类一套动画与素材。
-- **三种运行形态**：DSH web 的浏览器 overlay、DSH 桌面应用的透明置顶窗、完全不依赖 DSH 的独立模式。
-- **交互与物理**：点击回应、拖拽甩抛、双击弹弓、宠物互撞，同一套物理与 Q 弹挤压手感，参数可调。
-- **手机与触屏**：触屏直接拖拽甩抛，与鼠标共用同一套物理与挤压手感；手机浏览器上还能倾斜手机改变重力方向、摇一摇把宠物甩出去、碰撞时震动反馈——三项可在设置页「移动端效果」里分别关闭。传感器只在 HTTPS 或 localhost 下可用（iOS 还需点一次授权），iOS 与桌面端没有振动 API，会自动跳过。
-- **碎碎念与对话**：按周期自动说一句，也能随时聊；记忆持久化、可配图、可念出来。
-- **语音（说与听）**：对话回复与手动碎碎念会念出来，音色、音量与总开关可配；按住对话窗的话筒说一句，录音转成文字直接填进输入框。
-- **余额展示**：内置常见服务商的余额 / 额度查询，按剩余额度分档播动画并弹气泡；也可以登记自己的服务商。
-- **天气与位置**：右键「查询天气」查一次当前城市与天气（按出口 IP 粗定位 + Open-Meteo，免 key、免配置），气泡里给气温、体感、湿度、风速和对应天气图标；这份环境也会作为背景交给对话。
-- **工作状态联动**：跟随 DSH 会话状态切档位动画，并在头顶常驻一句话。
-- **待办事项**：一句话加可选到期时间，清单挂在宠物头顶；越临近到期提醒越密，由宠物说出来。
-- **睡觉**：右键「睡觉」让它睡下，点一下或右键「起来」叫醒；睡着时完全安静——随机动作、碎碎念、余额、待办与工作状态都不打扰，还会按周期说梦话；睡姿可用 `animations.sleep` 配多套（蹲着睡、趴着睡…）。
-- **系统通知**：任务完成或需要确认时弹系统通知，点一下回到对应会话。
-- **右键菜单**：换动画、开聊、回到原位、打开 DSH / 网站、重载配置。
-- **其他**：点击音效、系统托盘与每只宠物的显示位置。
+It only does the desktop pet itself and never touches the DSH kernel; these are all the capabilities it has.
 
-各项能力的详细说明见 **[FEATURES.md](FEATURES.md)**；配置（大小 / 位置 / 多开 / 物理 / 模型 / 人设 / 宠物种类）见 **[CONFIG.md](CONFIG.md)**。
+- **100+ animation assets**: idle, walking and roaming, play, work, conversation and every other expression are driven by video animations, chained head-to-tail by weight, and you can swap in your own assets.
+- **Multiple pets and species**: raise several at once, each with its own size and position; define custom pet species (pet packs), each species bringing its own set of animations and assets.
+- **Three runtime forms**: the browser overlay inside DSH web, the transparent always-on-top window of the DSH desktop app, and a standalone mode that does not need DSH at all.
+- **Interaction and physics**: click reactions, drag-and-throw, double-click slingshot, pets colliding with each other — one physics and squash-and-stretch feel for all of them, and the parameters are tunable.
+- **Phones and touchscreens**: drag and throw with a finger, sharing the same physics and squash feel as the mouse; in a mobile browser you can also tilt the phone to change the gravity direction, shake it to fling the pet away, and get haptic feedback on collisions — each of the three can be turned off separately under "mobile effects" on the settings page. The sensors only work over HTTPS or localhost (iOS also asks for permission once), and iOS and desktop have no vibration API, so that part is skipped automatically.
+- **Muttering and chat**: says something automatically on a timer and you can chat any time; memory persists, images are supported, and replies can be read aloud.
+- **Voice (speaking and listening)**: chat replies and manual mutters are spoken; voice, volume and a master switch are configurable; hold the microphone in the chat window to speak a sentence and have the recording transcribed straight into the input box.
+- **Balance display**: built-in balance/quota queries for common providers, an animation tier chosen by remaining credit plus a speech bubble; you can also register your own provider.
+- **Weather and location**: right-click "Check weather" to look up the current city and conditions once (coarse IP geolocation + Open-Meteo, no key, no setup); the bubble shows temperature, feels-like, humidity, wind speed and a matching weather icon, and this environment also becomes context for the chat.
+- **Work-status sync**: switches tier animations following DSH session state and keeps a line of text above its head.
+- **Todos**: one sentence plus an optional due time; the list hangs above the pet's head, reminding more often as deadlines approach, and the pet speaks the reminders out loud.
+- **Sleep**: right-click "Sleep" to put it to bed, click once or right-click "Wake up" to wake it; while asleep it is completely quiet — random actions, muttering, balance, todos and work status all leave it alone — and it talks in its sleep on a timer; sleep poses can be configured via `animations.sleep` (curled up, lying down, …).
+- **System notifications**: a system notification when a task completes or needs confirmation; click it to jump back to the corresponding session.
+- **Right-click menu**: switch animations, start a chat, return to the start position, open DSH / the website, reload the configuration.
+- **Other**: click sound effects, a system tray icon, and a display position per pet.
 
-## 🔌 对外接口（供其他插件调用）
+Details for every capability are in **[FEATURES.md](FEATURES.md)**; configuration (size / position / multiple pets / physics / model / persona / pet species) is in **[CONFIG.md](CONFIG.md)**.
 
-桌宠不只自己玩，也**对外开放两条调用通道**，让别的插件或脚本能驱动它、读它的状态。
+## 🔌 External API (for other plugins)
 
-- **能做什么**：让它说一句指定的话、播一段指定动画、与它对话；读它当前说的话、工作状态、系统通知、余额，以及所在城市与当前天气
-- **为什么开放**：桌宠不该只是个摆设——比如一个「女仆」插件巡检验完想说句话，就能让桌宠当它的「实体」开口；也方便任何人基于它做二次开发
-- **通道一 · HTTP**：挂在 DSH 自己的 Web 服务上（前缀 `/dsh-pet-7340`，只监听本机、无鉴权），跨进程、脚本可直接调。动作类接口只回 `{ok}`，数据统一从 `GET /state` 读
-- **通道二 · Cordis 服务**：客户端半侧在 DSH web 页面内注册，同页客户端插件用 `ctx.get('petApi7340')` 直接取，零网络、零端口；只在该页面实例内有效，方法与返回见 [`CORDIS.md`](CORDIS.md)
+The pet does not only play by itself: it **opens two call channels** so other plugins or scripts can drive it and read its state.
 
-相关文件（HTTP 与 Cordis 各一套）：
+- **What it can do**: make it say a given sentence, play a given animation, chat with it; read what it is currently saying, its work status, system notifications and balance, plus its city and the current weather
+- **Why it is open**: a desktop pet should not be a mere ornament — a "maid" plugin that has just finished an inspection, for example, can let the pet be its physical voice; and it makes building on top of the pet easy for anyone
+- **Channel one · HTTP**: mounted on DSH's own web server (prefix `/dsh-pet-7340`, loopback-only, no authentication), callable across processes and from scripts. Action endpoints reply with `{ok}` only; read data from `GET /state`
+- **Channel two · Cordis service**: the client half registers inside the DSH web page, and same-page client plugins get it directly with `ctx.get('petApi7340')` — no network, no port; it is valid only within that page instance, and its methods and returns are in [`CORDIS.md`](CORDIS.md)
 
-- [`API.md`](API.md) —— HTTP 接口一览（每个接口一句话，功能预览）
-- [`openapi.yaml`](openapi.yaml) —— 完整契约（OpenAPI 3.1，可直接导入 Swagger UI / Postman）
-- [`CORDIS-API.md`](CORDIS-API.md) —— Cordis 服务一览（每个成员一句话，功能预览）
-- [`CORDIS.md`](CORDIS.md) —— 对外 Cordis 服务（客户端半侧，页面内 `ctx.get('petApi7340')`，不走网络）
-- [`tools/api-tester.html`](tools/api-tester.html) —— HTTP 侧示例：桌宠控制台，扮演第三方消费方，可直观试用（`node tools/api-tester.cjs` 启动）
-- [`tools/cordis-probe`](tools/cordis-probe/README.md) —— Cordis 侧示例：扮演同页客户端插件，用 `ctx.get()` 消费服务
+The related files (one set for HTTP, one for Cordis):
 
-## 兼容性
+- [`API.md`](API.md) — HTTP endpoint overview (one line per endpoint, a feature preview)
+- [`openapi.yaml`](openapi.yaml) — the full contract (OpenAPI 3.1, imports straight into Swagger UI / Postman)
+- [`CORDIS-API.md`](CORDIS-API.md) — Cordis service overview (one line per member, a feature preview)
+- [`CORDIS.md`](CORDIS.md) — the exported Cordis service (client half, `ctx.get('petApi7340')` inside the page, no network)
+- [`tools/api-tester.html`](tools/api-tester.html) — HTTP-side example: a pet console playing the third-party consumer, easy to try by hand (`node tools/api-tester.cjs` starts it)
+- [`tools/cordis-probe`](tools/cordis-probe/README.md) — Cordis-side example: plays a same-page client plugin consuming the service through `ctx.get()`
 
-- **操作系统**：Windows / Linux / macOS 三端均可运行——浏览器 overlay 与桌面模式（Electron 透明置顶窗）行为完全一致；Electron 按平台自动探测/下载（`electron.exe` / `Electron.app` / linux 单文件），无需手动安装
-- **无头 / 无桌面环境**：支持 Linux headless 等无图形会话——桌面模式自动检测显示环境（Linux 无 `DISPLAY` / `WAYLAND_DISPLAY` 时判定无显示、跳过桌面窗口，仅日志告警），浏览器 overlay 不受影响
-- **浏览器**：浏览器 overlay 兼容 **Chromium 内核（Chrome / Edge 等）与 Firefox**——透明动画依赖 VP9-Alpha webm，三者均已实测透明确认；**不支持 Safari**（macOS 不认 webm alpha，透明渲染为黑底）——macOS 用 `.mov` 素材（GitHub Release `assets-mov`），下载放入即可（见「②.5 Safari/HEVC 兼容素材」）
-- **多显示器**：支持多屏环境——跨屏漫游/抛掷以各屏工作区为界，异构缩放（各屏 DPI 不同）、任务栏条带、屏幕之间空洞均正确判定（横屏 / 竖屏 / 上下叠放皆可）；设置页「锁定在当前屏幕」可让宠物（抛掷与漫游）只在当前所在那块屏内活动
+Those reference documents are **still Chinese** for now (see [Localization status](#localization-status)); the contracts and the `/dsh-pet-7340` prefix are unchanged.
 
-## 运行效果
+## Compatibility
 
-宠物实际运行在 DSH Web 界面中的样子：
+- **Operating systems**: Windows / Linux / macOS all work — the browser overlay and desktop mode (Electron transparent always-on-top window) behave identically, and Electron is detected or downloaded per platform automatically (`electron.exe` / `Electron.app` / a single Linux binary), with no manual install.
+- **Headless / no desktop environment**: Linux headless and other graphical-session-less setups are supported — desktop mode detects the display environment (on Linux, no `DISPLAY` / `WAYLAND_DISPLAY` means no display, so the desktop window is skipped with a log warning), while the browser overlay is unaffected.
+- **Browsers**: the browser overlay supports **Chromium-based browsers (Chrome / Edge and others) and Firefox** — transparent animation relies on VP9-Alpha webm and is verified transparent in all three; **Safari is not supported** (macOS does not handle webm alpha and renders the transparency as black) — on macOS use the `.mov` assets (the `assets-mov` release bundle from the upstream project) and drop them in (see section "②.5 Safari/HEVC-compatible assets" in [MAKE-YOUR-OWN-PET.md](MAKE-YOUR-OWN-PET.md)).
+- **Multi-monitor**: multi-screen setups are supported — roaming and throwing are bounded by each screen's work area, and heterogeneous scaling (different DPI per screen), taskbar strips and gaps between screens are all detected correctly (landscape / portrait / stacked). "Lock to the current screen" on the settings page keeps the pet (throwing and roaming) on the screen it is currently on.
 
-<p>
-  <img src="assets/screenshots/dsh-pet-running-1.png" width="380" alt="dsh-pet 运行效果 1" title="dsh-pet 运行效果 1">
-  <img src="assets/screenshots/dsh-pet-running-2.png" width="380" alt="dsh-pet 运行效果 2" title="dsh-pet 运行效果 2">
-  <img src="assets/screenshots/dsh-pet-running-3.png" width="380" alt="dsh-pet 运行效果 3" title="dsh-pet 运行效果 3">
-  <img src="assets/screenshots/dsh-pet-running-4.png" width="380" alt="dsh-pet 运行效果 4" title="dsh-pet 运行效果 4">
-  <img src="assets/screenshots/dsh-pet-running-5.png" width="380" alt="dsh-pet 运行效果 5" title="dsh-pet 运行效果 5">
-  <img src="assets/screenshots/dsh-pet-running-6.png" width="380" alt="dsh-pet 运行效果 6" title="dsh-pet 运行效果 6">
-  <img src="assets/screenshots/dsh-pet-running-7.png" width="380" alt="dsh-pet 运行效果 7" title="dsh-pet 运行效果 7">
-  <img src="assets/screenshots/dsh-pet-running-8.png" width="380" alt="dsh-pet 运行效果 8" title="dsh-pet 运行效果 8">
-</p>
+## Screenshots
 
-## 效果预览
-
-全部动画（640×360，插件实际播放用的资源）——GIF 预览存放于仓库 `dsh-pet/assets/preview/`（raw 直链渲染，文件名采用拼音便于跨平台）；完整透明视频见插件包 `dsh-pet/assets/webm/`（VP9-alpha，唯一发布格式）：
-
-**待机 / 转向**
+What the pet looks like running in the DSH web interface, with the English UI:
 
 <p>
-  <img src="dsh-pet/assets/preview/daiji-huxi-xiuxian.gif" width="160" alt="待机呼吸休闲" title="待机呼吸休闲">
-  <img src="dsh-pet/assets/preview/dongzhangxiwang.gif" width="160" alt="东张西望" title="东张西望">
+  <img src="docs/english-rework/acceptance/web-overlay.png" width="380" alt="dsh-pet in the DSH web overlay" title="dsh-pet in the DSH web overlay">
+  <img src="docs/english-rework/acceptance/web-overlay-submenu.png" width="380" alt="dsh-pet context menu in the web overlay" title="dsh-pet context menu in the web overlay">
+  <img src="docs/english-rework/acceptance/settings-chat.png" width="380" alt="dsh-pet settings page: chat" title="dsh-pet settings page: chat">
+  <img src="docs/english-rework/acceptance/settings-config.png" width="380" alt="dsh-pet settings page: configuration" title="dsh-pet settings page: configuration">
 </p>
 
-**移动**
+## Animation previews
+
+Every animation (640×360, the very assets the plugin plays) — the GIF previews live in `dsh-pet/assets/preview/` in the repository (referenced directly from the repository; the file names are pinyin to stay cross-platform), and the full transparent videos are in the plugin package under `dsh-pet/assets/webm/` (VP9-alpha, the only published format):
+
+**Idle / turn**
 
 <p>
-  <img src="dsh-pet/assets/preview/pangxie-zoulu.gif" width="160" alt="螃蟹走路" title="螃蟹走路">
-  <img src="dsh-pet/assets/preview/yuandi-piaofu-tabu.gif" width="160" alt="原地漂浮踏步" title="原地漂浮踏步">
-  <img src="dsh-pet/assets/preview/yuandi-zuozhuan-benpao.gif" width="160" alt="原地左转奔跑" title="原地左转奔跑">
+  <img src="dsh-pet/assets/preview/daiji-huxi-xiuxian.gif" width="160" alt="Idle breathing" title="Idle breathing">
+  <img src="dsh-pet/assets/preview/dongzhangxiwang.gif" width="160" alt="Looking around" title="Looking around">
 </p>
 
-**小动作**
+**Movement**
 
 <p>
-  <img src="dsh-pet/assets/preview/youxian-hengga.gif" width="160" alt="悠闲哼歌" title="悠闲哼歌">
-  <img src="dsh-pet/assets/preview/chaoda-shenlanyao.gif" width="160" alt="超大伸懒腰" title="超大伸懒腰">
-  <img src="dsh-pet/assets/preview/yuandi-qiaoji-zhuomian-hudong.gif" width="160" alt="原地敲击桌面互动" title="原地敲击桌面互动">
-  <img src="dsh-pet/assets/preview/yuandi-zhongli-xiadun-yasuo.gif" width="160" alt="原地重力下蹲压缩" title="原地重力下蹲压缩">
-  <img src="dsh-pet/assets/preview/haqian-liantian.gif" width="160" alt="哈欠连天" title="哈欠连天">
-  <img src="dsh-pet/assets/preview/yuandi-xiaoqi-chenmian.gif" width="160" alt="原地小憩沉眠" title="原地小憩沉眠">
-  <img src="dsh-pet/assets/preview/nvpu-quxi-liyi.gif" width="160" alt="女仆屈膝礼仪" title="女仆屈膝礼仪">
-  <img src="dsh-pet/assets/preview/beixiayitiao-zhamao.gif" width="160" alt="被吓一跳" title="被吓一跳">
-  <img src="dsh-pet/assets/preview/xiaofudu-yuandi-360du-xuanzhuan-zhanshi.gif" width="160" alt="小幅度原地360度旋转展示" title="小幅度原地360度旋转展示">
-  <img src="dsh-pet/assets/preview/touchi-lingshi-bei-zhuazhu.gif" width="160" alt="偷吃零食被抓住" title="偷吃零食被抓住">
-  <img src="dsh-pet/assets/preview/yong-jingyu-weiba-paidadi.gif" width="160" alt="用鲸鱼尾巴拍打地面" title="用鲸鱼尾巴拍打地面">
-  <img src="dsh-pet/assets/preview/da-keshui-bei-jingxing.gif" width="160" alt="打瞌睡被惊醒" title="打瞌睡被惊醒">
-  <img src="dsh-pet/assets/preview/zhao-jingzi.gif" width="160" alt="照镜子" title="照镜子">
-  <img src="dsh-pet/assets/preview/zhengti-huanzhuang-shise.gif" width="160" alt="整体换装试色" title="整体换装试色">
-  <img src="dsh-pet/assets/preview/qingkuai-jilu.gif" width="160" alt="轻快记录" title="轻快记录">
-  <img src="dsh-pet/assets/preview/xie-daima.gif" width="160" alt="写代码" title="写代码">
-  <img src="dsh-pet/assets/preview/yaoshan-naliang.gif" width="160" alt="摇扇纳凉" title="摇扇纳凉">
-  <img src="dsh-pet/assets/preview/chenjian-shuaya.gif" width="160" alt="晨间刷牙" title="晨间刷牙">
+  <img src="dsh-pet/assets/preview/pangxie-zoulu.gif" width="160" alt="Crab walk" title="Crab walk">
+  <img src="dsh-pet/assets/preview/yuandi-piaofu-tabu.gif" width="160" alt="Floating march" title="Floating march">
+  <img src="dsh-pet/assets/preview/yuandi-zuozhuan-benpao.gif" width="160" alt="Turn and run" title="Turn and run">
 </p>
 
-**玩耍**
+**Small actions**
 
 <p>
-  <img src="dsh-pet/assets/preview/yuandi-zhuanxin-wan-mofang.gif" width="160" alt="原地专心玩魔方" title="原地专心玩魔方">
-  <img src="dsh-pet/assets/preview/yuandi-dunxia-wan-wanju-qiche.gif" width="160" alt="原地蹲下玩玩具汽车" title="原地蹲下玩玩具汽车">
-  <img src="dsh-pet/assets/preview/jingyu-tu-paopao-texiao.gif" width="160" alt="鲸鱼吐泡泡特效" title="鲸鱼吐泡泡特效">
-  <img src="dsh-pet/assets/preview/yuandi-tiaoyue-zhuasui-touding-wupin.gif" width="160" alt="原地跳跃抓碎头顶物品" title="原地跳跃抓碎头顶物品">
-  <img src="dsh-pet/assets/preview/wan-youxi-qijibaituai.gif" width="160" alt="玩游戏气急败坏" title="玩游戏气急败坏">
-  <img src="dsh-pet/assets/preview/wan-shuiqiang.gif" width="160" alt="玩水枪" title="玩水枪">
-  <img src="dsh-pet/assets/preview/xiaotiqin-yanzou.gif" width="160" alt="小提琴演奏" title="小提琴演奏">
-  <img src="dsh-pet/assets/preview/lanjing-xianshi.gif" width="160" alt="蓝鲸现世" title="蓝鲸现世">
-  <img src="dsh-pet/assets/preview/youya-nvpuwu.gif" width="160" alt="优雅女仆舞" title="优雅女仆舞">
-  <img src="dsh-pet/assets/preview/qingkuai-yaobaiwu.gif" width="160" alt="轻快摇摆舞" title="轻快摇摆舞">
-  <img src="dsh-pet/assets/preview/keai-zhaiwu.gif" width="160" alt="可爱宅舞" title="可爱宅舞">
-  <img src="dsh-pet/assets/preview/chui-qiqiu.gif" width="160" alt="吹气球" title="吹气球">
-  <img src="dsh-pet/assets/preview/dongwu-huanrao.gif" width="160" alt="动物环绕" title="动物环绕">
-  <img src="dsh-pet/assets/preview/fang-fengzheng.gif" width="160" alt="放风筝" title="放风筝">
-  <img src="dsh-pet/assets/preview/chai-liwu.gif" width="160" alt="拆礼物" title="拆礼物">
-  <img src="dsh-pet/assets/preview/bian-gezi.gif" width="160" alt="变鸽子" title="变鸽子">
-  <img src="dsh-pet/assets/preview/puke-moshu.gif" width="160" alt="扑克魔术" title="扑克魔术">
-  <img src="dsh-pet/assets/preview/chou-tuoluo.gif" width="160" alt="抽陀螺" title="抽陀螺">
-  <img src="dsh-pet/assets/preview/chui-dizi.gif" width="160" alt="吹笛子" title="吹笛子">
-  <img src="dsh-pet/assets/preview/hudie-mifeng-huanrao-touding-kaihua.gif" width="160" alt="蝴蝶蜜蜂环绕头顶开花" title="蝴蝶蜜蜂环绕头顶开花">
-  <img src="dsh-pet/assets/preview/lu-mao.gif" width="160" alt="撸猫" title="撸猫">
-  <img src="dsh-pet/assets/preview/pingkong-shenghua.gif" width="160" alt="凭空生花" title="凭空生花">
-  <img src="dsh-pet/assets/preview/qi-muma.gif" width="160" alt="骑木马" title="骑木马">
-  <img src="dsh-pet/assets/preview/sanqiu-paojie.gif" width="160" alt="三球抛接" title="三球抛接">
-  <img src="dsh-pet/assets/preview/ti-jianzi.gif" width="160" alt="踢毽子" title="踢毽子">
-  <img src="dsh-pet/assets/preview/xiawuziqi.gif" width="160" alt="下五子棋" title="下五子棋">
-  <img src="dsh-pet/assets/preview/dangqiuqian.gif" width="160" alt="荡秋千" title="荡秋千">
+  <img src="dsh-pet/assets/preview/youxian-hengga.gif" width="160" alt="Humming a tune" title="Humming a tune">
+  <img src="dsh-pet/assets/preview/chaoda-shenlanyao.gif" width="160" alt="Big stretch" title="Big stretch">
+  <img src="dsh-pet/assets/preview/yuandi-qiaoji-zhuomian-hudong.gif" width="160" alt="Desk tapping" title="Desk tapping">
+  <img src="dsh-pet/assets/preview/yuandi-zhongli-xiadun-yasuo.gif" width="160" alt="Gravity crouch" title="Gravity crouch">
+  <img src="dsh-pet/assets/preview/haqian-liantian.gif" width="160" alt="Big yawn" title="Big yawn">
+  <img src="dsh-pet/assets/preview/yuandi-xiaoqi-chenmian.gif" width="160" alt="Nap in place" title="Nap in place">
+  <img src="dsh-pet/assets/preview/nvpu-quxi-liyi.gif" width="160" alt="Maid curtsy" title="Maid curtsy">
+  <img src="dsh-pet/assets/preview/beixiayitiao-zhamao.gif" width="160" alt="Getting startled" title="Getting startled">
+  <img src="dsh-pet/assets/preview/xiaofudu-yuandi-360du-xuanzhuan-zhanshi.gif" width="160" alt="360 spin showcase" title="360 spin showcase">
+  <img src="dsh-pet/assets/preview/touchi-lingshi-bei-zhuazhu.gif" width="160" alt="Caught snacking" title="Caught snacking">
+  <img src="dsh-pet/assets/preview/yong-jingyu-weiba-paidadi.gif" width="160" alt="Tail slapping floor" title="Tail slapping floor">
+  <img src="dsh-pet/assets/preview/da-keshui-bei-jingxing.gif" width="160" alt="Startled awake" title="Startled awake">
+  <img src="dsh-pet/assets/preview/zhao-jingzi.gif" width="160" alt="Looking in the mirror" title="Looking in the mirror">
+  <img src="dsh-pet/assets/preview/zhengti-huanzhuang-shise.gif" width="160" alt="Outfit try-on" title="Outfit try-on">
+  <img src="dsh-pet/assets/preview/qingkuai-jilu.gif" width="160" alt="Quick note-taking" title="Quick note-taking">
+  <img src="dsh-pet/assets/preview/xie-daima.gif" width="160" alt="Writing code" title="Writing code">
+  <img src="dsh-pet/assets/preview/yaoshan-naliang.gif" width="160" alt="Fanning to cool" title="Fanning to cool">
+  <img src="dsh-pet/assets/preview/chenjian-shuaya.gif" width="160" alt="Brushing teeth" title="Brushing teeth">
 </p>
 
-**吃什么**
+**Play**
 
 <p>
-  <img src="dsh-pet/assets/preview/chi-baifan.gif" width="160" alt="吃白饭" title="吃白饭">
-  <img src="dsh-pet/assets/preview/dakou-chi-lingshi.gif" width="160" alt="大口吃零食" title="大口吃零食">
-  <img src="dsh-pet/assets/preview/chi-token.gif" width="160" alt="吃Token" title="吃Token">
-  <img src="dsh-pet/assets/preview/chi-zaocan.gif" width="160" alt="吃早餐" title="吃早餐">
-  <img src="dsh-pet/assets/preview/chi-wucan.gif" width="160" alt="吃午餐" title="吃午餐">
-  <img src="dsh-pet/assets/preview/chi-wancan.gif" width="160" alt="吃晚餐" title="吃晚餐">
-  <img src="dsh-pet/assets/preview/chi-bingqilin-ronghua.gif" width="160" alt="吃冰淇淋融化" title="吃冰淇淋融化">
-  <img src="dsh-pet/assets/preview/chi-dazhaxie.gif" width="160" alt="吃大闸蟹" title="吃大闸蟹">
-  <img src="dsh-pet/assets/preview/chi-tanghulu.gif" width="160" alt="吃糖葫芦" title="吃糖葫芦">
-  <img src="dsh-pet/assets/preview/chi-changshoumian.gif" width="160" alt="吃长寿面" title="吃长寿面">
-  <img src="dsh-pet/assets/preview/chi-xigua.gif" width="160" alt="吃西瓜" title="吃西瓜">
-  <img src="dsh-pet/assets/preview/shuan-huoguo.gif" width="160" alt="涮火锅" title="涮火锅">
+  <img src="dsh-pet/assets/preview/yuandi-zhuanxin-wan-mofang.gif" width="160" alt="Rubik cube solving" title="Rubik cube solving">
+  <img src="dsh-pet/assets/preview/yuandi-dunxia-wan-wanju-qiche.gif" width="160" alt="Toy car play" title="Toy car play">
+  <img src="dsh-pet/assets/preview/jingyu-tu-paopao-texiao.gif" width="160" alt="Bubble-blowing whale" title="Bubble-blowing whale">
+  <img src="dsh-pet/assets/preview/yuandi-tiaoyue-zhuasui-touding-wupin.gif" width="160" alt="Jump and grab" title="Jump and grab">
+  <img src="dsh-pet/assets/preview/wan-youxi-qijibaituai.gif" width="160" alt="Gamer rage" title="Gamer rage">
+  <img src="dsh-pet/assets/preview/wan-shuiqiang.gif" width="160" alt="Water gun fight" title="Water gun fight">
+  <img src="dsh-pet/assets/preview/xiaotiqin-yanzou.gif" width="160" alt="Playing violin" title="Playing violin">
+  <img src="dsh-pet/assets/preview/lanjing-xianshi.gif" width="160" alt="Blue whale appears" title="Blue whale appears">
+  <img src="dsh-pet/assets/preview/youya-nvpuwu.gif" width="160" alt="Elegant maid dance" title="Elegant maid dance">
+  <img src="dsh-pet/assets/preview/qingkuai-yaobaiwu.gif" width="160" alt="Bouncy sway dance" title="Bouncy sway dance">
+  <img src="dsh-pet/assets/preview/keai-zhaiwu.gif" width="160" alt="Cute otaku dance" title="Cute otaku dance">
+  <img src="dsh-pet/assets/preview/chui-qiqiu.gif" width="160" alt="Blowing a balloon" title="Blowing a balloon">
+  <img src="dsh-pet/assets/preview/dongwu-huanrao.gif" width="160" alt="Circling animals" title="Circling animals">
+  <img src="dsh-pet/assets/preview/fang-fengzheng.gif" width="160" alt="Flying a kite" title="Flying a kite">
+  <img src="dsh-pet/assets/preview/chai-liwu.gif" width="160" alt="Opening gifts" title="Opening gifts">
+  <img src="dsh-pet/assets/preview/bian-gezi.gif" width="160" alt="Dove transformation" title="Dove transformation">
+  <img src="dsh-pet/assets/preview/puke-moshu.gif" width="160" alt="Card trick" title="Card trick">
+  <img src="dsh-pet/assets/preview/chou-tuoluo.gif" width="160" alt="Spinning top" title="Spinning top">
+  <img src="dsh-pet/assets/preview/chui-dizi.gif" width="160" alt="Playing the flute" title="Playing the flute">
+  <img src="dsh-pet/assets/preview/hudie-mifeng-huanrao-touding-kaihua.gif" width="160" alt="Butterfly bloom halo" title="Butterfly bloom halo">
+  <img src="dsh-pet/assets/preview/lu-mao.gif" width="160" alt="Petting a cat" title="Petting a cat">
+  <img src="dsh-pet/assets/preview/pingkong-shenghua.gif" width="160" alt="Conjuring flowers" title="Conjuring flowers">
+  <img src="dsh-pet/assets/preview/qi-muma.gif" width="160" alt="Rocking horse" title="Rocking horse">
+  <img src="dsh-pet/assets/preview/sanqiu-paojie.gif" width="160" alt="Juggling balls" title="Juggling balls">
+  <img src="dsh-pet/assets/preview/ti-jianzi.gif" width="160" alt="Shuttlecock kicks" title="Shuttlecock kicks">
+  <img src="dsh-pet/assets/preview/xiawuziqi.gif" width="160" alt="Gomoku match" title="Gomoku match">
+  <img src="dsh-pet/assets/preview/dangqiuqian.gif" width="160" alt="On the swing" title="On the swing">
 </p>
 
-**时节**
+**Food**
 
 <p>
-  <img src="dsh-pet/assets/preview/beiluoye-yanmo.gif" width="160" alt="被落叶淹没" title="被落叶淹没">
-  <img src="dsh-pet/assets/preview/zhongqiu-shangyue-chi-yuebing.gif" width="160" alt="中秋赏月吃月饼" title="中秋赏月吃月饼">
-  <img src="dsh-pet/assets/preview/duixueren.gif" width="160" alt="堆雪人" title="堆雪人">
-  <img src="dsh-pet/assets/preview/fang-yanhua.gif" width="160" alt="放烟花" title="放烟花">
-  <img src="dsh-pet/assets/preview/chi-zongzi.gif" width="160" alt="吃粽子" title="吃粽子">
-  <img src="dsh-pet/assets/preview/chi-niangao.gif" width="160" alt="吃年糕" title="吃年糕">
-  <img src="dsh-pet/assets/preview/chi-qingtuan.gif" width="160" alt="吃青团" title="吃青团">
-  <img src="dsh-pet/assets/preview/chi-labazhou.gif" width="160" alt="吃腊八粥" title="吃腊八粥">
-  <img src="dsh-pet/assets/preview/chi-chongyanggao.gif" width="160" alt="吃重阳糕" title="吃重阳糕">
-  <img src="dsh-pet/assets/preview/shou-hongbao.gif" width="160" alt="收红包" title="收红包">
-  <img src="dsh-pet/assets/preview/xie-fuzi.gif" width="160" alt="写福字" title="写福字">
-  <img src="dsh-pet/assets/preview/chuanzhenqiqiao.gif" width="160" alt="穿针乞巧" title="穿针乞巧">
-  <img src="dsh-pet/assets/preview/wu-shitou.gif" width="160" alt="舞狮头" title="舞狮头">
-  <img src="dsh-pet/assets/preview/taotang-nanguadeng.gif" width="160" alt="讨糖南瓜灯" title="讨糖南瓜灯">
-  <img src="dsh-pet/assets/preview/cha-zhuyu-shangju.gif" width="160" alt="插茱萸赏菊" title="插茱萸赏菊">
-  <img src="dsh-pet/assets/preview/fanghedeng.gif" width="160" alt="放河灯" title="放河灯">
-  <img src="dsh-pet/assets/preview/menghua-xiaoyouling.gif" width="160" alt="萌化小幽灵" title="萌化小幽灵">
-  <img src="dsh-pet/assets/preview/zhuangdian-shengdanshu.gif" width="160" alt="装点圣诞树" title="装点圣诞树">
-  <img src="dsh-pet/assets/preview/fang-kongmingdeng.gif" width="160" alt="放孔明灯" title="放孔明灯">
-  <img src="dsh-pet/assets/preview/chitangyuan.gif" width="160" alt="吃汤圆" title="吃汤圆">
-  <img src="dsh-pet/assets/preview/chijiaozi.gif" width="160" alt="吃饺子" title="吃饺子">
+  <img src="dsh-pet/assets/preview/chi-baifan.gif" width="160" alt="Eating plain rice" title="Eating plain rice">
+  <img src="dsh-pet/assets/preview/dakou-chi-lingshi.gif" width="160" alt="Greedy snacking" title="Greedy snacking">
+  <img src="dsh-pet/assets/preview/chi-token.gif" width="160" alt="Eating tokens" title="Eating tokens">
+  <img src="dsh-pet/assets/preview/chi-zaocan.gif" width="160" alt="Eating breakfast" title="Eating breakfast">
+  <img src="dsh-pet/assets/preview/chi-wucan.gif" width="160" alt="Eating lunch" title="Eating lunch">
+  <img src="dsh-pet/assets/preview/chi-wancan.gif" width="160" alt="Eating dinner" title="Eating dinner">
+  <img src="dsh-pet/assets/preview/chi-bingqilin-ronghua.gif" width="160" alt="Melting ice cream" title="Melting ice cream">
+  <img src="dsh-pet/assets/preview/chi-dazhaxie.gif" width="160" alt="Hairy crab feast" title="Hairy crab feast">
+  <img src="dsh-pet/assets/preview/chi-tanghulu.gif" width="160" alt="Candied hawthorn" title="Candied hawthorn">
+  <img src="dsh-pet/assets/preview/chi-changshoumian.gif" width="160" alt="Longevity noodles" title="Longevity noodles">
+  <img src="dsh-pet/assets/preview/chi-xigua.gif" width="160" alt="Eating watermelon" title="Eating watermelon">
+  <img src="dsh-pet/assets/preview/shuan-huoguo.gif" width="160" alt="Hotpot dinner" title="Hotpot dinner">
 </p>
 
-**文字**
+**Seasonal**
 
 <p>
-  <img src="dsh-pet/assets/preview/shia-chishenme.gif" width="160" alt="是啊，吃什么" title="是啊，吃什么">
-  <img src="dsh-pet/assets/preview/shendu-sikao-suisuinian.gif" width="160" alt="深度思考碎碎念" title="深度思考碎碎念">
+  <img src="dsh-pet/assets/preview/beiluoye-yanmo.gif" width="160" alt="Buried in leaves" title="Buried in leaves">
+  <img src="dsh-pet/assets/preview/zhongqiu-shangyue-chi-yuebing.gif" width="160" alt="Mid-Autumn mooncake" title="Mid-Autumn mooncake">
+  <img src="dsh-pet/assets/preview/duixueren.gif" width="160" alt="Building a snowman" title="Building a snowman">
+  <img src="dsh-pet/assets/preview/fang-yanhua.gif" width="160" alt="Fireworks show" title="Fireworks show">
+  <img src="dsh-pet/assets/preview/chi-zongzi.gif" width="160" alt="Eating zongzi" title="Eating zongzi">
+  <img src="dsh-pet/assets/preview/chi-niangao.gif" width="160" alt="New Year rice cake" title="New Year rice cake">
+  <img src="dsh-pet/assets/preview/chi-qingtuan.gif" width="160" alt="Green rice ball" title="Green rice ball">
+  <img src="dsh-pet/assets/preview/chi-labazhou.gif" width="160" alt="Laba porridge" title="Laba porridge">
+  <img src="dsh-pet/assets/preview/chi-chongyanggao.gif" width="160" alt="Double Ninth cake" title="Double Ninth cake">
+  <img src="dsh-pet/assets/preview/shou-hongbao.gif" width="160" alt="Red envelope" title="Red envelope">
+  <img src="dsh-pet/assets/preview/xie-fuzi.gif" width="160" alt="Writing blessing" title="Writing blessing">
+  <img src="dsh-pet/assets/preview/chuanzhenqiqiao.gif" width="160" alt="Needle threading" title="Needle threading">
+  <img src="dsh-pet/assets/preview/wu-shitou.gif" width="160" alt="Lion dance" title="Lion dance">
+  <img src="dsh-pet/assets/preview/taotang-nanguadeng.gif" width="160" alt="Pumpkin trick-or-treat" title="Pumpkin trick-or-treat">
+  <img src="dsh-pet/assets/preview/cha-zhuyu-shangju.gif" width="160" alt="Chrysanthemum viewing" title="Chrysanthemum viewing">
+  <img src="dsh-pet/assets/preview/fanghedeng.gif" width="160" alt="River lantern" title="River lantern">
+  <img src="dsh-pet/assets/preview/menghua-xiaoyouling.gif" width="160" alt="Cute little ghost" title="Cute little ghost">
+  <img src="dsh-pet/assets/preview/zhuangdian-shengdanshu.gif" width="160" alt="Decorating the tree" title="Decorating the tree">
+  <img src="dsh-pet/assets/preview/fang-kongmingdeng.gif" width="160" alt="Sky lantern" title="Sky lantern">
+  <img src="dsh-pet/assets/preview/chitangyuan.gif" width="160" alt="Sweet rice balls" title="Sweet rice balls">
+  <img src="dsh-pet/assets/preview/chijiaozi.gif" width="160" alt="Eating dumplings" title="Eating dumplings">
 </p>
 
-**点击回应**
+**Text**
 
 <p>
-  <img src="dsh-pet/assets/preview/dianji-huiying-kaixin-yuedong.gif" width="160" alt="点击回应-开心跃动" title="点击回应-开心跃动">
-  <img src="dsh-pet/assets/preview/dianji-huiying-haixiu-jingya.gif" width="160" alt="点击回应-害羞惊讶" title="点击回应-害羞惊讶">
-  <img src="dsh-pet/assets/preview/dianji-huiying-aojiao-shengqi-ceshen-zhanshi.gif" width="160" alt="点击回应-傲娇生气" title="点击回应-傲娇生气">
-  <img src="dsh-pet/assets/preview/dianji-huiying-naoyang-gegexiao.gif" width="160" alt="点击回应-挠痒咯咯笑" title="点击回应-挠痒咯咯笑">
-  <img src="dsh-pet/assets/preview/dianji-huiying-yuanqi-huishou.gif" width="160" alt="点击回应-元气挥手" title="点击回应-元气挥手">
+  <img src="dsh-pet/assets/preview/shia-chishenme.gif" width="160" alt="What to eat text" title="What to eat text">
+  <img src="dsh-pet/assets/preview/shendu-sikao-suisuinian.gif" width="160" alt="Deep-thought muttering" title="Deep-thought muttering">
 </p>
 
-**拖拽**
+**Click reactions**
 
 <p>
-  <img src="dsh-pet/assets/preview/beishubiao-tuozhuai-xuankong-fankui.gif" width="160" alt="被鼠标拖拽悬空反馈" title="被鼠标拖拽悬空反馈">
+  <img src="dsh-pet/assets/preview/dianji-huiying-kaixin-yuedong.gif" width="160" alt="Happy bounce" title="Happy bounce">
+  <img src="dsh-pet/assets/preview/dianji-huiying-haixiu-jingya.gif" width="160" alt="Shy surprise" title="Shy surprise">
+  <img src="dsh-pet/assets/preview/dianji-huiying-aojiao-shengqi-ceshen-zhanshi.gif" width="160" alt="Pouty anger" title="Pouty anger">
+  <img src="dsh-pet/assets/preview/dianji-huiying-naoyang-gegexiao.gif" width="160" alt="Ticklish giggle" title="Ticklish giggle">
+  <img src="dsh-pet/assets/preview/dianji-huiying-yuanqi-huishou.gif" width="160" alt="Energetic wave" title="Energetic wave">
 </p>
 
-**余额事件**（按余额已用百分比分档，满格 → 告急 → 耗尽）
+**Drag**
 
 <p>
-  <img src="dsh-pet/assets/preview/qian-dai-man-yi.gif" width="160" alt="余额-钱袋满溢" title="余额-钱袋满溢">
-  <img src="dsh-pet/assets/preview/jin-dai-ding-dang.gif" width="160" alt="余额-金袋叮当" title="余额-金袋叮当">
-  <img src="dsh-pet/assets/preview/qian-dai-ru-chang.gif" width="160" alt="余额-钱袋如常" title="余额-钱袋如常">
-  <img src="dsh-pet/assets/preview/shu-jin-zhou-mei.gif" width="160" alt="余额-数金皱眉" title="余额-数金皱眉">
-  <img src="dsh-pet/assets/preview/dai-kong-ru-xi.gif" width="160" alt="余额-袋空如洗" title="余额-袋空如洗">
-  <img src="dsh-pet/assets/preview/fen-wen-bu-sheng.gif" width="160" alt="余额-分文不剩" title="余额-分文不剩">
+  <img src="dsh-pet/assets/preview/beishubiao-tuozhuai-xuankong-fankui.gif" width="160" alt="Dangled by mouse" title="Dangled by mouse">
 </p>
 
-**碎碎念说话动画**（碎碎念 / 对话回复触发，随机抽 1 段）
+**Balance events** (tiers by the percentage of balance used: full → tight → exhausted)
 
 <p>
-  <img src="dsh-pet/assets/preview/suisuinian-cazhuo-suisuinian.gif" width="160" alt="碎碎念-擦桌碎碎念" title="碎碎念-擦桌碎碎念">
-  <img src="dsh-pet/assets/preview/suisuinian-fadai-suisuinian.gif" width="160" alt="碎碎念-发呆碎碎念" title="碎碎念-发呆碎碎念">
-  <img src="dsh-pet/assets/preview/suisuinian-duiping-suisuinian.gif" width="160" alt="碎碎念-对屏碎碎念" title="碎碎念-对屏碎碎念">
+  <img src="dsh-pet/assets/preview/qian-dai-man-yi.gif" width="160" alt="Overflowing purse" title="Overflowing purse">
+  <img src="dsh-pet/assets/preview/jin-dai-ding-dang.gif" width="160" alt="Jingling coins" title="Jingling coins">
+  <img src="dsh-pet/assets/preview/qian-dai-ru-chang.gif" width="160" alt="Steady purse" title="Steady purse">
+  <img src="dsh-pet/assets/preview/shu-jin-zhou-mei.gif" width="160" alt="Counting coins" title="Counting coins">
+  <img src="dsh-pet/assets/preview/dai-kong-ru-xi.gif" width="160" alt="Empty pockets" title="Empty pockets">
+  <img src="dsh-pet/assets/preview/fen-wen-bu-sheng.gif" width="160" alt="Flat broke" title="Flat broke">
 </p>
 
-**工作状态动画**（跟随 DSH 会话事件，六档：思考 / 工作 / 整理 / 等待 / 成功 / 出错）
+**Whisper animations** (triggered by muttering or a chat reply, one picked at random)
 
 <p>
-  <img src="dsh-pet/assets/preview/gongzuozhuangtai-sikao-maopao.gif" width="160" alt="工作状态-思考冒泡" title="工作状态-思考冒泡">
-  <img src="dsh-pet/assets/preview/gongzuozhuangtai-manglu-dianan.gif" width="160" alt="工作状态-忙碌点按" title="工作状态-忙碌点按">
-  <img src="dsh-pet/assets/preview/gongzuozhuangtai-qingdian-guidang.gif" width="160" alt="工作状态-清点归档" title="工作状态-清点归档">
-  <img src="dsh-pet/assets/preview/gongzuozhuangtai-yuandi-duobu-zhangwang.gif" width="160" alt="工作状态-原地踱步张望" title="工作状态-原地踱步张望">
-  <img src="dsh-pet/assets/preview/gongzuozhuangtai-queyue-qingzhu.gif" width="160" alt="工作状态-雀跃庆祝" title="工作状态-雀跃庆祝">
-  <img src="dsh-pet/assets/preview/gongzuozhuangtai-chuitou-tanqi-maohan.gif" width="160" alt="工作状态-垂头叹气冒汗" title="工作状态-垂头叹气冒汗">
+  <img src="dsh-pet/assets/preview/suisuinian-cazhuo-suisuinian.gif" width="160" alt="Wiping and muttering" title="Wiping and muttering">
+  <img src="dsh-pet/assets/preview/suisuinian-fadai-suisuinian.gif" width="160" alt="Spaced-out muttering" title="Spaced-out muttering">
+  <img src="dsh-pet/assets/preview/suisuinian-duiping-suisuinian.gif" width="160" alt="Muttering at the screen" title="Muttering at the screen">
 </p>
 
-**睡觉**（右键「睡觉」或鼠标停上去按 `S`；睡着时点一下叫醒）
+**Work-status animations** (following DSH session events, six tiers: thinking / working / tidying / waiting / success / error)
 
 <p>
-  <img src="dsh-pet/assets/preview/shuijiao-kaishi.gif" width="160" alt="睡觉-开始" title="睡觉-开始">
-  <img src="dsh-pet/assets/preview/shuijiao-xunhuan.gif" width="160" alt="睡觉-循环" title="睡觉-循环">
-  <img src="dsh-pet/assets/preview/shuijiao-qilai.gif" width="160" alt="睡觉-起来" title="睡觉-起来">
+  <img src="dsh-pet/assets/preview/gongzuozhuangtai-sikao-maopao.gif" width="160" alt="Thinking bubbles" title="Thinking bubbles">
+  <img src="dsh-pet/assets/preview/gongzuozhuangtai-manglu-dianan.gif" width="160" alt="Busy clicking" title="Busy clicking">
+  <img src="dsh-pet/assets/preview/gongzuozhuangtai-qingdian-guidang.gif" width="160" alt="Filing and sorting" title="Filing and sorting">
+  <img src="dsh-pet/assets/preview/gongzuozhuangtai-yuandi-duobu-zhangwang.gif" width="160" alt="Pacing and peeking" title="Pacing and peeking">
+  <img src="dsh-pet/assets/preview/gongzuozhuangtai-queyue-qingzhu.gif" width="160" alt="Happy celebration" title="Happy celebration">
+  <img src="dsh-pet/assets/preview/gongzuozhuangtai-chuitou-tanqi-maohan.gif" width="160" alt="Sighing and sweating" title="Sighing and sweating">
 </p>
 
-> 注：动画为透明背景；GIF 预览中透明部分显示为页面底色，实际 webm 播放为透明。
+**Sleep** (right-click "Sleep" or hover and press `S`; click once while asleep to wake up)
 
-## 从零生成你自己的宠物
+<p>
+  <img src="dsh-pet/assets/preview/shuijiao-kaishi.gif" width="160" alt="Falling asleep" title="Falling asleep">
+  <img src="dsh-pet/assets/preview/shuijiao-xunhuan.gif" width="160" alt="Sleeping" title="Sleeping">
+  <img src="dsh-pet/assets/preview/shuijiao-qilai.gif" width="160" alt="Waking up" title="Waking up">
+</p>
 
-AI 提示词 → 绿幕视频 → 透明动画 → 插件，换角色、换动作、换风格，全流程可复现。
+> Note: the animations have a transparent background; in the GIF previews the transparent areas show the page background, while the actual webm plays fully transparent.
 
-完整步骤见 **[MAKE-YOUR-OWN-PET.md](MAKE-YOUR-OWN-PET.md)**（提示词配方、素材链、Safari 兼容、发布）。
+## Make your own pet from scratch
 
-## 项目结构
+AI prompts → green-screen video → transparent animation → plugin; change the character, the moves, the style, and the whole pipeline is reproducible.
 
-只列代码与发布相关目录；素材链的 video / scripts / step / pr 见 [MAKE-YOUR-OWN-PET.md](MAKE-YOUR-OWN-PET.md) 的 ② 章节（gitignore 的本地目录不列）：
+The complete walkthrough is in **[MAKE-YOUR-OWN-PET.md](MAKE-YOUR-OWN-PET.md)** (prompt recipes, the asset pipeline, Safari compatibility, publishing).
+
+## Project structure
+
+Only the code and release-related directories are listed; for the asset pipeline's video / scripts / step / pr see section ② of [MAKE-YOUR-OWN-PET.md](MAKE-YOUR-OWN-PET.md) (gitignored local directories are not listed):
 
 ```
-├── README.md  INSTALL.md  FEATURES.md  MAKE-YOUR-OWN-PET.md  CONFIG.md  API.md  CORDIS.md  openapi.yaml   # 说明 / 安装 / 功能详解 / 宠物制作指南 / 配置 / HTTP 接口 / Cordis 服务 / OpenAPI 规范
-├── prompts/           # ① 动画生成提示词配方（绿幕规范 + 按秒分解）
-├── assets/            # 仓库展示用截图
-├── tools/             # 开发工具：API 调试页、cordis-probe mock 服务商、DPI 探针
-├── .github/workflows/ # CI：Safari/HEVC 转码流水线（macOS runner，手动触发 → 发布 assets-mov Release）
-├── dsh-pet/           # ③ 插件（可独立 npm 发布）
+├── README.md  INSTALL.md  FEATURES.md  MAKE-YOUR-OWN-PET.md  CONFIG.md  API.md  CORDIS.md  openapi.yaml   # readme / install / feature guide / pet-making guide / configuration / HTTP API / Cordis service / OpenAPI spec
+├── docs/english-rework/ # localization process docs (Russian): status, plan, glossary, acceptance screenshots
+├── HANDOFF.md           # cross-session handoff journal (Russian)
+├── .agents/skills/      # repository development skills (task guardrails, plugin and commit standards)
+├── prompts/             # ① animation prompt recipes (green-screen rules + per-second breakdown)
+├── assets/              # legacy upstream screenshots (Chinese UI); the English ones live in docs/english-rework/acceptance/
+├── tools/               # developer tools: API debugging page, cordis-probe mock provider, DPI probe
+├── .github/workflows/   # CI: Safari/HEVC transcoding pipeline (macOS runner, manual trigger → assets-mov Release)
+├── dsh-pet/             # ③ the plugin (independently publishable to npm)
 │   ├── src/
-│   │   ├── host/       # 宿主半侧：配置 / 路由 / 余额 / 工作状态
-│   │   ├── client/     # 浏览器半侧：宠物渲染 / 动画链 / 设置页
-│   │   ├── shared/     # 双端共用纯逻辑（物理 / 菜单 / 取数）
-│   │   └── standalone/ # 独立模式 CLI（不依赖 DSH 直接跑桌宠）
-│   ├── lib/            # 构建产物（npm run build 生成，不入库）
-│   ├── runtime/        # 桌面模式运行壳（Electron 透明窗）
-│   ├── assets/         # webm 动画 / preview GIF / 字体 / 图标 / config.jsonc 默认配置
-│   └── scripts/        # 构建、发布与开发脚本
-└── LICENSE             # MIT
+│   │   ├── host/        # host half: configuration / routes / balance / work status
+│   │   ├── client/      # browser half: pet rendering / animation chain / settings page
+│   │   ├── shared/      # pure logic shared by both halves (physics / menu / data fetching)
+│   │   └── standalone/  # standalone-mode CLI (runs the pet directly, without DSH)
+│   ├── lib/             # build output (generated by npm run build, not committed)
+│   ├── runtime/         # desktop-mode runtime shell (Electron transparent window)
+│   ├── assets/          # webm animations / preview GIFs / fonts / icons / config.jsonc default configuration
+│   └── scripts/         # build, release and development scripts
+└── LICENSE              # MIT
 ```
 
-## 相关项目
+## Related projects
 
-- **[aipets](https://github.com/kallen-noelle/aipets)** —— Windows 11 桌面宠物，五个角色可多开，透明置顶、点击穿透、甩动带惯性。特色在**动作由大模型决定**：每轮对话后模型结合时间、天气、电量与好感度挑动作，无人说话时还能排出接近一整天的编排，模型不可用时回退内置规则。聊天接任意 OpenAI 兼容接口，带长期记忆、贴纸、画图与工具调用（联网搜索 / Home Assistant / MCP），支持语音朗读与语音输入；同一套代码既有单文件 `aipets.exe` 桌面版，也有浏览器里的整页舞台版。
+- **[aipets](https://github.com/kallen-noelle/aipets)** — a Windows 11 desktop pet with five characters, multiple instances, transparent always-on-top, click-through and inertia when flung. Its distinguishing feature is that **the model picks the actions**: after each conversation round the model chooses an action from the time, weather, battery level and affinity, and when nobody is talking it can even schedule almost a whole day; when the model is unavailable it falls back to built-in rules. Chat connects to any OpenAI-compatible endpoint and includes long-term memory, stickers, image generation and tool calls (web search / Home Assistant / MCP), plus read-aloud and voice input. The same code ships both as a single-file `aipets.exe` desktop build and as a full-page stage version in the browser.
 
-## 💬 反馈与发版节奏
+## 💬 Feedback and release cadence
 
-欢迎提 [issue](https://github.com/PC2005-cloud/dsh-pet/issues) 与 PR——bug、体验问题随时反馈。**新功能请先开 issue** 说明使用场景，确认后再动手，不要在确认前直接提交实现 PR。这个插件专注桌宠与 DSH 本身，偏离太远的需求一般不会做。动手前也请先翻一眼 [提交记录](https://github.com/PC2005-cloud/dsh-pet/commits/main)，确认不是已经修掉的同款问题（有些问题可能已经在 `main` 上修好了，只是还没发版）。
+[Issues](https://github.com/hametovbr/dsh-pet/issues) and PRs are welcome — bugs and UX problems, any time. **Open an issue first for a new feature** describing the use case, and start on it only after it is agreed; please do not send an implementation PR before that confirmation. This plugin focuses on the desktop pet and DSH itself, so requests that drift too far away usually will not be built. Before starting, also skim the [commit history](https://github.com/hametovbr/dsh-pet/commits/main) to make sure it is not the same problem already fixed (some issues are fixed on `main` but not released yet).
 
-- **小修不单独发版**：不影响使用的小 bug 与优化会**累计**到下一个版本一起发，避免版本更迭过于频繁。所以「`main` 上已经修了」不等于「你装的这版已经包含」——`latest` 没更新时，以 `main` 的提交记录为准。
-- **想立刻用上未发布的修复**：按 [INSTALL.md](INSTALL.md) 的「从源码安装」把插件指向本地仓库即可；注意**宿主半侧**的代码改动要**重开 DSH** 才生效（浏览器半侧刷新页面即可）。
-- **报 bug 时请带上**：插件版本、`dsh` 版本、操作系统、复现步骤（有日志或截图更好）。
+- **Small fixes are not released on their own**: small bugs and optimizations that do not affect usability are **accumulated** into the next version to avoid overly frequent releases. So "fixed on `main`" does not mean "the version you installed already has it" — when `latest` has not moved, the commit history on `main` is the source of truth.
+- **Want an unreleased fix right now**: point the plugin at your local clone with the "install from source" path in [INSTALL.md](INSTALL.md); note that changes on the **host half** need a DSH restart to take effect (the browser half only needs a page refresh).
+- **When reporting a bug, please include**: the plugin version, the `dsh` version, the operating system, and reproduction steps (logs or screenshots help).
 
-## 许可
+## License
 
-- 代码：MIT
-- 素材（动画/提示词/源视频）：允许开源使用，具体授权参考角色原型的形象授权（见下方「形象授权」）
-- **二次创作（二创）约定**：基于本项目的衍生 / 改版 / 换皮作品，在 **GitHub 仓库、产品官网等公开渠道**上须附上原作者 GitHub 地址：<https://github.com/PC2005-cloud/dsh-pet>
-- **形象出处**：宠物形象为社区二创的 DeepSeek「大肥鱼」（鲸鱼娘），**非 DeepSeek 官方形象**；原型「溟月」出自 B 站 [@上善无形](https://space.bilibili.com/4456176)，DeepSeek 版（女仆鲸鱼娘）设计出自 B 站 [@ZipZipPipe](https://space.bilibili.com/4168597)
-- **形象授权**：[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans)（署名 · 非商业 · 相同方式共享），[声明原文](https://www.bilibili.com/opus/1247156596114456581)：「大肥鱼是遵守CC BY-NC-SA 4.0协议的形象，不可以以任何形式商业化。若您非常喜爱该形象，希望其拥有实体，您可以自行定制。」
+- Code: MIT
+- Assets (animations / prompts / source videos): open-source use is permitted; for the exact grant see the character's image license (see "Character license" below)
+- **Derivative-work terms**: derivative / modified / reskinned works based on this project must, on public channels such as a GitHub repository or a product website, include the original author's GitHub address: <https://github.com/PC2005-cloud/dsh-pet>
+- **Character origin**: the pet is a community fan-art DeepSeek "big fat fish" (whale girl), **not an official DeepSeek character**; the prototype Mingyue comes from Bilibili [@上善无形](https://space.bilibili.com/4456176), and the DeepSeek version (maid whale girl) was designed by Bilibili [@ZipZipPipe](https://space.bilibili.com/4168597)
+- **Character license**: [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en) (Attribution · NonCommercial · ShareAlike), [original statement](https://www.bilibili.com/opus/1247156596114456581): "The big fat fish is a character released under CC BY-NC-SA 4.0 and must not be commercialized in any form. If you love the character and wish it had a physical form, you are welcome to have one made for yourself."
