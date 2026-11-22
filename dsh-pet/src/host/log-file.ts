@@ -140,7 +140,7 @@ export function createFileLogger(options: FileLoggerOptions): FileLogger {
 
   /** 取走当前缓冲（含溢出提示）；取出后 pending 为空，文本改由调用方保管。 */
   const takePending = (): string => {
-    const note = dropped > 0 ? formatLogLine('warn', `日志缓冲溢出，丢弃 ${dropped} 条`, now()) : '';
+    const note = dropped > 0 ? formatLogLine('warn', `Log buffer overflow, dropped ${dropped} lines`, now()) : '';
     const chunk = note + pending.join('');
     pending = [];
     dropped = 0;

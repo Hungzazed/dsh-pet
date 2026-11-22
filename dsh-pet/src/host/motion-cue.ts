@@ -50,9 +50,9 @@ function resolvePet(
   requested: string,
 ): { ok: true; petId: string } | { ok: false; reason: MotionFailure; message: string } {
   const petId = String(requested ?? '').trim();
-  if (!petId) return { ok: false, reason: 'pet-required', message: 'pet 必填：要指定操作哪只桌宠' };
+  if (!petId) return { ok: false, reason: 'pet-required', message: 'pet is required: specify which pet to act on' };
   if (!flattenPetList(cfg).some((p) => String(p.id) === petId)) {
-    return { ok: false, reason: 'unknown-pet', message: '没有这只桌宠：' + petId };
+    return { ok: false, reason: 'unknown-pet', message: 'No such pet: ' + petId };
   }
   return { ok: true, petId };
 }
@@ -80,19 +80,23 @@ export function decidePosition(args: {
   duration?: unknown;
 }): PositionDecision {
   const x = finite(args.x);
-  if (x === null) return { ok: false, reason: 'bad-request', message: 'x 必须是有限数字' };
+  if (x === null) return { ok: false, reason: 'bad-request', message: 'x must be a finite number' };
   const y = finite(args.y);
-  if (y === null) return { ok: false, reason: 'bad-request', message: 'y 必须是有限数字' };
+  if (y === null) return { ok: false, reason: 'bad-request', message: 'y must be a finite number' };
 
   const mode = positionMode(args.mode);
   if (mode === null) {
-    return { ok: false, reason: 'bad-request', message: 'mode 必须是 instant / spring / line' };
+    return { ok: false, reason: 'bad-request', message: 'mode must be instant / spring / line' };
   }
   let duration: number | null = null;
   if (mode === 'line') {
     const d = finite(args.duration);
     if (d === null || d < 0) {
-      return { ok: false, reason: 'bad-request', message: 'line 模式的 duration 必须是非负有限数字（毫秒）' };
+      return {
+        ok: false,
+        reason: 'bad-request',
+        message: 'duration in line mode must be a finite number >= 0 (milliseconds)',
+      };
     }
     duration = d;
   }
@@ -134,10 +138,10 @@ export function decideThrow(args: {
   power: unknown;
 }): ThrowDecision {
   const angle = finite(args.angle);
-  if (angle === null) return { ok: false, reason: 'bad-request', message: 'angle 必须是有限数字' };
+  if (angle === null) return { ok: false, reason: 'bad-request', message: 'angle must be a finite number' };
   const power = finite(args.power);
   if (power === null || power <= 0) {
-    return { ok: false, reason: 'bad-request', message: 'power 必须是大于 0 的有限数字' };
+    return { ok: false, reason: 'bad-request', message: 'power must be a finite number greater than 0' };
   }
 
   const pet = resolvePet(args.cfg, args.requested);

@@ -84,20 +84,24 @@ export class MenuRegistry {
    */
   register(raw: unknown): MenuRegisterResult {
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
-      return { ok: false, reason: 'bad-request', message: 'body 必须是 { owner, labels, target? }' };
+      return { ok: false, reason: 'bad-request', message: 'body must be { owner, labels, target? }' };
     }
     const body = raw as Record<string, unknown>;
     const owner = displayText(body.owner, OWNER_MAX);
     if (owner === null) {
-      return { ok: false, reason: 'invalid-owner', message: `owner 必须是 1–${OWNER_MAX} 字符的字符串（禁控制字符）` };
+      return {
+        ok: false,
+        reason: 'invalid-owner',
+        message: `owner must be a string of 1–${OWNER_MAX} characters (no control characters)`,
+      };
     }
 
     const rawLabels = body.labels;
     if (!Array.isArray(rawLabels) || rawLabels.length === 0) {
-      return { ok: false, reason: 'invalid-labels', message: 'labels 必须是非空数组' };
+      return { ok: false, reason: 'invalid-labels', message: 'labels must be a non-empty array' };
     }
     if (rawLabels.length > ITEMS_MAX) {
-      return { ok: false, reason: 'too-many-items', message: `每个 owner 最多 ${ITEMS_MAX} 项` };
+      return { ok: false, reason: 'too-many-items', message: `At most ${ITEMS_MAX} items per owner` };
     }
 
     const labels: string[] = [];
@@ -107,14 +111,14 @@ export class MenuRegistry {
         return {
           ok: false,
           reason: 'invalid-label',
-          message: `每个 label 必须是 1–${LABEL_MAX} 字符的字符串（禁控制字符）`,
+          message: `Each label must be a string of 1–${LABEL_MAX} characters (no control characters)`,
         };
       }
       if (!labels.includes(label)) labels.push(label); // 同 owner 内去重（保留首次出现的位置）
     }
 
     if (!this.owners.has(owner) && this.owners.size >= OWNERS_MAX) {
-      return { ok: false, reason: 'too-many-owners', message: `最多 ${OWNERS_MAX} 个 owner` };
+      return { ok: false, reason: 'too-many-owners', message: `At most ${OWNERS_MAX} owners` };
     }
     // target 选填：不写 / null = both（老调用方只传 owner + labels 时一个字都不用改）；写了就必须
     // 是三个字面量之一——非法值只报错、不猜，免得第三方以为注册成功却看不到菜单。
@@ -125,7 +129,7 @@ export class MenuRegistry {
         return {
           ok: false,
           reason: 'invalid-target',
-          message: 'target 只能是 web / desktop / both（不写 = both）',
+          message: 'target must be web / desktop / both (omitted = both)',
         };
       }
       target = rawTarget as MenuTarget;
@@ -143,7 +147,11 @@ export class MenuRegistry {
   clear(rawOwner: unknown): { ok: true; removed: number } | { ok: false; reason: MenuFailure; message: string } {
     const owner = displayText(rawOwner, OWNER_MAX);
     if (owner === null) {
-      return { ok: false, reason: 'invalid-owner', message: `owner 必须是 1–${OWNER_MAX} 字符的字符串（禁控制字符）` };
+      return {
+        ok: false,
+        reason: 'invalid-owner',
+        message: `owner must be a string of 1–${OWNER_MAX} characters (no control characters)`,
+      };
     }
     const entry = this.owners.get(owner);
     if (!entry) return { ok: true, removed: 0 };
