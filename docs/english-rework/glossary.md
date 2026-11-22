@@ -206,7 +206,8 @@
   `Model name`, `API key`, `DeepSeek speech key`, `Check balance`, `Test connection`, `Save`,
   `Unsaved changes`, `Default entry`, `Entry notes`, `Upload avatar`, `Avatar updated`,
   позиции `Top-left/Top-right/Bottom-left/Bottom-right`, режимы `Browser only/Desktop only/
-  Both/Neither`; `lang="zh-CN"` в chrome.ts остаётся до синхронизации с чат-панелью (i18n).
+  Both/Neither`; (историческая запись) `lang="zh-CN"` в chrome.ts оставался до синхронизации
+  с чат-панелью — снято решением D8 (см. дополнения батча 8: `lang="en"` и словарь `en`).
 
 ## Дополнения после батча 7 волны 1 (2026-11-21)
 
@@ -227,3 +228,44 @@
   playback/sleep/work-status выровнены по браузерному канону.
 - **шрифт**: в `runtime/electron-helper/index.html` и `renderer.js` иероглифические алиасы
   удалены (путь к файлу шрифта — `\u`-escape), латинский `YouYuan` сохранён.
+
+## Дополнения батча 8 видимой волны (2026-11-22)
+
+- **host-валидация и команды**: `pet is required: specify which pet to act on`,
+  `No such pet: <id>`, `No such animation: <name>`, `url must be a full http/https URL`,
+  `Only one of name and url can be given`, `Either name or url is required`,
+  `target must be web / desktop / both (omitted = both)`,
+  `owner must be a string of 1–<N> characters (no control characters)`,
+  `At most <N> items per owner`, `x must be a finite number`,
+  `duration in line mode must be a finite number >= 0 (milliseconds)`,
+  `surface is required: web / desktop / both / any`,
+  `attachment.data must be a non-empty base64 string`,
+  `attachment.data is not valid base64`, `attachment.data is too long (compress it or lower the
+  resolution)`.
+- **канон «только одно из двух»**: `Only one of X and Y can be given` /
+  `Either X or Y is required` — единая форма для взаимоисключающих параметров.
+- **lock**: `This pet is currently locked; pass lock=<lockId>`, `This pet is already locked`,
+  причины `The lock expired (it was not renewed in time)`, `The lock has been released`,
+  `The user took over (drag / click / hide / close)`, `lock is not the currently active lock id`.
+- **конфиг**: предупреждения `Invalid <field> in <label>; using the default`,
+  `Missing or empty pets in <label>; using the default pet list`,
+  `Invalid, duplicate, or already used pet id "<id>" in <label>; skipping this instance`,
+  `Pet "<id>" has no name; using the id instead`, плейсхолдер `(empty)`; миграция
+  `User config migrated to JSONC: <old> → <new>`.
+- **helper рабочего стола**: `Downloading Electron <version>`, `Download complete (<s>s),
+  extracting`, `Electron ready (<s>s), starting the pet`, `Electron download failed: <reason>`;
+  расшифровки exit code: `access violation`, `breakpoint (sandbox init failed)`,
+  `missing DLL`, `DLL initialization failed`; подсказки при краш-лупе императивные.
+- **баланс**: `Balance lookup timed out (20 s); try again later`, `Missing credential <ref>`,
+  `Missing account service (<provider>)`, `dsh-pet: invalid balance data field <what>`,
+  ответы провайдеров `…response is missing <field>`.
+- **погода/окружение**: `Weather`, `Weather is unavailable right now`, `Feels like`,
+  `Humidity`, `Wind`, `Observed <time>`; служебные китайские суффиксы геокодинга остаются
+  `\u`-escape (это данные, не литералы).
+- **распознавание/мини-игра**: `Speech recognition response is not JSON`,
+  `Speed <n> · Size <n>`.
+- **подсказки клавиш (канон)**: `<значение> key` — `D key`, `L key`, `S key`, `Z key`,
+  `1 key`…`4 key`; форма `Key <значение>` не используется.
+- **страница настроек standalone (D8)**: страница выбирает английский словарь чат-панели и
+  объявляет `lang="en"`; словари `zh.ts`/`ja.ts` и остальной i18n-слой не трогаются. В
+  веб-панели DSH язык чат-панели следует локали хоста — это штатное поведение i18n.
