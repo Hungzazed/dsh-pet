@@ -51,7 +51,7 @@ export function mergeEntry(
       continue;
     }
     if (!topFieldValid(key, own)) {
-      warnOnce(`${label}:${key}`, `「${label}」的 ${key} 非法，已取默认值`);
+      warnOnce(`${label}:${key}`, `Invalid ${key} in ${label}; using the default`);
       out[key] = base[key];
       continue;
     }
@@ -69,7 +69,7 @@ function mergePets(
 ): Record<string, unknown>[] {
   const basePet: Record<string, unknown> = basePets[0] ?? {};
   if (!Array.isArray(raw) || raw.length === 0) {
-    warnOnce(`${label}:pets`, `「${label}」的 pets 缺失或为空，已取默认宠物列表`);
+    warnOnce(`${label}:pets`, `Missing or empty pets in ${label}; using the default pet list`);
     return basePets;
   }
   const out: Record<string, unknown>[] = [];
@@ -78,7 +78,10 @@ function mergePets(
     if (pet) out.push(pet);
   }
   if (out.length === 0) {
-    warnOnce(`${label}:pets`, `「${label}」的 pets 全部被跳过（id 非法/重复/冲突），已取默认宠物列表`);
+    warnOnce(
+      `${label}:pets`,
+      `All pets in ${label} were skipped (invalid, duplicate, or conflicting id); using the default pet list`,
+    );
     return basePets;
   }
   return out;
@@ -90,7 +93,7 @@ function petNumber(own: unknown, def: unknown, min: number, label: string, field
   if (own !== undefined && own !== null && Number.isFinite(n) && n >= min) return n;
   // 缺失 = 常态（文件宠物可只写 id/name 等少量字段），静默取默认；显式写了但非法才是真异常
   if (own !== undefined && own !== null) {
-    warnOnce(`${label}:${field}:${id}`, `宠物「${id}」的 ${field} 非法，已取默认值`);
+    warnOnce(`${label}:${field}:${id}`, `Invalid ${field} for pet "${id}"; using the default`);
   }
   return Number(def);
 }
@@ -103,7 +106,7 @@ function petSizePercentField(own: unknown, def: unknown, label: string, id: stri
   if (isValidSizePercent(value)) return { sizePercent: value };
   warnOnce(
     `${label}:sizePercent:${id}`,
-    `宠物「${id}」的 sizePercent 非法（应为不小于 ${SIZE_PERCENT_MIN} 的数字），已忽略（按默认 ${SIZE_PERCENT_DEFAULT} 处理）`,
+    `Invalid sizePercent for pet "${id}" (must be a number of at least ${SIZE_PERCENT_MIN}); ignoring it and using the default ${SIZE_PERCENT_DEFAULT}`,
   );
   return {};
 }
@@ -112,7 +115,7 @@ function petSizePercentField(own: unknown, def: unknown, label: string, id: stri
 function petBool(own: unknown, def: unknown, label: string, field: string, id: string): boolean {
   if (typeof own === 'boolean') return own;
   if (own !== undefined && own !== null) {
-    warnOnce(`${label}:${field}:${id}`, `宠物「${id}」的 ${field} 非法，已取默认值`);
+    warnOnce(`${label}:${field}:${id}`, `Invalid ${field} for pet "${id}"; using the default`);
   }
   return Boolean(def);
 }
@@ -128,7 +131,7 @@ function petEnum(
 ): string {
   if (typeof own === 'string' && set.has(own)) return own;
   if (own !== undefined && own !== null) {
-    warnOnce(`${label}:${field}:${id}`, `宠物「${id}」的 ${field} 非法，已取默认值`);
+    warnOnce(`${label}:${field}:${id}`, `Invalid ${field} for pet "${id}"; using the default`);
   }
   return typeof def === 'string' ? def : '';
 }
@@ -143,14 +146,17 @@ function mergePet(
   const p = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
   const id = typeof p.id === 'string' ? p.id.trim() : '';
   if (!isValidPetId(id) || seenIds.has(id)) {
-    warnOnce(`${label}:id:${id || '(空)'}`, `「${label}」的宠物 id「${id || '(空)'}」非法、重复或已存在，已跳过该实例`);
+    warnOnce(
+      `${label}:id:${id || '(empty)'}`,
+      `Invalid, duplicate, or already used pet id "${id || '(empty)'}" in ${label}; skipping this instance`,
+    );
     return null;
   }
   seenIds.add(id);
   // name：缺失/空 → 按该宠物 id 处理（既定规则：可重复，不继承默认名字）
   const rawName = typeof p.name === 'string' ? p.name.trim() : '';
   const name = rawName || id;
-  if (!rawName) warnOnce(`${label}:name:${id}`, `宠物「${id}」缺少 name，已按 id 处理`);
+  if (!rawName) warnOnce(`${label}:name:${id}`, `Pet "${id}" has no name; using the id instead`);
 
   // position：逐子字段合并（缺失 → 静默取默认；显式写但非法 → 告警 + 默认）
   const basePos = base.position && typeof base.position === 'object' ? (base.position as Record<string, unknown>) : {};
@@ -189,7 +195,10 @@ function petPersonaField(own: unknown, label: string, id: string): { whisperProm
     return own.trim() === '' ? {} : { whisperPrompt: own };
   }
   if (own !== undefined && own !== null) {
-    warnOnce(`${label}:whisperPrompt:${id}`, `宠物「${id}」的 whisperPrompt 非法，已忽略（回落所属条目人设）`);
+    warnOnce(
+      `${label}:whisperPrompt:${id}`,
+      `Invalid whisperPrompt for pet "${id}"; ignoring it and falling back to the entry persona`,
+    );
   }
   return {};
 }

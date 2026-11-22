@@ -57,14 +57,14 @@ describe('balanceBubbleView —— 不可用状态必须给出可读的文字说
       provider: 'deepseek-official',
       ok: false,
       reason: 'credential-missing',
-      message: '缺少凭证 DEEPSEEK_API_KEY',
+      message: 'Missing credential DEEPSEEK_API_KEY',
     });
     assert.deepEqual(rows, [
       { role: 'error', text: 'Missing balance lookup credentials' },
-      { role: 'sub', text: '缺少凭证 DEEPSEEK_API_KEY' },
+      { role: 'sub', text: 'Missing credential DEEPSEEK_API_KEY' },
     ]);
     assert.equal(
-      rows.filter((r) => r.text.includes('缺少凭证')).length,
+      rows.filter((r) => r.text.includes('Missing credential')).length,
       1,
       '「缺少凭证」只应出现一次（曾经是「缺少凭证：缺少凭证 X」）',
     );

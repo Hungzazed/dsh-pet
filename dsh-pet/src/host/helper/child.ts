@@ -133,10 +133,10 @@ export class HelperProcess {
     });
     // Wayland 原生下窗口无法定位/置顶/穿透，只有 XWayland 能救；纯 Wayland 时明说不可用，别让用户猜。
     if (!this.options.command && shouldForceXWayland()) {
-      this.logger.info?.('dsh-pet desktop helper: Wayland 会话，强制 XWayland（--ozone-platform=x11）');
+      this.logger.info?.('dsh-pet desktop helper: Wayland session, forcing XWayland (--ozone-platform=x11)');
     } else if (!this.options.command && process.platform === 'linux' && process.env.WAYLAND_DISPLAY) {
       this.logger.warn?.(
-        'dsh-pet desktop helper: 纯 Wayland 无 XWayland，桌面模式的定位/置顶/穿透不可用；请改用 X11 会话',
+        'dsh-pet desktop helper: pure Wayland without XWayland; positioning, always-on-top, and click-through are unavailable in desktop mode; use an X11 session instead',
       );
     }
     this.hasChildOutput = false;
@@ -237,7 +237,7 @@ export class HelperProcess {
     try {
       req = JSON.parse(line.slice(BRIDGE_PREFIX.length)) as BridgeRequest;
     } catch {
-      this.logger.warn?.('[dsh-pet desktop helper] bridge 协议行非法，已忽略');
+      this.logger.warn?.('[dsh-pet desktop helper] invalid bridge protocol line, ignoring it');
       return;
     }
     if (typeof req.id !== 'number') return;
@@ -302,7 +302,9 @@ export class HelperProcess {
     const child = this.child;
     if (!child) return;
     await waitForChildExit(child, timeoutMs, () => {
-      this.logger.warn?.(`dsh-pet desktop helper 未在 ${timeoutMs}ms 内退出，升级 SIGKILL（${reason}）`);
+      this.logger.warn?.(
+        `dsh-pet desktop helper did not exit within ${timeoutMs}ms; escalating to SIGKILL (${reason})`,
+      );
       try {
         child.kill('SIGKILL');
       } catch {
@@ -325,8 +327,8 @@ export class HelperProcess {
     if (!applied) return false;
     this.hasSandboxFallbackApplied = true;
     this.logger.warn?.(
-      `dsh-pet desktop helper 因 Chromium 沙箱初始化失败而秒退（${describeExit(code, null)}），` +
-        `改用 --no-sandbox 重试一次${this.launchIdentity}`,
+      `dsh-pet desktop helper exited immediately because Chromium sandbox init failed (${describeExit(code, null)}), ` +
+        `retrying once with --no-sandbox${this.launchIdentity}`,
     );
     this.start();
     return true;
@@ -346,7 +348,7 @@ export class HelperProcess {
       // 既不知道死的是哪个版本，也拿不到能照着做的下一步（#244 的现场）。
       this.logger.error?.(
         `dsh-pet desktop helper crashed ${this.restartFailures} consecutive times; circuit breaker tripped, ` +
-          `no more restarts${this.launchIdentity} · 建议：${crashLoopAdvice(process.platform)}`,
+          `no more restarts${this.launchIdentity} · Advice: ${crashLoopAdvice(process.platform)}`,
       );
       return;
     }

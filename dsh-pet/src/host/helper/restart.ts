@@ -43,10 +43,10 @@ export function helperRunIsStable(elapsedMs: number): boolean {
 
 /** Windows NTSTATUS 退出码 → 中文短语；只收「进程被系统当场终止」这一类，其余不收录。 */
 const WINDOWS_EXIT_MEANINGS: Readonly<Record<number, string>> = {
-  0xc0000005: '访问违例',
-  [SANDBOX_INIT_FAILED_CODE]: '断点（沙箱初始化失败）',
-  0xc0000135: '缺少 DLL',
-  0xc0000142: 'DLL 初始化失败',
+  0xc0000005: 'access violation',
+  [SANDBOX_INIT_FAILED_CODE]: 'breakpoint (sandbox init failed)',
+  0xc0000135: 'missing DLL',
+  0xc0000142: 'DLL initialization failed',
 };
 
 /**
@@ -93,17 +93,17 @@ function describeCodeDetail(code: number | null): string {
  * @returns 一句面向用户的建议文本（含可复制的环境变量名）。
  */
 export function crashLoopAdvice(platform: NodeJS.Platform): string {
-  const raise = '或设 DSH_PET_RESTART_MAX_FAILURES 提高重试上限后重启。';
+  const raise = 'or set DSH_PET_RESTART_MAX_FAILURES to raise the retry limit, then restart.';
   if (platform === 'win32') {
     return (
-      '换一个 Electron 版本（删掉日志里 electron= 指向的目录，用 DSH_PET_ELECTRON_VERSION 指定可用版本后重启），' +
-      `或用 DSH_PET_ELECTRON_PATH 指向本机能开窗的 electron.exe；${raise}`
+      'Switch to another Electron version (delete the directory that electron= in the log points to, then restart with a working version set via DSH_PET_ELECTRON_VERSION), ' +
+      `or point DSH_PET_ELECTRON_PATH at an electron.exe that can open a window on this machine; ${raise}`
     );
   }
   if (platform === 'linux') {
-    return `确认有可用显示环境（DISPLAY / WAYLAND_DISPLAY，无显示时用 Xvfb 并设 DSH_PET_DESKTOP_FORCE=1）；${raise}`;
+    return `Make sure a display environment is available (DISPLAY / WAYLAND_DISPLAY; without a display, use Xvfb and set DSH_PET_DESKTOP_FORCE=1); ${raise}`;
   }
-  return `用 DSH_PET_ELECTRON_PATH 指向本机能开窗的 Electron；${raise}`;
+  return `Point DSH_PET_ELECTRON_PATH at an Electron that can open a window on this machine; ${raise}`;
 }
 
 /**

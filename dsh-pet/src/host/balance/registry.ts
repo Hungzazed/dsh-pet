@@ -26,11 +26,11 @@ const external = new Map<string, PluginProvider>();
  * @throws 定义非法、id 与内置冲突或已被第三方注册时
  */
 export function registerBalanceProvider(def: PluginProvider): () => void {
-  if (!def || typeof def !== 'object') throw new TypeError('provider 定义必须是对象');
-  if (typeof def.id !== 'string' || def.id.length === 0) throw new TypeError('id 必须是非空字符串');
-  if (typeof def.fetch !== 'function') throw new TypeError('fetch 必须是函数');
-  if (BUILTIN_PROVIDERS.some((p) => p.id === def.id)) throw new Error('不能覆盖内置服务商: ' + def.id);
-  if (external.has(def.id)) throw new Error('该服务商 id 已被注册: ' + def.id);
+  if (!def || typeof def !== 'object') throw new TypeError('provider definition must be an object');
+  if (typeof def.id !== 'string' || def.id.length === 0) throw new TypeError('id must be a non-empty string');
+  if (typeof def.fetch !== 'function') throw new TypeError('fetch must be a function');
+  if (BUILTIN_PROVIDERS.some((p) => p.id === def.id)) throw new Error('cannot override a built-in provider: ' + def.id);
+  if (external.has(def.id)) throw new Error('this provider id is already registered: ' + def.id);
 
   external.set(def.id, def);
   return () => {

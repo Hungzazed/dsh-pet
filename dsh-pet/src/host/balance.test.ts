@@ -212,7 +212,7 @@ describe('parseCommandCode —— 必填缺失/非法一律抛错（绝不伪造
   });
 
   test('credits 里三个额度字段全缺 → 抛错（否则分母当 0 会算出「已用 100%」）', () => {
-    assert.throws(() => parseCommandCode({ credits: {} }, undefined, { totalCost: 0 }, 'commandcode'), /额度字段/);
+    assert.throws(() => parseCommandCode({ credits: {} }, undefined, { totalCost: 0 }, 'commandcode'), /quota fields/);
   });
 
   test('缺少 / 非法 totalCost → 抛错', () => {
@@ -346,7 +346,7 @@ describe('queryBalance —— 网络链路（fetch stub）', () => {
         ok: false,
         provider: 'commandcode',
         reason: 'credential-missing',
-        message: '缺少凭证 COMMANDCODE_API_KEY',
+        message: 'Missing credential COMMANDCODE_API_KEY',
       });
       assert.deepEqual(stub.calls, []);
     } finally {
@@ -489,20 +489,20 @@ describe('deepseek-account —— DSH 账号路由（走账号服务，不是 HT
   });
 
   test('null（未登录）/ failed（查询失败）/ 空钱包 → 一律抛错，绝不伪造 0 余额', () => {
-    assert.throws(() => parseAccountBalance(null, 'deepseek-account'), /未登录/);
-    assert.throws(() => parseAccountBalance(undefined, 'deepseek-account'), /未登录/);
-    assert.throws(() => parseAccountBalance({ status: 'failed' }, 'deepseek-account'), /查询失败/);
+    assert.throws(() => parseAccountBalance(null, 'deepseek-account'), /not signed in/);
+    assert.throws(() => parseAccountBalance(undefined, 'deepseek-account'), /not signed in/);
+    assert.throws(() => parseAccountBalance({ status: 'failed' }, 'deepseek-account'), /lookup failed/);
     assert.throws(
       () => parseAccountBalance({ status: 'ready', value: [], bonusWallets: [] }, 'deepseek-account'),
-      /没有充值钱包/,
+      /no topped-up wallet/,
     );
     assert.throws(
       () => parseAccountBalance({ status: 'ready', value: [{ currency: 'CNY', balance: '' }] }, 'deepseek-account'),
-      /非法|balance/,
+      /invalid|balance/,
     );
     assert.throws(
       () => parseAccountBalance({ status: 'ready', value: [{ currency: 'CNY', balance: 'abc' }] }, 'deepseek-account'),
-      /非法/,
+      /invalid/,
     );
   });
 
@@ -536,7 +536,7 @@ describe('deepseek-account —— DSH 账号路由（走账号服务，不是 HT
       ok: false,
       provider: 'deepseek-account',
       reason: 'credential-missing',
-      message: '缺少账号服务（deepseek-account）',
+      message: 'Missing account service (deepseek-account)',
     });
   });
 
@@ -584,13 +584,13 @@ describe('注册表 —— 第三方 provider（register / list / match）', () 
   });
 
   test('不能覆盖内置 id', () => {
-    assert.throws(() => registerBalanceProvider(plugin('deepseek-official')), /不能覆盖内置服务商/);
+    assert.throws(() => registerBalanceProvider(plugin('deepseek-official')), /cannot override a built-in provider/);
   });
 
   test('重复注册同一个 id → 抛错（不静默覆盖）', () => {
     const dispose = registerBalanceProvider(plugin('plugin-b'));
     try {
-      assert.throws(() => registerBalanceProvider(plugin('plugin-b')), /已被注册/);
+      assert.throws(() => registerBalanceProvider(plugin('plugin-b')), /already registered/);
     } finally {
       dispose();
     }

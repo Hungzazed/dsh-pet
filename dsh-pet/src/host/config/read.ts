@@ -25,7 +25,7 @@ export function migrateUserConfig(paths: ConfigPaths, log?: (message: string) =>
   } catch {
     return false; // 迁移失败：读取侧回落旧路径，不影响使用
   }
-  log?.(`用户配置已迁移到 JSONC：${legacy} → ${paths.userFile}`);
+  log?.(`User config migrated to JSONC: ${legacy} → ${paths.userFile}`);
   return true;
 }
 
@@ -71,7 +71,8 @@ export function readPetConfigEntry(
  */
 export function readAllConfig(paths: ConfigPaths): Record<string, Record<string, unknown>> {
   const base = readJsonc(paths.defaultFile);
-  if (!base) throw new Error('dsh-pet: 内置默认配置缺失或解析失败（安装损坏）：' + paths.defaultFile);
+  if (!base)
+    throw new Error('dsh-pet: built-in default config missing or unparsable (broken install): ' + paths.defaultFile);
   const basePets = Array.isArray(base.pets) ? (base.pets as Record<string, unknown>[]) : [];
   const seenIds = new Set<string>();
   const out: Record<string, Record<string, unknown>> = {};
@@ -80,7 +81,7 @@ export function readAllConfig(paths: ConfigPaths): Record<string, Record<string,
   const userFile = effectiveUserFile(paths);
   const mainOverlay = userFile ? readJsonc(userFile) : undefined;
   if (userFile && !mainOverlay) {
-    warnOnce('file:' + userFile, '用户主配置解析失败，已按无用户配置处理：' + userFile);
+    warnOnce('file:' + userFile, 'Failed to parse the user main config; continuing without a user config: ' + userFile);
   }
   out.main = mergeEntry(base, mainOverlay, 'main-config.jsonc', basePets, seenIds);
 
@@ -90,7 +91,7 @@ export function readAllConfig(paths: ConfigPaths): Record<string, Record<string,
   for (const file of scanPetFiles(paths.petDir)) {
     const parsed = readJsonc(file.path);
     if (!parsed) {
-      warnOnce('file:' + file.path, '文件宠物配置解析失败，已跳过：' + file.path);
+      warnOnce('file:' + file.path, 'Failed to parse a file pet config; skipping it: ' + file.path);
       continue;
     }
     out[file.prefix] = mergeEntry(filePetBase, parsed, file.prefix + '-config.json', basePets, seenIds);

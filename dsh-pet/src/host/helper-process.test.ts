@@ -239,8 +239,8 @@ test('Electron cache validation: an empty file enters the download path and repo
     onLog: (e) => logs.push(e.text),
   });
   assert.equal(result, undefined);
-  assert.ok(logs.some((m) => m.includes('缓存无效')));
-  assert.ok(logs.some((m) => m.includes('下载失败')));
+  assert.ok(logs.some((m) => m.includes('cache is invalid')));
+  assert.ok(logs.some((m) => m.includes('download failed')));
 });
 
 describe('hasGraphicalDisplay —— 无图形环境时不拉起 Electron', () => {
@@ -374,12 +374,15 @@ describe('helperRunIsStable —— 稳定运行 ≥3 分钟后计数清零', () 
 
 describe('describeExit —— 崩溃退出码翻成可读片段', () => {
   test('访问违例：无符号与有符号两种报法指向同一个 0xC0000005', () => {
-    assert.equal(describeExit(3221225477, null), 'code=3221225477 (0xC0000005 访问违例), signal=null');
-    assert.equal(describeExit(-1073741819, null), 'code=-1073741819 (0xC0000005 访问违例), signal=null');
+    assert.equal(describeExit(3221225477, null), 'code=3221225477 (0xC0000005 access violation), signal=null');
+    assert.equal(describeExit(-1073741819, null), 'code=-1073741819 (0xC0000005 access violation), signal=null');
   });
 
   test('断点：0x80000003 标注为沙箱初始化失败', () => {
-    assert.equal(describeExit(2147483651, null), 'code=2147483651 (0x80000003 断点（沙箱初始化失败）), signal=null');
+    assert.equal(
+      describeExit(2147483651, null),
+      'code=2147483651 (0x80000003 breakpoint (sandbox init failed)), signal=null',
+    );
   });
 
   test('普通退出码不补十六进制：避免把 exit 1 写成 0x1', () => {
