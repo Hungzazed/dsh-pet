@@ -2,7 +2,7 @@
  * 独立模式「对话」分区的浏览器入口：把 DSH 右侧栏那套面板挂到设置页上。
  *
  * 组件、状态与渲染树全部来自 client/chat，这里只补宿主那一侧：react 运行时由本包自己
- * 打包（独立环境没有 DSH 注入），文案走包内 zh 字典（无 locale 服务），样式走外链
+ * 打包（独立环境没有 DSH 注入），文案走包内 en 字典（无 locale 服务），样式走外链
  * CSS（页面 CSP 是 style-src 'self'，内联 style 会被拦掉）。平台 UI 原语在独立模式
  * 没有，面板按既有分支自行降级。
  * @module dsh-pet/src/standalone/settings-page/chat-mount
@@ -10,7 +10,7 @@
 import { createElement, useEffect, useRef, useState, type FC } from 'react';
 import { createRoot } from 'react-dom/client';
 import { jsx } from 'react/jsx-runtime';
-import { zh } from '../../client/chat/locales/index.ts';
+import { en } from '../../client/chat/locales/en.ts';
 import { makePetChatPanel } from '../../client/chat/panel.ts';
 import type { ChatPanelRuntime } from '../../client/chat/runtime.ts';
 import { createTranslator } from './translate.ts';
@@ -29,7 +29,7 @@ const runtime: ChatPanelRuntime = {
   useState,
   useEffect,
   useRef,
-  t: createTranslator(zh),
+  t: createTranslator(en),
 };
 
 const host = document.getElementById(HOST_ID);

@@ -2,7 +2,7 @@
  * 独立模式设置页的文案翻译：按与宿主相同的 `{name}` 规则替换占位符。
  *
  * 宿主侧由 `ctx.locale.bind(NS)` 提供翻译，独立环境没有 locale 服务，
- * 这里用包内字典自建；页面固定中文（见 chrome.ts 的 `lang="zh-CN"`），字典取 `zh`。
+ * 这里用包内字典自建；页面固定英文（见 chrome.ts 的 `lang="en"`），字典取 `en`。
  * @module dsh-pet/src/standalone/settings-page/translate
  */
 

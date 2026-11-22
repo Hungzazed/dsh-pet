@@ -320,7 +320,7 @@ test('public settings are an allowlist even if backend accidentally includes cre
 });
 
 test('settings shell is accessible, self contained, and never saves browser secrets', () => {
-  assert.match(settingsPage, /lang="zh-CN"/);
+  assert.match(settingsPage, /lang="en"/);
   assert.match(settingsPage, /type="password"/);
   assert.match(settingsPage, /aria-live="polite"/);
   assert.match(settingsPage, /data-tab="config"/);
