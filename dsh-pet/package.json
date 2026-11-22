@@ -94,6 +94,7 @@
     "lint": "eslint .",
     "check:cycles": "node scripts/check-import-cycles.mjs",
     "check:english": "node scripts/check-english.mjs",
+    "check:english:visible": "node scripts/check-english-visible.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test:ui": "node --test scripts/tests/*.test.mjs",
