@@ -10,6 +10,7 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 
+import { getLanguageSetting, setActiveLanguage } from './i18n/core.ts';
 import { HEAR_SAMPLE_RATE, encodeWave, floatToPcm16, hearAudio, peakOf, toBase64 } from './hear.ts';
 
 /** 从字节里取一段 ASCII 标记，按 WAV 头的 4 字节块比对。 */
@@ -173,6 +174,26 @@ describe('hearAudio', () => {
       assert.equal(outcome.ok, false);
       if (!outcome.ok) assert.equal(outcome.reason, 'network');
     } finally {
+      stub.restore();
+    }
+  });
+
+  test('响应不是 JSON 时，vi/en 给出对应语言提示而不含中文', async () => {
+    const prev = getLanguageSetting();
+    const stub = stubFetch(() => new Response('<html>502</html>', { status: 502 }));
+    try {
+      setActiveLanguage('vi');
+      const viOut = await hearAudio('http://x/voice/hear', 'AAAA');
+      assert.equal(viOut.ok, false);
+      if (!viOut.ok) assert.doesNotMatch(viOut.message, /[\u4e00-\u9fff]/);
+
+      setActiveLanguage('en');
+      const enOut = await hearAudio('http://x/voice/hear', 'AAAA');
+      assert.equal(enOut.ok, false);
+      if (!enOut.ok) assert.match(enOut.message, /JSON/i);
+      if (!enOut.ok) assert.doesNotMatch(enOut.message, /[\u4e00-\u9fff]/);
+    } finally {
+      setActiveLanguage(prev);
       stub.restore();
     }
   });

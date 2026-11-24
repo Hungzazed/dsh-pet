@@ -8,6 +8,7 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { frameToToast, MAX_BODY } from './notify.ts';
+import { getLanguageSetting, setActiveLanguage } from './i18n/core.ts';
 
 /** 审批帧：标题固定是「正在申请权限」，用它观察会话名怎么拼进标题。 */
 const approvalFrame = { type: 'approval/requested', sessionId: 's1', toolName: 'bash', reason: '要写 /tmp' };
@@ -91,5 +92,26 @@ describe('frameToToast：不弹的分支', () => {
       assert.equal(frameToToast(frame, '这条也不该弹'), null);
     }
     assert.equal(frameToToast({ type: 'unknown/frame' }, '同样'), null);
+  });
+});
+
+describe('frameToToast：多语言权限正文分隔符', () => {
+  test('vi/en 使用半角冒号与空格，zh 保持全角冒号', () => {
+    const prev = getLanguageSetting();
+    try {
+      setActiveLanguage('vi');
+      const viToast = frameToToast({ type: 'approval/requested', toolName: 'bash', reason: 'run script' });
+      assert.equal(viToast?.body, 'Công cụ "bash": run script');
+
+      setActiveLanguage('en');
+      const enToast = frameToToast({ type: 'approval/requested', toolName: 'bash', reason: 'run script' });
+      assert.equal(enToast?.body, 'Tool "bash": run script');
+
+      setActiveLanguage('zh');
+      const zhToast = frameToToast({ type: 'approval/requested', toolName: 'bash', reason: '要写 /tmp' });
+      assert.equal(zhToast?.body, '工具「bash」：要写 /tmp');
+    } finally {
+      setActiveLanguage(prev);
+    }
   });
 });

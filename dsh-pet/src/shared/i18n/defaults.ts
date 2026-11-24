@@ -328,3 +328,29 @@ export function translateMoreItemLabel(owner: string, label: string, lang?: Reso
   }
   return label;
 }
+
+/** Built-in Edge TTS short voice IDs for each resolved plugin language. */
+export const DEFAULT_VOICE_BY_LANGUAGE: Readonly<Record<ResolvedLanguage, string>> = {
+  vi: 'vi-VN-HoaiMyNeural',
+  en: 'en-US-AvaNeural',
+  zh: 'zh-CN-XiaoyiNeural',
+};
+
+/** Default Edge TTS short voice ID for a resolved language. */
+export function defaultVoiceForLanguage(lang: ResolvedLanguage): string {
+  return DEFAULT_VOICE_BY_LANGUAGE[lang];
+}
+
+/** Default qualified TTS voice ID (`<provider>/<voice>`) for a resolved language. */
+export function defaultLimitedVoiceForLanguage(lang: ResolvedLanguage, providerId = 'edge'): string {
+  return `${providerId}/${DEFAULT_VOICE_BY_LANGUAGE[lang]}`;
+}
+
+const DEFAULT_LIMITED_VOICE_SET = new Set<string>(
+  Object.values(DEFAULT_VOICE_BY_LANGUAGE).map((voiceId) => `edge/${voiceId}`),
+);
+
+/** Whether a qualified voice ID is one of the built-in per-language default Edge voices. */
+export function isDefaultLanguageVoice(limitedId: string): boolean {
+  return DEFAULT_LIMITED_VOICE_SET.has(limitedId);
+}

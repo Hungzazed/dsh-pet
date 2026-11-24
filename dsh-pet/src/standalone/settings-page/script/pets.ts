@@ -92,6 +92,9 @@ function initDrafts(config) {
   }
   if (!state.pets.main) state.pets.main = [];
   if (!state.pets[state.entry]) state.entry = 'main';
+  if (config && config.main && typeof config.main.language === 'string') {
+    applyPageLanguage(state.globals.language, { persist: true, broadcast: true });
+  }
 }
 
 function currentPets() {
@@ -103,7 +106,7 @@ function currentPet() {
 }
 
 function entryTabs(keys) {
-  const tabs = keys.map((key) => tabButton(key === 'main' ? '默认条目' : key, key === state.entry, () => {
+  const tabs = keys.map((key) => tabButton(key === 'main' ? tr('entry.main') : key, key === state.entry, () => {
     state.entry = key;
     state.petIndex = 0;
     renderPetsPanel();
@@ -112,8 +115,8 @@ function entryTabs(keys) {
 }
 
 function packNote() {
-  return card('条目说明', null, [
-    make('p', { class: 'cardHint', text: '这个条目来自文件宠物，只保存它自己的实例；全局开关与语音外观在「默认条目」里改。' }),
+  return card(tr('entry.packTitle'), null, [
+    make('p', { class: 'cardHint', text: tr('entry.packHint') }),
   ]);
 }
 
@@ -175,25 +178,25 @@ async function savePets() {
   const status = byId('pet-status');
   const saveBtn = byId('pet-save');
   if (state.entry === 'main' && currentPets().length === 0) {
-    setStatus(status, '默认条目至少要保留一只宠物，否则宿主会拒绝保存。', 'error');
+    setStatus(status, tr('status.mainNeedsPet'), 'error');
     return;
   }
   saveBtn.disabled = true;
-  setStatus(status, '正在保存…');
+  setStatus(status, tr('status.saving'));
   try {
     let merged;
     if (state.entry === 'main') {
       merged = await callApi('PUT', '/config', petsBody());
       if (merged && merged.ok === false && merged.reason === 'user-config-unparsable') {
-        const file = merged.userFile ? String(merged.userFile) : '用户配置';
+        const file = merged.userFile ? String(merged.userFile) : tr('corrupt.fallbackFile');
         const confirmed = await confirmDialog({
-          title: '配置文件无法解析',
-          text: file + '\\n继续保存会按白名单重建这个文件，里面其它内容会丢失。',
-          confirmLabel: '覆盖保存',
+          title: tr('corrupt.title'),
+          text: tr('corrupt.text', { file: file }),
+          confirmLabel: tr('btn.overwriteSave'),
           danger: true,
         });
         if (!confirmed) {
-          setStatus(status, '已取消保存。', 'error');
+          setStatus(status, tr('status.saveCancelled'), 'error');
           return;
         }
         merged = await callApi('PUT', '/config?force=1', petsBody());
@@ -202,13 +205,13 @@ async function savePets() {
       merged = await callApi('POST', '/pet-config', { entry: state.entry, pets: currentPets() });
     }
     if (!merged || merged.ok === false) {
-      setStatus(status, (merged && (merged.message || merged.reason)) || '宿主拒绝了这次保存。', 'error');
+      setStatus(status, (merged && (merged.message || merged.reason)) || tr('status.saveRejected'), 'error');
       return;
     }
     initDrafts(merged);
     markDirty(false);
     renderPetsPanel();
-    setStatus(status, '已保存到本机。', 'ok');
+    setStatus(status, tr('status.savedLocal'), 'ok');
   } catch (error) {
     setStatus(status, error && error.message ? error.message : String(error), 'error');
   } finally {

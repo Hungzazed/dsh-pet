@@ -18,8 +18,8 @@ function mountProtocolSelect() {
   if (!host) return;
   protocolSelect = createSelect(
     [
-      { value: 'openai-compatible', label: 'OpenAI 兼容' },
-      { value: 'anthropic', label: 'Anthropic' },
+      { value: 'openai-compatible', label: tr('ai.protocolOpenAI') },
+      { value: 'anthropic', label: tr('ai.protocolAnthropic') },
     ],
     'openai-compatible',
     () => forgetModelOptions(),
@@ -32,7 +32,7 @@ function mountServiceSelect() {
   const host = byId('service-host');
   if (!host) return;
   // 选项由 populateAi 读到的服务商目录重填；这里先给一项，避免首帧空白。
-  serviceSelect = createSelect([{ value: 'custom', label: '自定义' }], 'custom', (picked) => {
+  serviceSelect = createSelect([{ value: 'custom', label: tr('ai.serviceCustom') }], 'custom', (picked) => {
     onServicePicked(picked);
   });
   serviceSelect.root.firstElementChild.setAttribute('aria-labelledby', 'service-label');
@@ -40,6 +40,7 @@ function mountServiceSelect() {
 }
 
 function selectTab(name) {
+  state.activeTab = name;
   for (const cell of document.querySelectorAll('[data-tab]')) {
     const active = cell.dataset.tab === name;
     cell.setAttribute('aria-selected', active ? 'true' : 'false');
@@ -103,11 +104,11 @@ async function loadVoiceCatalog() {
 
 async function loadPets() {
   const status = byId('pet-status');
-  setStatus(status, '正在读取本机配置…');
+  setStatus(status, tr('loading.config'));
   try {
     const config = await callApi('GET', '/config');
     const meta = await callApi('GET', '/config/meta').catch(() => null);
-    if (!config || config.ok === false || !config.main) throw new Error('读取配置失败：宿主没有返回可用的配置。');
+    if (!config || config.ok === false || !config.main) throw new Error(tr('err.loadConfig'));
     state.meta = meta;
     initDrafts(config);
     renderPetsPanel();
@@ -123,7 +124,7 @@ async function loadAi() {
   try {
     populateAi(await aiRequest('GET'));
     byId('save').disabled = false;
-    setStatus(status, '设置只在本机保存。');
+    setStatus(status, tr('status.aiLocalOnly'));
   } catch (error) {
     setStatus(status, (error && error.message) || String(error), 'error');
   }

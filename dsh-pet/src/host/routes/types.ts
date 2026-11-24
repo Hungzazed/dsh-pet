@@ -93,6 +93,8 @@ export interface PetRouteDeps {
   readonly userConfigPath: string;
   /** 请求重载桌面 Helper：是否真的重启、如何串行与退避由桌面侧决定（调用方只表达意图）。 */
   readonly requestRestart: () => Promise<void>;
+  /** Optional hook invoked after main config is saved or synced (e.g. refresh localized slash commands). */
+  readonly onConfigSaved?: () => void;
   /** 按 `?pet=` 定位宠物；缺参/未知宠物给出可直接返回的应答。 */
   readonly requirePet: (
     params: URLSearchParams,

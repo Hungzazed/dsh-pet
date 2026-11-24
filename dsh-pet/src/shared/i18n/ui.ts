@@ -43,8 +43,6 @@ const zh = {
   'menu.openHintMac': 'Cmd+左键',
   'menu.openHintWin': 'Ctrl+左键',
   'hotkey.key': '{key} 键',
-  'tray.quit': '退出',
-  'tray.tooltip': 'dsh-pet 桌面宠物',
 
   // Desktop renderer errors
   'renderer.configError': 'dsh-pet 配置错误：{message}',
@@ -65,7 +63,6 @@ const zh = {
   'balance.pointsLabel': '余额 {total} {unit}',
   'balance.windowWeekly': '周',
   'balance.windowMonthly': '月',
-  'balance.windowRollingHours': '{hours}小时',
   'balance.resetDone': '已重置',
   'balance.resetDays': '{n} 天',
   'balance.resetHours': '{n} 小时',
@@ -114,11 +111,14 @@ const zh = {
   'chat.recognizing': '识别中…',
   'chat.noAudio': '没录到声音',
   'chat.noMicSignal': '没听到声音，检查一下麦克风',
+  'chat.hearUnclear': '没听清，再说一次',
+  'chat.recordError': '录音出错：{message}',
+  'chat.hearInvalidJson': '识别响应不是 JSON',
+  'score.detail': '速度 {speed} · 大小 {size}',
   'chat.micFailed': '打不开麦克风：{message}',
   'chat.openingMic': '正在打开麦克风…',
   'chat.recordingTime': '录音中 {time} · 松开结束',
   'chat.invalidResponse': 'dsh-pet: 对话响应非法',
-  'chat.sendFailed': '发送失败（HTTP {status}）',
 
   // Todo panel, formatting & calendar picker
   'todo.title': '待办事项',
@@ -184,14 +184,13 @@ const zh = {
   'notify.truncatedBody': '已达到输出 token 上限',
   'notify.approval': '正在申请权限',
   'notify.approvalTool': '工具「{tool}」',
+  'notify.approvalBody': '{tool}：{reason}',
   'notify.question': '模型在等你回答',
-  'notify.agentError': '代理异常',
   'notify.testTitle': '桌宠通知测试',
   'notify.testBody': '系统通知工作正常！',
   'notify.permissionDenied': '权限未授予（{status}）',
 
   // Baifan mini-game
-  'baifan.label': '吃白饭',
   'baifan.notInWeb': '这只宠物没显示在网页里（display={display}）',
   'baifan.lockFailed': '取锁失败：{reason}',
   'baifan.waitPrevious': '上一场还没收干净，等它过期…',
@@ -246,8 +245,6 @@ const en: Record<UiKey, string> = {
   'menu.openHintMac': 'Cmd+Click',
   'menu.openHintWin': 'Ctrl+Click',
   'hotkey.key': '{key}',
-  'tray.quit': 'Quit',
-  'tray.tooltip': 'dsh-pet Desktop Pet',
 
   // Desktop renderer errors
   'renderer.configError': 'dsh-pet config error: {message}',
@@ -268,7 +265,6 @@ const en: Record<UiKey, string> = {
   'balance.pointsLabel': 'Balance {total} {unit}',
   'balance.windowWeekly': 'Weekly',
   'balance.windowMonthly': 'Monthly',
-  'balance.windowRollingHours': '{hours}h',
   'balance.resetDone': 'Reset',
   'balance.resetDays': '{n}d',
   'balance.resetHours': '{n}h',
@@ -317,11 +313,14 @@ const en: Record<UiKey, string> = {
   'chat.recognizing': 'Recognizing…',
   'chat.noAudio': 'No sound recorded',
   'chat.noMicSignal': 'No voice detected — check your microphone',
+  'chat.hearUnclear': "Didn't catch that, please try again",
+  'chat.recordError': 'Recording error: {message}',
+  'chat.hearInvalidJson': 'Speech recognition response is not JSON',
+  'score.detail': 'Speed {speed} · Size {size}',
   'chat.micFailed': 'Unable to open microphone: {message}',
   'chat.openingMic': 'Opening microphone…',
   'chat.recordingTime': 'Recording {time} · release to finish',
   'chat.invalidResponse': 'dsh-pet: Invalid chat response',
-  'chat.sendFailed': 'Send failed (HTTP {status})',
 
   // Todo panel, formatting & calendar picker
   'todo.title': 'Todo list',
@@ -387,14 +386,13 @@ const en: Record<UiKey, string> = {
   'notify.truncatedBody': 'Output token limit reached',
   'notify.approval': 'Approval requested',
   'notify.approvalTool': 'Tool "{tool}"',
+  'notify.approvalBody': '{tool}: {reason}',
   'notify.question': 'Needs your input',
-  'notify.agentError': 'Agent error',
   'notify.testTitle': 'Pet Notification Test',
   'notify.testBody': 'System notifications are working!',
   'notify.permissionDenied': 'Permission not granted ({status})',
 
   // Baifan mini-game
-  'baifan.label': 'Rice Feast',
   'baifan.notInWeb': 'This pet is not shown in the browser (display={display})',
   'baifan.lockFailed': 'Failed to acquire lock: {reason}',
   'baifan.waitPrevious': 'Waiting for the previous session to finish…',
@@ -447,8 +445,6 @@ const vi: Record<UiKey, string> = {
   'menu.openHintMac': 'Cmd+Click',
   'menu.openHintWin': 'Ctrl+Click',
   'hotkey.key': 'Phím {key}',
-  'tray.quit': 'Thoát',
-  'tray.tooltip': 'dsh-pet Thú cưng desktop',
 
   // Desktop renderer errors
   'renderer.configError': 'Lỗi cấu hình dsh-pet: {message}',
@@ -469,7 +465,6 @@ const vi: Record<UiKey, string> = {
   'balance.pointsLabel': 'Số dư {total} {unit}',
   'balance.windowWeekly': 'Tuần',
   'balance.windowMonthly': 'Tháng',
-  'balance.windowRollingHours': '{hours} giờ',
   'balance.resetDone': 'Đã đặt lại',
   'balance.resetDays': '{n} ngày',
   'balance.resetHours': '{n} giờ',
@@ -518,11 +513,14 @@ const vi: Record<UiKey, string> = {
   'chat.recognizing': 'Đang nhận diện…',
   'chat.noAudio': 'Không ghi được âm thanh',
   'chat.noMicSignal': 'Không nghe thấy tiếng — hãy kiểm tra lại micro',
+  'chat.hearUnclear': 'Nghe không rõ, hãy nói lại',
+  'chat.recordError': 'Lỗi ghi âm: {message}',
+  'chat.hearInvalidJson': 'Phản hồi nhận diện không phải JSON',
+  'score.detail': 'Tốc độ {speed} · Cỡ {size}',
   'chat.micFailed': 'Không mở được micro: {message}',
   'chat.openingMic': 'Đang mở micro…',
   'chat.recordingTime': 'Đang ghi {time} · thả ra để kết thúc',
   'chat.invalidResponse': 'dsh-pet: Phản hồi trò chuyện không hợp lệ',
-  'chat.sendFailed': 'Gửi thất bại (HTTP {status})',
 
   // Todo panel, formatting & calendar picker
   'todo.title': 'Việc cần làm',
@@ -588,14 +586,13 @@ const vi: Record<UiKey, string> = {
   'notify.truncatedBody': 'Đã chạm giới hạn token đầu ra',
   'notify.approval': 'Đang xin cấp quyền',
   'notify.approvalTool': 'Công cụ "{tool}"',
+  'notify.approvalBody': '{tool}: {reason}',
   'notify.question': 'Đang chờ bạn trả lời',
-  'notify.agentError': 'Lỗi tác nhân',
   'notify.testTitle': 'Thử thông báo thú cưng',
   'notify.testBody': 'Thông báo hệ thống đang hoạt động bình thường!',
   'notify.permissionDenied': 'Chưa được cấp quyền ({status})',
 
   // Baifan mini-game
-  'baifan.label': 'Ăn cơm trắng',
   'baifan.notInWeb': 'Bé này hiện không hiển thị trên web (display={display})',
   'baifan.lockFailed': 'Không lấy được khóa điều khiển: {reason}',
   'baifan.waitPrevious': 'Chờ lượt trước kết thúc hẳn đã nhé…',

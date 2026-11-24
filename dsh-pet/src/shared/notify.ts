@@ -106,7 +106,12 @@ export function frameToToast(
       const reason = typeof frame.reason === 'string' && frame.reason ? frame.reason : '';
       return {
         title: composeTitle(sessionTitle, uiText('notify.approval')),
-        body: (toolName ? uiText('notify.approvalTool', { tool: toolName }) : '') + (reason ? '：' + reason : ''),
+        body:
+          toolName && reason
+            ? uiText('notify.approvalBody', { tool: uiText('notify.approvalTool', { tool: toolName }), reason })
+            : toolName
+              ? uiText('notify.approvalTool', { tool: toolName })
+              : reason,
         icon: NOTIFY_ICONS.approval,
       };
     }

@@ -49,6 +49,7 @@ export function isValidPetId(value: string): boolean {
  * 人设是例外：实例级 pets[].whisperPrompt 优先，回落由消费端做（./persona 的 petPersona）。
  */
 export const GLOBAL_DEFAULT_KEYS = [
+  'language',
   'physics',
   'animationWeights',
   'font',

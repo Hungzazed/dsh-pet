@@ -7,7 +7,10 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 
+import { readFileSync } from 'node:fs';
+import vm from 'node:vm';
 import { createMenuActions, type MenuActionDeps } from './menu-actions.ts';
+import { resetMenuEvents, setMenuItems, takeMenuEvents } from '../menu-service.ts';
 import type { MenuLeaf } from '../../shared/menu.ts';
 import type { Animations } from '../../shared/types.ts';
 
@@ -259,5 +262,90 @@ describe('createMenuActions —— 宿主指令不按「用户点击」判睡觉
     });
     actions.run({ anim: 'idle1', label: 'idle1' } as MenuLeaf, undefined, false, true);
     assert.deepEqual(calls, ['stopMove', 'playOnce:idle1:null']);
+  });
+});
+
+describe('createMenuActions —— 第三方菜单项（保留协议原名 itemLabel）', () => {
+  test('译文菜单项带 itemLabel 时，同页事件与 /menu/click 均上报原名', async () => {
+    const bodies: unknown[] = [];
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = (async (_input: unknown, init?: RequestInit) => {
+      bodies.push(init?.body ? JSON.parse(String(init.body)) : null);
+      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    }) as typeof globalThis.fetch;
+    resetMenuEvents();
+    setMenuItems([{ owner: 'baifan', label: '吃白饭' }]);
+    try {
+      harness().actions.run({
+        label: 'Ăn cơm trắng',
+        itemLabel: '吃白饭',
+        owner: 'baifan',
+        action: 'third-party',
+      } as MenuLeaf);
+      await new Promise((resolve) => setImmediate(resolve));
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+    const result = takeMenuEvents('baifan');
+    assert.deepEqual(result, { ok: true, events: { 吃白饭: 'pet-1' } });
+    assert.deepEqual(bodies, [{ owner: 'baifan', label: '吃白饭', pet: 'pet-1' }]);
+    resetMenuEvents();
+  });
+
+  test('未翻译的第三方菜单项（无 itemLabel）照旧上报 label', async () => {
+    const bodies: unknown[] = [];
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = (async (_input: unknown, init?: RequestInit) => {
+      bodies.push(init?.body ? JSON.parse(String(init.body)) : null);
+      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    }) as typeof globalThis.fetch;
+    resetMenuEvents();
+    setMenuItems([{ owner: 'ext-x', label: 'Custom Action' }]);
+    try {
+      harness().actions.run({
+        label: 'Custom Action',
+        owner: 'ext-x',
+        action: 'third-party',
+      } as MenuLeaf);
+      await new Promise((resolve) => setImmediate(resolve));
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+    const result = takeMenuEvents('ext-x');
+    assert.deepEqual(result, { ok: true, events: { 'Custom Action': 'pet-1' } });
+    assert.deepEqual(bodies, [{ owner: 'ext-x', label: 'Custom Action', pet: 'pet-1' }]);
+    resetMenuEvents();
+  });
+
+  test('桌面端 sprite/menu.js 点击带 itemLabel 的第三方项时上报原名', () => {
+    const posted: Array<{ url: string; body: unknown }> = [];
+    const spriteProto: Record<string, unknown> = {};
+    const sandbox = {
+      PetSprite: { prototype: spriteProto },
+      BASE: 'http://127.0.0.1:7340/api/plugins/dsh-pet',
+      ORIGIN: 'http://127.0.0.1:7340',
+      SLEEP_REFUSE_BUBBLE_MS: 3000,
+      window: { __dshPetDebug: {} },
+      S: {
+        isSleepAllowedAction: () => true,
+        postAction: (url: string, body: unknown) => {
+          posted.push({ url, body });
+          return Promise.resolve();
+        },
+      },
+    };
+    const code = readFileSync('runtime/electron-helper/sprite/menu.js', 'utf8');
+    vm.runInNewContext(code, sandbox);
+    const onMenuAction = spriteProto.onMenuAction as (leaf: MenuLeaf) => void;
+    onMenuAction.call(
+      { closeMenu: () => undefined, sleeping: false, frozen: false, pet: { id: 'main' } },
+      { label: 'Rice Feast', itemLabel: '吃白饭', owner: 'baifan', action: 'third-party' },
+    );
+    assert.deepEqual(JSON.parse(JSON.stringify(posted)), [
+      {
+        url: 'http://127.0.0.1:7340/api/plugins/dsh-pet/menu/click',
+        body: { owner: 'baifan', label: '吃白饭', pet: 'main' },
+      },
+    ]);
   });
 });

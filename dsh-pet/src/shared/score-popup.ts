@@ -4,6 +4,7 @@
  * 弹窗显示 +N 分与速度/大小明细，点外或 Esc 立即关闭。
  * @module dsh-pet/src/shared/score-popup
  */
+import { uiText } from './i18n/ui.ts';
 import { clickScore, SCORE_MIN_SPEED } from './score.ts';
 
 /** 弹窗展示时长（ms）：积分反馈比气泡（10s）短，够读即可。 */
@@ -140,7 +141,7 @@ export function mountScorePopup(opts: {
   val.textContent = '+' + opts.score;
   const sub = document.createElement('div');
   sub.className = 'dsh-pet-score-sub';
-  sub.textContent = '速度 ' + Math.round(opts.speed) + ' · 大小 ' + Math.round(opts.size);
+  sub.textContent = uiText('score.detail', { speed: Math.round(opts.speed), size: Math.round(opts.size) });
   root.appendChild(val);
   root.appendChild(sub);
   document.body.appendChild(root);

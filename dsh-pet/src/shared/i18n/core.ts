@@ -65,8 +65,56 @@ export function resolvePetLanguage(
   return fallback;
 }
 
-/** Module-level active setting (defaults to `'zh'` until runtime boot sets configured language). */
+/** LocalStorage key used by browser clients to avoid a startup flash before /config resolves. */
+export const LANGUAGE_STORAGE_KEY = 'dsh-pet:language';
+
+/** Module-level active setting (defaults to 'zh' for unit-test compatibility until client boot initializes it). */
 let activeSetting: PetLanguage = 'zh';
+
+function readStorage(): { getItem(k: string): string | null; setItem(k: string, v: string): void } | undefined {
+  try {
+    const ls = (globalThis as { localStorage?: unknown }).localStorage;
+    if (
+      ls &&
+      typeof ls === 'object' &&
+      typeof (ls as { getItem?: unknown }).getItem === 'function' &&
+      typeof (ls as { setItem?: unknown }).setItem === 'function'
+    ) {
+      return ls as { getItem(k: string): string | null; setItem(k: string, v: string): void };
+    }
+  } catch {
+    // Storage access can throw in restricted contexts; ignore safely.
+  }
+  return undefined;
+}
+
+/**
+ * Read the last persisted client language preference from localStorage, if available and valid.
+ *
+ * @returns Valid cached {@link PetLanguage}, or `undefined` if absent/unreadable.
+ */
+export function readCachedLanguage(): PetLanguage | undefined {
+  try {
+    const raw = readStorage()?.getItem(LANGUAGE_STORAGE_KEY);
+    return isPetLanguage(raw) ? raw : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Initialize browser client language synchronously before slots/chrome register.
+ * Restores cached preference if available; otherwise starts in `auto` to follow the host locale
+ * instead of forcing Chinese before `/config` finishes loading.
+ *
+ * @param hostLocale - Detected DSH/browser locale tag.
+ * @returns Initialized language setting.
+ */
+export function initClientLanguage(hostLocale?: string): PetLanguage {
+  const initial: PetLanguage = readCachedLanguage() ?? 'auto';
+  setActiveLanguage(initial, hostLocale);
+  return initial;
+}
 let activeHostLocale: string | undefined;
 const languageListeners = new Set<() => void>();
 
@@ -102,8 +150,15 @@ export function getActiveLanguage(override?: ResolvedLanguage): ResolvedLanguage
  * @param setting - Configured language value.
  * @param hostLocale - Optional host locale hint for `'auto'`.
  */
-export function setActiveLanguage(setting: unknown, hostLocale?: string): void {
+export function setActiveLanguage(setting: unknown, hostLocale?: string, options?: { persist?: boolean }): void {
   const nextSetting: PetLanguage = isPetLanguage(setting) ? setting : DEFAULT_LANGUAGE;
+  if (options?.persist === true) {
+    try {
+      readStorage()?.setItem(LANGUAGE_STORAGE_KEY, nextSetting);
+    } catch {
+      // Ignore storage quota/privacy errors.
+    }
+  }
   const prevResolved = getActiveLanguage();
   const prevSetting = activeSetting;
   activeSetting = nextSetting;

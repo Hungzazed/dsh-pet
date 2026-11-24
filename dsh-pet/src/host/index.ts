@@ -35,6 +35,7 @@ import { listChatMemoryProviders } from './chat-memory-provider.ts';
 import { TODO_FILE_NAME, TodoStore } from './todo/store.ts';
 import { join } from 'node:path';
 import { resolvePetLanguage, type ResolvedLanguage } from '../shared/i18n/core.ts';
+import { defaultLimitedVoiceForLanguage } from '../shared/i18n/defaults.ts';
 import type { PetRouteDeps } from './routes/types.ts';
 
 /** 插件行 id（与 cordis.patch.yml 一致） */
@@ -167,17 +168,28 @@ export function apply(ctx: any): void {
       const conf = memoryBlock().powercontext;
       const enabled = conf && typeof conf === 'object' && (conf as Record<string, unknown>).optimizeQuery === true;
       if (!enabled) return undefined;
+      const lang = configuredLanguage();
       const result = await generateChat({
         ctx,
-        system: REWRITE_QUERY_SYSTEMS[configuredLanguage()],
+        system: REWRITE_QUERY_SYSTEMS[lang],
         history,
         userText,
         pool: [],
         actions: [],
+        language: lang,
       });
       return result.ok ? result.text : undefined;
     },
   });
+
+  let registeredCommandLang = configuredLanguage();
+  const commandRefreshers: Array<() => void> = [];
+  const refreshCommandsIfLanguageChanged = (): void => {
+    const nextLang = configuredLanguage();
+    if (nextLang === registeredCommandLang) return;
+    registeredCommandLang = nextLang;
+    for (const refresh of commandRefreshers) refresh();
+  };
 
   const deps: PetRouteDeps = {
     ...setup,
@@ -204,7 +216,7 @@ export function apply(ctx: any): void {
       log,
       configuredVoice: () => {
         const name = readAllConfig(configPaths).main?.voiceName;
-        return typeof name === 'string' && name ? name : undefined;
+        return typeof name === 'string' && name ? name : defaultLimitedVoiceForLanguage(configuredLanguage());
       },
     }),
     // 语音识别：实现来自注册表；请求没带 provider 时用配置里的那个值，没有第二份默认
@@ -216,6 +228,7 @@ export function apply(ctx: any): void {
     }),
     // 长期记忆实现目录：设置页据此渲染下拉，配置项 memoryProvider 的取值就来自它
     memory: { list: listChatMemoryProviders },
+    onConfigSaved: refreshCommandsIfLanguageChanged,
   };
   const httpRoute = createHttpRoute(deps);
   registerHttpRoute(ctx, httpRoute.handlePetRoute);
@@ -237,14 +250,16 @@ export function apply(ctx: any): void {
     workStatus,
   });
 
-  registerBalanceCommand({
-    ctx,
-    effectivePetList,
-    language: configuredLanguage,
-    refreshBalance,
-    sleep,
-    sleepRefusalText,
-  });
+  commandRefreshers.push(
+    registerBalanceCommand({
+      ctx,
+      effectivePetList,
+      language: configuredLanguage,
+      refreshBalance,
+      sleep,
+      sleepRefusalText,
+    }).refresh,
+  );
 
   registerLoops({
     ctx,
@@ -261,25 +276,29 @@ export function apply(ctx: any): void {
     whisperPeriodSec,
   });
 
-  registerPetCommand({
-    ctx,
-    effectivePetList,
-    language: configuredLanguage,
-    petDisplayName,
-    resolveActivePetId,
-    setActivePetId,
-  });
+  commandRefreshers.push(
+    registerPetCommand({
+      ctx,
+      effectivePetList,
+      language: configuredLanguage,
+      petDisplayName,
+      resolveActivePetId,
+      setActivePetId,
+    }).refresh,
+  );
 
-  registerChatCommand({
-    ctx,
-    chatWithPet,
-    language: configuredLanguage,
-    log,
-    publishWhisper,
-    resolveActivePetId,
-    sleep,
-    sleepRefusalText,
-  });
+  commandRefreshers.push(
+    registerChatCommand({
+      ctx,
+      chatWithPet,
+      language: configuredLanguage,
+      log,
+      publishWhisper,
+      resolveActivePetId,
+      sleep,
+      sleepRefusalText,
+    }).refresh,
+  );
 
   // 待办提醒：随插件生命周期起停；锁被第三方持有时由 pickReminderSpeaker 跳过该宠物。
   // 播报开关现读现用：改配置后下一次提醒即生效，不必重启。

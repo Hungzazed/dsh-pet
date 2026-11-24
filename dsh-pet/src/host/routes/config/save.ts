@@ -65,6 +65,7 @@ async function saveUserLayer(deps: PetRouteDeps, input: RouteInput): Promise<Rou
     // 配置变了，UAPI 那条缓存必须作废：否则改完城市得等 TTL（10 分钟）过期才生效，
     // 而碎碎念与外部脚本不带 fresh，会一直读到旧城市
     resetUapiCache();
+    deps.onConfigSaved?.();
     void requestRestart(); // display/size 等可能变化：重解析桌面宠物并重启 Helper（异步，不阻塞保存响应）
     // 响应体 = 保存后的成品聚合（与 GET /config 同一份，字段已填满）：设置页直接交给
     // flattenConfigPets 拍平渲染，客户端的条目级字段只有这一处填充。
@@ -89,6 +90,7 @@ function syncFromDefault(deps: PetRouteDeps): RouteResult {
     // 默认文件缺失 / 用户目录不可写：显式失败，绝不静默留下半个配置文件
     return failResult('generate-error', e instanceof Error ? e.message : String(e));
   }
+  deps.onConfigSaved?.();
   void requestRestart(); // 配置变了：重解析桌面宠物并重启 Helper（异步，不阻塞响应）
   return okResult(readAllConfig(configPaths));
 }

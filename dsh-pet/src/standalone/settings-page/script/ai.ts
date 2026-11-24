@@ -17,7 +17,7 @@ const AI_BALANCE_URL = '/standalone-ai/balance';
 const CUSTOM_SERVICE_ID = 'custom';
 
 /** 服务商目录：首帧只放自定义，读到设置后整份替换成后端下发的目录。 */
-let serviceCatalog = [{ id: CUSTOM_SERVICE_ID, label: '自定义', keyName: 'CUSTOM_API_KEY', protocol: 'openai-compatible' }];
+let serviceCatalog = [{ id: CUSTOM_SERVICE_ID, label: tr('ai.serviceCustom'), keyName: 'CUSTOM_API_KEY', protocol: 'openai-compatible' }];
 /** 当前服务商，与下拉、密钥框标题、余额按钮同步。 */
 let currentService = CUSTOM_SERVICE_ID;
 /** 已保存密钥的键名，用于按服务显示「已保存」。 */
@@ -37,9 +37,9 @@ async function aiRequest(method, body) {
     body: body ? JSON.stringify(body) : undefined,
   });
   if (!response.ok) {
-    if (response.status === 403) throw new Error('打开凭据已失效。请从桌宠菜单重新打开设置。');
-    if (response.status === 429) throw new Error('保存过于频繁，请稍等一分钟再试。');
-    throw new Error('设置未保存。请检查接口地址、模型名称与密钥，再重试。');
+    if (response.status === 403) throw new Error(tr('err.tokenExpiredDot'));
+    if (response.status === 429) throw new Error(tr('err.rateLimit'));
+    throw new Error(tr('err.aiSaveFailed'));
   }
   return response.json();
 }
@@ -74,9 +74,9 @@ function applyProfile(id) {
 
 /** 把当前服务商的状态画进密钥框与余额按钮。 */
 function paintServiceState() {
-  byId('key-label').textContent = serviceInfo(currentService).label + ' API 密钥';
+  byId('key-label').textContent = tr('ai.keyLabelFor', { service: serviceInfo(currentService).label });
   const saved = hasSavedKey(currentService);
-  byId('key-state').textContent = saved ? '已保存 · 不回显' : '尚未设置';
+  byId('key-state').textContent = saved ? tr('ai.keyStateSaved') : tr('ai.keyStateUnset');
   byId('key-actions').hidden = !saved;
   // 密钥框永远清空：留空表示保留该服务已保存的那把。
   byId('apiKey').value = '';
@@ -112,7 +112,9 @@ function populateAi(data) {
   if (serviceSelect) serviceSelect.setValue(currentService);
   applyProfile(currentService);
   paintServiceState();
-  byId('deepseek-key-state').textContent = data.hasDeepseekKey ? '已保存 · 不回显' : '尚未设置';
+  state.aiLoaded = true;
+  state.hasDeepseekKey = data.hasDeepseekKey === true;
+  byId('deepseek-key-state').textContent = data.hasDeepseekKey ? tr('ai.keyStateSaved') : tr('ai.keyStateUnset');
   byId('deepseek-key-actions').hidden = data.hasDeepseekKey !== true;
   byId('deepseekApiKey').value = '';
   byId('deepseekApiKey').disabled = false;
@@ -138,9 +140,9 @@ function onServicePicked(id) {
 /** 把余额结果翻成一行可读文案；失败一律说明原因，不显示伪造数字。 */
 function describeBalance(data) {
   if (!data || data.ok !== true) {
-    if (data && data.reason === 'credential-missing') return '缺少密钥：请先保存所选服务商的 API 密钥。';
-    if (data && data.reason === 'unsupported') return '该服务商不提供余额查询。';
-    return data && data.message ? '查询失败：' + data.message : '查询失败，请稍后重试。';
+    if (data && data.reason === 'credential-missing') return tr('ai.balanceMissingKey');
+    if (data && data.reason === 'unsupported') return tr('ai.balanceUnsupported');
+    return data && data.message ? tr('ai.balanceFailed', { message: data.message }) : tr('ai.balanceFailedGeneric');
   }
   const payload = data.data || {};
   if (data.shape === 'money' && payload.wallets) {
@@ -151,8 +153,8 @@ function describeBalance(data) {
       .join(' / ');
   }
   if (data.shape === 'points') return payload.total + ' ' + payload.unit;
-  if (data.shape === 'windows') return '月度已用 ' + payload.monthly + '%';
-  return '已取到余额数据。';
+  if (data.shape === 'windows') return tr('ai.balanceMonthlyUsed', { percent: payload.monthly });
+  return tr('ai.balanceFetched');
 }
 
 function wireBalanceQuery() {
@@ -163,7 +165,7 @@ function wireBalanceQuery() {
     result.className = 'status';
     result.dataset.ok = '';
     result.dataset.error = '';
-    result.textContent = '正在查询余额…';
+    result.textContent = tr('ai.balanceQuerying');
     try {
       const response = await fetch(AI_BALANCE_URL, {
         method: 'POST',
@@ -171,7 +173,7 @@ function wireBalanceQuery() {
         cache: 'no-store',
         headers: { 'X-DSH-Pet-Token': TOKEN },
       });
-      if (!response.ok) throw new Error('查询被拒绝（HTTP ' + response.status + '）');
+      if (!response.ok) throw new Error(tr('ai.balanceHttpError', { status: response.status }));
       const data = await response.json();
       const ok = data && data.ok === true;
       if (ok) result.dataset.ok = 'true';
@@ -189,17 +191,17 @@ function wireBalanceQuery() {
 function wireKeyDelete(status) {
   byId('key-delete').addEventListener('click', async () => {
     const confirmed = await confirmDialog({
-      title: '删除已保存的密钥',
-      text: '只删除当前服务商的密钥；别家已保存的密钥不受影响。删除后桌宠将无法再用这家调用模型。',
-      confirmLabel: '删除',
+      title: tr('ai.delKeyTitle'),
+      text: tr('ai.delKeyText'),
+      confirmLabel: tr('btn.delete'),
       danger: true,
     });
     if (!confirmed) return;
-    setStatus(status, '正在删除密钥…');
+    setStatus(status, tr('ai.delKeyRunning'));
     try {
       // 带上服务商：用户可能刚切过来还没保存，服务端要删的必须是他看到的那一家。
       populateAi(await aiRequest('POST', { service: currentService, clearKey: true }));
-      setStatus(status, '已删除该服务商的密钥。', 'ok');
+      setStatus(status, tr('ai.delKeyDone'), 'ok');
     } catch (error) {
       setStatus(status, error && error.message ? error.message : String(error), 'error');
     }
@@ -209,16 +211,16 @@ function wireKeyDelete(status) {
 function wireDeepseekKeyDelete(status) {
   byId('deepseek-key-delete').addEventListener('click', async () => {
     const confirmed = await confirmDialog({
-      title: '删除已保存的语音密钥',
-      text: '删除后 DeepSeek 语音将不可用，直到重新填写密钥。',
-      confirmLabel: '删除',
+      title: tr('ai.delVoiceKeyTitle'),
+      text: tr('ai.delVoiceKeyText'),
+      confirmLabel: tr('btn.delete'),
       danger: true,
     });
     if (!confirmed) return;
-    setStatus(status, '正在删除语音密钥…');
+    setStatus(status, tr('ai.delVoiceKeyRunning'));
     try {
       populateAi(await aiRequest('POST', { clearDeepseekKey: true }));
-      setStatus(status, '已删除保存的语音密钥。', 'ok');
+      setStatus(status, tr('ai.delVoiceKeyDone'), 'ok');
     } catch (error) {
       setStatus(status, error && error.message ? error.message : String(error), 'error');
     }
@@ -229,7 +231,7 @@ function wireTest(testBtn, testResult) {
   testBtn.addEventListener('click', async () => {
     testBtn.disabled = true;
     testResult.className = 'status';
-    testResult.textContent = '正在测试连接，请稍候…';
+    testResult.textContent = tr('ai.testing');
     const input = {
       protocol: protocolSelect ? protocolSelect.getValue() : 'openai-compatible',
       baseUrl: byId('baseUrl').value.trim(),
@@ -249,16 +251,16 @@ function wireTest(testBtn, testResult) {
         testResult.className = 'status';
         testResult.dataset.ok = 'true';
         testResult.textContent = '✓ ' + data.message;
-        if (data.reply) testResult.textContent += '；回复：' + data.reply;
+        if (data.reply) testResult.textContent += tr('ai.testReply', { reply: data.reply });
       } else {
         testResult.className = 'status';
         testResult.dataset.error = 'true';
-        testResult.textContent = '✗ ' + (data.message || data.error || '测试失败');
+        testResult.textContent = '✗ ' + (data.message || data.error || tr('ai.testFailed'));
       }
     } catch (error) {
       testResult.className = 'status';
       testResult.dataset.error = 'true';
-      testResult.textContent = '✗ 请求异常：' + (error && error.message ? error.message : String(error));
+      testResult.textContent = tr('ai.testError', { message: error && error.message ? error.message : String(error) });
     } finally {
       testBtn.disabled = false;
     }
@@ -270,7 +272,7 @@ function wireSave(form, save, status) {
     event.preventDefault();
     if (!form.reportValidity()) return;
     save.disabled = true;
-    setStatus(status, '正在保存到本机…');
+    setStatus(status, tr('status.savingLocal'));
     // 只提交当前服务商这一栏：别家的密钥与 profile 原样留在配置里。
     const keys = {};
     const typed = byId('apiKey').value;
@@ -291,7 +293,7 @@ function wireSave(form, save, status) {
     byId('deepseekApiKey').value = '';
     try {
       populateAi(await aiRequest('POST', input));
-      setStatus(status, '已保存到本机。', 'ok');
+      setStatus(status, tr('status.savedLocal'), 'ok');
     } catch (error) {
       setStatus(status, error && error.message ? error.message : String(error), 'error');
     } finally {

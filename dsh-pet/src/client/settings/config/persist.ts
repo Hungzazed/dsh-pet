@@ -15,7 +15,7 @@ import type { PackWrite } from './pack-writes.ts';
 
 /** 保存结果；`corrupt` 带出真实写入路径，`partial` 列出没写成功的种类。 */
 export type SaveResult =
-  | { kind: 'ok' }
+  | { kind: 'ok'; merged: MergedConfig }
   | { kind: 'invalid' }
   | { kind: 'error' }
   | { kind: 'corrupt'; path: string }
@@ -47,10 +47,10 @@ export async function persistSettings(
     if (result.kind === 'ok') merged = result.merged;
     else failed.push(write.entry);
   }
-  setActiveLanguage((merged as { main?: Record<string, unknown> })?.main?.language);
+  setActiveLanguage((merged as { main?: Record<string, unknown> })?.main?.language, undefined, { persist: true });
   petBridge.reload(merged);
   void reloadNotifications(); // 保存后即时生效，无需刷新。
-  return failed.length > 0 ? { kind: 'partial', failed } : { kind: 'ok' };
+  return failed.length > 0 ? { kind: 'partial', failed } : { kind: 'ok', merged };
 }
 
 /**
@@ -61,7 +61,7 @@ export async function persistSettings(
 export async function syncSettings(): Promise<MergedConfig | null> {
   const merged = await syncConfig();
   if (merged === null) return null;
-  setActiveLanguage((merged as { main?: Record<string, unknown> })?.main?.language);
+  setActiveLanguage((merged as { main?: Record<string, unknown> })?.main?.language, undefined, { persist: true });
   petBridge.reload(merged);
   void reloadNotifications();
   return merged;

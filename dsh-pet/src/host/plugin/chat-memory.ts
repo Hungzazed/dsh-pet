@@ -152,7 +152,7 @@ export function createChatMemory(deps: ChatMemoryInput) {
    *  收 `findPetInstance` 的命中结果而不是 (petId, cfg)：调用方都已解析过，再查只会多一处
    *  「查不到就兜底 main」的不可达分支。 */
   const langOf = (cfg: Record<string, Record<string, unknown>>): ResolvedLanguage =>
-    resolvePetLanguage(cfg.main?.language, undefined, 'zh');
+    resolvePetLanguage(cfg.main?.language, undefined, 'vi');
 
   const petSystemPrompt = (
     found: { conf: Record<string, unknown>; pet: Record<string, unknown> },

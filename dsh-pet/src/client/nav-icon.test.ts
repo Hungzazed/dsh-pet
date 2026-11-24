@@ -19,6 +19,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { expandUseRefs, installSectionNavIcon, svgMaskUri, symbolIn } from './nav-icon.ts';
+import { getLanguageSetting, setActiveLanguage } from '../shared/i18n/core.ts';
 
 /** 标记属性名（与模块内 MARK 一致；这里独立写一份，避免测试跟着实现改名而失效）。 */
 const MARK = 'data-dsh-pet-nav';
@@ -556,6 +557,27 @@ describe('installSectionNavIcon —— 设置面板导航换图标', () => {
       dispose();
     } finally {
       warn.restore();
+      restore();
+    }
+  });
+
+  test('启动竞态：面板已先按旧语言渲染时，fallbackLabels 仍能命中并随语言切换重扫', () => {
+    const { doc, restore } = withFakeDom();
+    const prevLang = getLanguageSetting();
+    try {
+      const { panel, cells } = panelWith(['General', 'Pet Settings']);
+      doc.body.append(panel);
+      setActiveLanguage('vi');
+      const dispose = installSectionNavIcon({
+        label: () => 'Cấu hình thú cưng',
+        fallbackLabels: ['桌宠配置', 'Pet Settings', 'Cấu hình thú cưng'],
+        renderSvg: fakeRenderer().renderSvg,
+      });
+      assert.equal(cells[0].getAttribute(MARK), null);
+      assert.equal(cells[1].getAttribute(MARK), '', '旧语言渲染的导航项也应匹配 fallbackLabels');
+      dispose();
+    } finally {
+      setActiveLanguage(prevLang);
       restore();
     }
   });

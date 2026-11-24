@@ -78,6 +78,7 @@ export function createWriteFlow(deps: WriteFlowDeps): WriteFlow {
     try {
       const result = await persistSettings(fields, deps.packWrites(), force, deps.userFile());
       if (result.kind === 'ok') {
+        deps.applyConfig(result.merged);
         setMsg({ kind: 'ok', text: t('saved') });
         return;
       }

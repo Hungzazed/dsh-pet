@@ -8,7 +8,14 @@
 import { ROUTE_PATH } from '../shared/constants.ts';
 import { avatarUrl } from '../shared/avatar.ts';
 import { DEFAULT_FONT } from '../shared/fonts.ts';
-import { DEFAULT_LANGUAGE, setActiveLanguage, subscribeLanguage, type PetLanguage } from '../shared/i18n/core.ts';
+import {
+  DEFAULT_LANGUAGE,
+  resolvePetLanguage,
+  setActiveLanguage,
+  subscribeLanguage,
+  type PetLanguage,
+} from '../shared/i18n/core.ts';
+import { defaultLimitedVoiceForLanguage, isDefaultLanguageVoice } from '../shared/i18n/defaults.ts';
 import type { MemoryConfig } from '../shared/memory.ts';
 import { DEFAULT_PHYSICS } from '../shared/physics.ts';
 import type { FontConfig, ModelSelection, PhysicsParams, Weights } from '../shared/types.ts';
@@ -257,7 +264,7 @@ export function makePetConfigSection(
         replace(entries);
         if (patch.language !== undefined) {
           setLanguage(patch.language);
-          setActiveLanguage(patch.language);
+          setActiveLanguage(patch.language, undefined, { persist: true });
         }
         if (patch.notificationsEnabled !== undefined) setNotifyEnabled(patch.notificationsEnabled);
         if (patch.notifyWhenFocused !== undefined) setNotifyWhenFocused(patch.notifyWhenFocused);
@@ -464,7 +471,16 @@ export function makePetConfigSection(
         }),
 
         h(LoadStatus, { loadState, onRetry: retry }),
-        h(LanguageCard, { busy, language, onChange: setLanguage }),
+        h(LanguageCard, {
+          busy,
+          language,
+          onChange: (nextLang: PetLanguage) => {
+            setLanguage(nextLang);
+            if (isDefaultLanguageVoice(voiceName)) {
+              setVoiceName(defaultLimitedVoiceForLanguage(resolvePetLanguage(nextLang, undefined, 'vi')));
+            }
+          },
+        }),
 
         h(KindTabs, { kinds, kind, busy, onSelect: selectKind }),
         h(PetTabs, { pets: visiblePets, selId, busy, onSelect: select, onAdd: add }),

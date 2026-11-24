@@ -14,12 +14,15 @@ import { credentialRef } from '@deepseek-ai/dsh-credentials';
 import { clampPeriodSec } from './period.ts';
 import type { ChatMemory } from './chat-memory.ts';
 import type { HostSetup } from './setup.ts';
+import type { ResolvedLanguage } from '../../shared/i18n/core.ts';
 import type { HostContext } from './context.ts';
 
 /** 余额与周期的输入：装配期对象与更早的工厂。 */
 export type BalancePollInput = {
   /** 宿主上下文（apply 收到的那一个）。 */
   ctx: HostContext;
+  /** Optional language reader for localized balance errors and client metadata. */
+  language?: () => ResolvedLanguage;
 } & Pick<HostSetup, 'configPaths'> &
   Pick<ChatMemory, 'getActivePetId'> &
   Pick<HostSetup, 'log'> &
@@ -30,7 +33,8 @@ export type BalancePollInput = {
  * 创建余额与周期。
  */
 export function createBalancePoll(deps: BalancePollInput) {
-  const { ctx, configPaths, getActivePetId, log, state, standaloneAiBalance } = deps;
+  const { ctx, configPaths, getActivePetId, language, log, state, standaloneAiBalance } = deps;
+  const lang = (): ResolvedLanguage => language?.() ?? 'zh';
   /** 当前生效宠物列表：成品配置拍平（合并器已保证 id 唯一、字段填满），命令与桌面模式共用。 */
   const effectivePetList = (): Record<string, unknown>[] => flattenPetList(readAllConfig(configPaths));
 
@@ -59,7 +63,9 @@ export function createBalancePoll(deps: BalancePollInput) {
     } catch {
       // 读不到不影响查询：version 只是平台侧的来源标识
     }
-    return { version, locale: 'zh-CN', timezoneOffsetSeconds: -new Date().getTimezoneOffset() * 60 };
+    const l = lang();
+    const locale = l === 'vi' ? 'vi-VN' : l === 'en' ? 'en-US' : 'zh-CN';
+    return { version, locale, timezoneOffsetSeconds: -new Date().getTimezoneOffset() * 60 };
   };
 
   /**
@@ -101,6 +107,7 @@ export function createBalancePoll(deps: BalancePollInput) {
           if (!account) return undefined;
           return account.getBalance(accountClientMetadata());
         },
+        lang(),
       );
       state.writeSection('balance', mark(result));
       // 失败也写 S（前端弹文字说明），日志同样留一条：否则「查了、失败了」与「根本没查」

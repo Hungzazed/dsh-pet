@@ -1508,6 +1508,73 @@ describe('文件宠物条目 —— 全局默认（用户层作基座）+ 种类
     assert.equal(out.main.chatMemoryRounds, 9);
   });
 
+  test('未显式配置 voiceName 时按 language 选择对应默认音色，显式配置则原样保留', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'dsh-pet-voice-lang-'));
+    try {
+      const paths: ConfigPaths = {
+        defaultFile: join(process.cwd(), 'assets/config.jsonc'),
+        userFile: join(dir, 'main-config.jsonc'),
+        petDir: join(dir, 'pet'),
+      };
+      // 默认（无用户层，language=vi）
+      assert.equal(readAllConfig(paths).main.voiceName, 'edge/vi-VN-HoaiMyNeural');
+      // 仅切换 language=en（未写 voiceName）→ 自动跟随英文默认音色
+      writeFileSync(paths.userFile, JSON.stringify({ language: 'en' }));
+      assert.equal(readAllConfig(paths).main.voiceName, 'edge/en-US-AvaNeural');
+      // 仅切换 language=zh → 中文默认音色
+      writeFileSync(paths.userFile, JSON.stringify({ language: 'zh' }));
+      assert.equal(readAllConfig(paths).main.voiceName, 'edge/zh-CN-XiaoyiNeural');
+      // 用户显式指定其他音色 → 即使 language=en 也不覆盖
+      writeFileSync(paths.userFile, JSON.stringify({ language: 'en', voiceName: 'edge/vi-VN-NamMinhNeural' }));
+      assert.equal(readAllConfig(paths).main.voiceName, 'edge/vi-VN-NamMinhNeural');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test('language 继承用户层并驱动 pet pack 内置文案，种类文件显式声明可覆盖', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'dsh-pet-pack-lang-'));
+    try {
+      const petDir = join(dir, 'pet');
+      mkdirSync(petDir, { recursive: true });
+      const paths: ConfigPaths = {
+        defaultFile: join(process.cwd(), 'assets/config.jsonc'),
+        userFile: join(dir, 'main-config.jsonc'),
+        petDir,
+      };
+      writeFileSync(paths.userFile, JSON.stringify({ language: 'en' }));
+      writeFileSync(join(petDir, 'pig-config.json'), JSON.stringify(PACK));
+      writeFileSync(
+        join(petDir, 'cat-config.json'),
+        JSON.stringify({
+          language: 'zh',
+          pets: [
+            {
+              id: 'cat1',
+              name: '小猫',
+              size: 300,
+              balanceEnabled: false,
+              display: 'web',
+              position: { corner: 'top-left', marginX: 10, marginY: 10 },
+            },
+          ],
+        }),
+      );
+      const out = readAllConfig(paths);
+      assert.equal(out.main.language, 'en');
+      assert.equal(out.pig.language, 'en', 'pet pack 应继承用户层的 language');
+      assert.match(String(out.pig.whisperPrompt), /master's desktop/i, 'pet pack 应获得对应语言的默认人设');
+      assert.ok(
+        (out.pig.sleepRefuseTexts as string[]).every((s) => !/[\u4e00-\u9fff]/.test(s) && !/đang ngủ/i.test(s)),
+        'pet pack 睡眠文案应跟随继承的 en',
+      );
+      assert.equal(out.cat.language, 'zh', 'pet pack 显式设置 language 时应覆盖用户层');
+      assert.match(String(out.cat.whisperPrompt), /蓝发小女仆/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   test('种类文件自己写了 → 覆盖自己那份；没写的仍继承用户层', () => {
     const out = merged({
       overlay: {

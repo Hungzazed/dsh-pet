@@ -10,6 +10,8 @@ import { isValidSizePercent, SIZE_PERCENT_DEFAULT, SIZE_PERCENT_MIN } from '../.
 import { topFieldValid } from './validate.ts';
 import { isPetLanguage, resolvePetLanguage } from '../../shared/i18n/core.ts';
 import {
+  defaultLimitedVoiceForLanguage,
+  isDefaultLanguageVoice,
   resolveBuiltinSleepTexts,
   resolveBuiltinWhisperPrompt,
   resolveBuiltinWorkStatusTexts,
@@ -71,6 +73,9 @@ export function mergeEntry(
     if ('sleepStartTexts' in out) out.sleepStartTexts = resolveBuiltinSleepTexts('start', out.sleepStartTexts, lang);
     if ('sleepEndTexts' in out) out.sleepEndTexts = resolveBuiltinSleepTexts('end', out.sleepEndTexts, lang);
     if ('workStatusTexts' in out) out.workStatusTexts = resolveBuiltinWorkStatusTexts(out.workStatusTexts, lang);
+    if ('voiceName' in out && overlay?.voiceName === undefined && isDefaultLanguageVoice(String(out.voiceName))) {
+      out.voiceName = defaultLimitedVoiceForLanguage(lang);
+    }
   }
   return out;
 }

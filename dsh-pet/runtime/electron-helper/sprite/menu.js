@@ -105,7 +105,11 @@ Object.assign(PetSprite.prototype, {
       // 第三方菜单项：只把 (owner, label) 交给宿主，具体做什么由注册方自己查 /menu/events。
       // 带上宠物 id——同一条菜单项在不同宠物上被点，注册方要能分辨是哪只。
       if (leaf.owner) {
-        S.postAction(BASE + '/menu/click', { owner: leaf.owner, label: leaf.label, pet: this.pet.id }).catch(() => {
+        S.postAction(BASE + '/menu/click', {
+          owner: leaf.owner,
+          label: leaf.itemLabel ?? leaf.label,
+          pet: this.pet.id,
+        }).catch(() => {
           /* 上报失败不影响本地：注册方下次轮询自然拿不到这次触发 */
         });
       }

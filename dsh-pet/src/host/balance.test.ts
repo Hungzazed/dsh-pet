@@ -691,3 +691,35 @@ describe('注册表 —— 第三方 provider（register / list / match）', () 
     });
   });
 });
+
+describe('queryBalance —— 多语言错误副标题（vi / en）', () => {
+  test('缺凭证、缺账号服务与非法响应在 vi / en 下返回无中文的本地化提示', async () => {
+    const viCred = await queryBalance('commandcode', async () => undefined, undefined, 'vi');
+    assert.equal(viCred.ok, false);
+    if (!viCred.ok) {
+      assert.equal(viCred.reason, 'credential-missing');
+      assert.match(viCred.message ?? '', /COMMANDCODE_API_KEY/);
+      assert.doesNotMatch(viCred.message ?? '', /[\u4e00-\u9fff]/);
+    }
+
+    const enAcct = await queryBalance('deepseek-account', async () => undefined, undefined, 'en');
+    assert.equal(enAcct.ok, false);
+    if (!enAcct.ok) {
+      assert.equal(enAcct.reason, 'credential-missing');
+      assert.match(enAcct.message ?? '', /deepseek-account/);
+      assert.doesNotMatch(enAcct.message ?? '', /[\u4e00-\u9fff]/);
+    }
+
+    const viNotLoggedIn = await queryBalance(
+      'deepseek-account',
+      async () => undefined,
+      async () => null,
+      'vi',
+    );
+    assert.equal(viNotLoggedIn.ok, false);
+    if (!viNotLoggedIn.ok) {
+      assert.equal(viNotLoggedIn.reason, 'fetch-error');
+      assert.doesNotMatch(viNotLoggedIn.message ?? '', /[\u4e00-\u9fff]/);
+    }
+  });
+});

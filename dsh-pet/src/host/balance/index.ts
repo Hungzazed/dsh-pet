@@ -8,6 +8,7 @@
  *
  * @module dsh-pet/src/host/balance/index
  */
+import type { ResolvedLanguage } from '../../shared/i18n/core.ts';
 import { BUILTIN_PROVIDERS, matchBalanceProvider } from './registry.ts';
 import type { AccountBalanceSnapshot, BalanceResult } from './types.ts';
 
@@ -31,9 +32,76 @@ function failed(
   return message === undefined ? { ok: false, provider, reason } : { ok: false, provider, reason, message };
 }
 
+/** Localize known host-generated balance error strings when running in English or Vietnamese. */
+function localizeBalanceError(message: string, language: ResolvedLanguage): string {
+  if (language === 'zh') return message;
+  const fieldMatch = /^dsh-pet: 余额数据非法字段 (.+)$/.exec(message);
+  if (fieldMatch) {
+    return language === 'vi'
+      ? `Trường dữ liệu số dư không hợp lệ: ${fieldMatch[1]}`
+      : `Invalid balance field: ${fieldMatch[1]}`;
+  }
+  const amountMatch = /^dsh-pet: 账号余额金额非法 (.+)$/.exec(message);
+  if (amountMatch) {
+    return language === 'vi'
+      ? `Số tiền số dư tài khoản không hợp lệ: ${amountMatch[1]}`
+      : `Invalid account balance amount: ${amountMatch[1]}`;
+  }
+  const accountSvcMatch = /^dsh-pet: 缺少账号服务（(.+)）$/.exec(message);
+  if (accountSvcMatch) {
+    return language === 'vi'
+      ? `Dịch vụ tài khoản không khả dụng (${accountSvcMatch[1]})`
+      : `Account service unavailable (${accountSvcMatch[1]})`;
+  }
+  const exact: Record<string, { en: string; vi: string }> = {
+    'dsh-pet: commandcode 响应缺少 credits': {
+      en: 'commandcode response missing credits',
+      vi: 'Phản hồi commandcode thiếu trường credits',
+    },
+    'dsh-pet: commandcode credits 响应缺少额度字段': {
+      en: 'commandcode credits response missing quota fields',
+      vi: 'Phản hồi commandcode credits thiếu trường hạn mức',
+    },
+    'dsh-pet: commandcode usage 响应缺少 totalCost': {
+      en: 'commandcode usage response missing totalCost',
+      vi: 'Phản hồi commandcode usage thiếu totalCost',
+    },
+    'dsh-pet: 账号未登录（deepseek-account）': {
+      en: 'Account not signed in (deepseek-account)',
+      vi: 'Tài khoản chưa đăng nhập (deepseek-account)',
+    },
+    'dsh-pet: 账号余额查询失败': {
+      en: 'Failed to fetch account balance',
+      vi: 'Không thể tra cứu số dư tài khoản',
+    },
+    'dsh-pet: 账号没有充值钱包余额': {
+      en: 'No top-up wallet balance on this account',
+      vi: 'Tài khoản không có số dư ví nạp',
+    },
+    'dsh-pet: 账号钱包结构非法': {
+      en: 'Invalid account wallet structure',
+      vi: 'Cấu trúc ví tài khoản không hợp lệ',
+    },
+    'dsh-pet: deepseek balance 响应缺少 balance_infos': {
+      en: 'DeepSeek balance response missing balance_infos',
+      vi: 'Phản hồi số dư DeepSeek thiếu balance_infos',
+    },
+    'dsh-pet: opencode usage 响应缺少 usage': {
+      en: 'opencode usage response missing usage',
+      vi: 'Phản hồi opencode usage thiếu trường usage',
+    },
+    'dsh-pet: opencode usage 响应缺少窗口': {
+      en: 'opencode usage response missing quota windows',
+      vi: 'Phản hồi opencode usage thiếu khung hạn mức',
+    },
+  };
+  return exact[message]?.[language] ?? message;
+}
+
 /** 把取数异常归一成 fetch-error（内置与第三方同一口径）。 */
-function fetchFailed(provider: string, e: unknown): BalanceResult {
-  return failed(provider, 'fetch-error', e instanceof Error ? e.message : String(e));
+function fetchFailed(provider: string, e: unknown, language: ResolvedLanguage = 'zh'): BalanceResult {
+  const raw = e instanceof Error ? e.message : String(e);
+  return failed(provider, 'fetch-error', localizeBalanceError(raw, language));
 }
 
 /**
@@ -47,6 +115,7 @@ export async function queryBalance(
   provider: string,
   resolveKey: (ref: string) => Promise<string | undefined>,
   resolveAccount?: () => Promise<AccountBalanceSnapshot | null | undefined>,
+  language: ResolvedLanguage = 'zh',
 ): Promise<BalanceResult> {
   const def = matchBalanceProvider(provider);
   if (!def) return failed(provider, 'unsupported');
@@ -57,13 +126,25 @@ export async function queryBalance(
     let timer: ReturnType<typeof setTimeout> | undefined;
     try {
       const timeout = new Promise<never>((_, reject) => {
-        timer = setTimeout(() => reject(new Error('余额查询超时（20 秒），请稍后重试')), PLUGIN_FETCH_TIMEOUT_MS);
+        timer = setTimeout(
+          () =>
+            reject(
+              new Error(
+                language === 'vi'
+                  ? 'Tra cứu số dư quá thời gian (20 giây), vui lòng thử lại sau'
+                  : language === 'en'
+                    ? 'Balance check timed out (20s), please try again later'
+                    : '余额查询超时（20 秒），请稍后重试',
+              ),
+            ),
+          PLUGIN_FETCH_TIMEOUT_MS,
+        );
         timer.unref();
       });
       // 超时只结束宿主等待，不宣称取消第三方请求；迟到结果由 race 丢弃。
       return await Promise.race([def.fetch({ provider }), timeout]);
     } catch (e) {
-      return fetchFailed(provider, e);
+      return fetchFailed(provider, e, language);
     } finally {
       if (timer !== undefined) clearTimeout(timer);
     }
@@ -73,16 +154,33 @@ export async function queryBalance(
   let key = '';
   if (def.credential.mode === 'ref') {
     const resolved = await resolveKey(def.credential.ref);
-    if (!resolved) return failed(provider, 'credential-missing', '缺少凭证 ' + def.credential.ref);
+    if (!resolved)
+      return failed(
+        provider,
+        'credential-missing',
+        language === 'vi'
+          ? 'Thiếu thông tin xác thực: ' + def.credential.ref
+          : language === 'en'
+            ? 'Missing credential: ' + def.credential.ref
+            : '缺少凭证 ' + def.credential.ref,
+      );
     key = resolved;
   } else if (!resolveAccount) {
-    return failed(provider, 'credential-missing', '缺少账号服务（' + provider + '）');
+    return failed(
+      provider,
+      'credential-missing',
+      language === 'vi'
+        ? 'Dịch vụ tài khoản không khả dụng (' + provider + ')'
+        : language === 'en'
+          ? 'Account service unavailable (' + provider + ')'
+          : '缺少账号服务（' + provider + '）',
+    );
   }
 
   try {
     return await def.fetch({ provider, key, resolveAccount });
   } catch (e) {
-    return fetchFailed(provider, e);
+    return fetchFailed(provider, e, language);
   }
 }
 

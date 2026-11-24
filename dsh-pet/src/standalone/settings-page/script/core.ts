@@ -1,5 +1,5 @@
 /**
- * 设置页脚本的公共层：令牌、请求封装、共享状态与 DOM 工具。
+ * 设置页脚本的公共层：令牌、请求封装、共享状态、多语言字典与 DOM 工具。
  *
  * 作为整页脚本的第一个片段被拼进同一个 IIFE，后续片段只调用这里导出的名字。
  * 令牌只放内存并随请求头送出，地址栏里的那一份读完即清；刷新后内存里没有令牌时，
@@ -7,6 +7,8 @@
  * 片段里不许出现第二份枚举清单，取值一律由调用方注入。
  * @module dsh-pet/src/standalone/settings-page/script/core
  */
+import { DEFAULT_VOICE_BY_LANGUAGE } from '../../../shared/i18n/defaults.ts';
+import { STANDALONE_DICTS, STANDALONE_LANGUAGE_EVENT } from '../locales.ts';
 
 /** 脚本片段需要的枚举与默认值，全部由装配入口从源码常量注入。 */
 export interface ScriptConsts {
@@ -35,6 +37,12 @@ export interface ScriptConsts {
   readonly powerContextProviderId: string;
 }
 
+const DEFAULT_LIMITED_VOICES = {
+  vi: 'edge/' + DEFAULT_VOICE_BY_LANGUAGE.vi,
+  en: 'edge/' + DEFAULT_VOICE_BY_LANGUAGE.en,
+  zh: 'edge/' + DEFAULT_VOICE_BY_LANGUAGE.zh,
+};
+
 /**
  * 生成公共层片段。
  *
@@ -49,6 +57,8 @@ history.replaceState(null, '', location.pathname);
 const API = ${JSON.stringify(routePath)};
 const VOICES = ${JSON.stringify(consts.voices)};
 const DEFAULT_VOICE_ID = ${JSON.stringify(consts.defaultVoice)};
+const DEFAULT_VOICE_BY_LANG = ${JSON.stringify(DEFAULT_LIMITED_VOICES)};
+const DEFAULT_VOICE_SET = new Set(Object.values(DEFAULT_VOICE_BY_LANG));
 const FONT_IDS = ${JSON.stringify(consts.fonts)};
 const DISPLAYS = ${JSON.stringify(consts.displays)};
 const CORNERS = ${JSON.stringify(consts.corners)};
@@ -57,7 +67,111 @@ const FALLBACK_FONT = ${JSON.stringify(consts.font)};
 const FALLBACK_WEIGHTS = ${JSON.stringify(consts.weights)};
 const POWERCONTEXT_ID = ${JSON.stringify(consts.powerContextProviderId)};
 const FALLBACK_INTERVAL_SEC = 300;
-const state = { config: null, meta: null, globals: null, pets: {}, prompts: {}, entry: 'main', petIndex: 0, dirty: false, voiceOptions: null, speechProviders: null, memoryProviders: null };
+const I18N_DICTS = ${JSON.stringify(STANDALONE_DICTS)};
+const LANG_EVENT_NAME = ${JSON.stringify(STANDALONE_LANGUAGE_EVENT)};
+const state = { config: null, meta: null, globals: null, pets: {}, prompts: {}, entry: 'main', petIndex: 0, dirty: false, voiceOptions: null, speechProviders: null, memoryProviders: null, lang: 'zh', activeTab: 'chat', aiLoaded: false, hasDeepseekKey: false };
+
+function resolveUiLang(setting) {
+  if (setting === 'vi' || setting === 'en' || setting === 'zh') return setting;
+  if (setting === 'auto') {
+    const raw = (typeof navigator !== 'undefined' && navigator.language) ? String(navigator.language).toLowerCase() : 'en';
+    if (raw.startsWith('vi')) return 'vi';
+    if (raw.startsWith('zh')) return 'zh';
+    return 'en';
+  }
+  return 'zh';
+}
+
+
+function tr(key, params) {
+  const dict = I18N_DICTS[state.lang] || I18N_DICTS.zh;
+  const raw = (dict && key in dict) ? dict[key] : (I18N_DICTS.zh[key] || key);
+  if (!params) return raw;
+  return raw.replace(/\\{(\\w+)\\}/g, function (_m, name) {
+    return Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : '';
+  });
+}
+
+function setTextById(id, text) {
+  const el = byId(id);
+  if (el) el.textContent = text;
+}
+
+function setPlaceholderById(id, text) {
+  const el = byId(id);
+  if (el) el.placeholder = text;
+}
+
+function applyChromeTranslations() {
+  const htmlLang = state.lang === 'vi' ? 'vi' : state.lang === 'en' ? 'en' : 'zh-CN';
+  if (document.documentElement) document.documentElement.lang = htmlLang;
+  document.title = tr('page.title');
+  setTextById('brand-label', tr('brand.label'));
+  const nav = byId('settings-nav');
+  if (nav) nav.setAttribute('aria-label', tr('nav.aria'));
+  const tabChat = byId('tab-chat');
+  if (tabChat) tabChat.dataset.title = tr('nav.chat');
+  const tabConfig = byId('tab-config');
+  if (tabConfig) tabConfig.dataset.title = tr('nav.config');
+  setTextById('nav-label-chat', tr('nav.chat'));
+  setTextById('nav-label-config', tr('nav.config'));
+  setTextById('side-foot', tr('side.foot'));
+  setTextById('page-title', state.activeTab === 'config' ? tr('nav.config') : tr('nav.chat'));
+  setTextById('dirty', tr('dirty.badge'));
+  setTextById('pet-save', tr('btn.save'));
+  setTextById('ai-card-title', tr('ai.cardTitle'));
+  setTextById('ai-card-hint', tr('ai.cardHint'));
+  setTextById('service-label', tr('ai.serviceLabel'));
+  setTextById('service-note', tr('ai.serviceNote'));
+  setTextById('protocol-label', tr('ai.protocolLabel'));
+  setTextById('baseUrl-label', tr('ai.baseUrlLabel'));
+  setTextById('endpoint-note', tr('ai.baseUrlNote'));
+  setTextById('model-label', tr('ai.modelLabel'));
+  setPlaceholderById('model', tr('ai.modelPlaceholder'));
+  const modelToggle = byId('model-toggle');
+  if (modelToggle) modelToggle.setAttribute('aria-label', tr('ai.modelToggleAria'));
+  setTextById('model-note', tr('ai.modelNote'));
+  setPlaceholderById('apiKey', tr('ai.keyPlaceholder'));
+  setTextById('key-delete', tr('btn.deleteKey'));
+  setTextById('key-note', tr('ai.keyNote'));
+  setTextById('deepseek-key-label', tr('ai.voiceKeyLabel'));
+  setPlaceholderById('deepseekApiKey', tr('ai.keyPlaceholder'));
+  setTextById('deepseek-key-delete', tr('btn.deleteVoiceKey'));
+  setTextById('deepseek-key-note', tr('ai.voiceKeyNote'));
+  setTextById('balance-note', tr('ai.balanceNote'));
+  setTextById('balance-btn', tr('btn.queryBalance'));
+  setTextById('test-btn', tr('btn.testConn'));
+  setTextById('privacy', tr('ai.privacy'));
+  setTextById('save', tr('btn.save'));
+  if (typeof protocolSelect !== 'undefined' && protocolSelect) {
+    protocolSelect.setOptions([
+      { value: 'openai-compatible', label: tr('ai.protocolOpenAI') },
+      { value: 'anthropic', label: tr('ai.protocolAnthropic') },
+    ]);
+  }
+  if (state.aiLoaded) {
+    if (typeof paintServiceState === 'function') paintServiceState();
+    setTextById('deepseek-key-state', state.hasDeepseekKey ? tr('ai.keyStateSaved') : tr('ai.keyStateUnset'));
+    const aiStatus = byId('status');
+    if (aiStatus && aiStatus.dataset.error !== 'true' && aiStatus.dataset.ok !== 'true') {
+      aiStatus.textContent = tr('status.aiLocalOnly');
+    }
+  } else {
+    setTextById('key-label', tr('ai.keyLabelDefault'));
+    setTextById('key-state', tr('ai.keyStateUnread'));
+    setTextById('deepseek-key-state', tr('ai.keyStateUnread'));
+  }
+}
+
+function applyPageLanguage(setting, opts) {
+  if (setting !== 'vi' && setting !== 'en' && setting !== 'zh' && setting !== 'auto') return;
+  const resolved = resolveUiLang(setting);
+  state.lang = resolved;
+  applyChromeTranslations();
+  if (opts && opts.broadcast && typeof window !== 'undefined' && typeof window.dispatchEvent === 'function' && typeof CustomEvent === 'function') {
+    window.dispatchEvent(new CustomEvent(LANG_EVENT_NAME, { detail: { language: setting } }));
+  }
+}
 
 function byId(id) {
   return document.getElementById(id);
@@ -111,9 +225,9 @@ async function callApi(method, path, body) {
   });
   const data = await response.json().catch(() => null);
   if (!response.ok) {
-    if (response.status === 403) throw new Error('打开凭据已失效，请从桌宠菜单重新打开设置。');
-    if (response.status === 429) throw new Error('保存过于频繁，请稍等一分钟再试。');
-    throw new Error((data && (data.message || data.error)) || '本机接口暂时无法处理请求');
+    if (response.status === 403) throw new Error(tr('err.tokenExpired'));
+    if (response.status === 429) throw new Error(tr('err.rateLimit'));
+    throw new Error((data && (data.message || data.error)) || tr('err.localApi'));
   }
   return data;
 }

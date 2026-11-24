@@ -4,7 +4,7 @@
  */
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { DEFAULT_VOICE, VOICES } from './voices.ts';
+import { DEFAULT_VOICE, defaultVoiceForLanguage, VOICES } from './voices.ts';
 
 test('DEFAULT_VOICE：必须在清单里，且恰好一个 default', () => {
   assert.equal(
@@ -20,5 +20,19 @@ test('DEFAULT_VOICE：必须在清单里，且恰好一个 default', () => {
 test('清单里的音色 id 不含 provider 前缀：前缀由注册表统一加', () => {
   for (const voice of VOICES) {
     assert.equal(voice.id.includes('/'), false, `音色 id 不能自带前缀: ${voice.id}`);
+  }
+});
+
+test('defaultVoiceForLanguage：各语言映射到对应内置音色且默认语言为 vi', () => {
+  assert.equal(defaultVoiceForLanguage('vi'), 'vi-VN-HoaiMyNeural');
+  assert.equal(defaultVoiceForLanguage('en'), 'en-US-AvaNeural');
+  assert.equal(defaultVoiceForLanguage('zh'), 'zh-CN-XiaoyiNeural');
+  assert.equal(DEFAULT_VOICE, defaultVoiceForLanguage('vi'));
+  for (const lang of ['vi', 'en', 'zh'] as const) {
+    assert.equal(
+      VOICES.some((v) => v.id === defaultVoiceForLanguage(lang)),
+      true,
+      `缺少 ${lang} 默认音色`,
+    );
   }
 });

@@ -20,7 +20,7 @@ import { registerPetChatTab, openPetChatTab } from './chat/register.ts';
 import { PET_CHAT_COMMAND_ID, registerPetChatShortcut } from './chat/shortcut.ts';
 import { dicts as chatDicts, NS as CHAT_NS } from './chat/locales/index.ts';
 import { ROUTE_PATH } from '../shared/constants.ts';
-import { setActiveLanguage, setHostLocale } from '../shared/i18n/core.ts';
+import { initClientLanguage, setActiveLanguage } from '../shared/i18n/core.ts';
 import { bindPluginLocale, detectHostLocale } from './i18n-bind.ts';
 import { registerPetCardShortcuts } from './pet/card/shortcut.ts';
 import type * as ReactNS from 'react';
@@ -76,14 +76,15 @@ export function makeFactory(): (require: (mod: string) => any) => any {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- DSH 注入的 ctx（locale/slots/webServer 等 service 无静态类型）
     function apply(ctx: any) {
       // 探测宿主语言供 language="auto" 回落，并在启动时异步读取用户配置的 language。
-      setHostLocale(detectHostLocale(ctx.locale));
+      initClientLanguage(detectHostLocale(ctx.locale));
       ctx.effect(() => {
         let alive = true;
         void fetch(ROUTE_PATH + '/config', { cache: 'no-store' })
           .then((r) => (r.ok ? r.json() : null))
           .then((body: { ok?: unknown; main?: { language?: unknown } } | null) => {
             if (!alive || !body || body.ok === false) return;
-            if (body.main && 'language' in body.main) setActiveLanguage(body.main.language);
+            if (body.main && 'language' in body.main)
+              setActiveLanguage(body.main.language, undefined, { persist: true });
           })
           .catch(() => undefined);
         return () => {
@@ -196,7 +197,11 @@ export function makeFactory(): (require: (mod: string) => any) => any {
           console.warn('[dsh-pet] 设置页导航图标不可用（那一行仍是齿轮）');
           return () => {};
         }
-        return installSectionNavIcon({ label: () => t('nav'), renderSvg: () => renderIcon(icon) });
+        return installSectionNavIcon({
+          label: () => t('nav'),
+          fallbackLabels: Object.values(dicts).map((dict) => dict.nav),
+          renderSvg: () => renderIcon(icon),
+        });
       }, 'dsh-pet: settings nav icon');
 
       // 宠物 overlay：容器渲染多个 PetCard。

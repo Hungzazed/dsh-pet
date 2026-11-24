@@ -125,8 +125,9 @@ export function createMenuActions(deps: MenuActionDeps): MenuActions {
       const owner = leaf.owner ?? '';
       if (owner !== '') {
         // 同页消费者（petApi7340.menuEvents）当场就能取到；HTTP 照旧上报，桌面端与老扩展仍读宿主那份。
-        setMenuClick(owner, leaf.label, petId);
-        postAction(ROUTE_PATH + '/menu/click', { owner, label: leaf.label, pet: petId }).catch((error: unknown) =>
+        const clickLabel = leaf.itemLabel ?? leaf.label;
+        setMenuClick(owner, clickLabel, petId);
+        postAction(ROUTE_PATH + '/menu/click', { owner, label: clickLabel, pet: petId }).catch((error: unknown) =>
           deps.warn('[dsh-pet] 第三方菜单点击上报失败 ' + String(error)),
         );
       }

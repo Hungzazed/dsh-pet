@@ -143,13 +143,13 @@ export function createHearControl(opts: HearControlOptions): HearControl {
       }
       const text = outcome.text.trim();
       if (text === '') {
-        hint.flash('没听清，再说一次');
+        hint.flash(uiText('chat.hearUnclear'));
         return;
       }
       hint.hide();
       insertText(text);
     } catch (e) {
-      hint.flash('录音出错：' + (e instanceof Error ? e.message : String(e)));
+      hint.flash(uiText('chat.recordError', { message: e instanceof Error ? e.message : String(e) }));
     } finally {
       hearState = 'idle';
       paint();

@@ -10,6 +10,8 @@
  * @module dsh-pet/src/client/nav-icon
  */
 
+import { subscribeLanguage } from '../shared/i18n/core.ts';
+
 /** 注入的样式表去重标记（与宠物页面 / 设置页同一套 `data-plugin-css` 约定）。 */
 const STYLE_TAG = 'dsh-pet/nav-icon.css';
 
@@ -30,6 +32,8 @@ const LABEL_SELECTOR = '[class*="navLabel"]';
 export interface SectionNavIcon {
   /** 目标行标题，与注册 `settings.section` 时的 label 同源；每次现取。 */
   label: () => string;
+  /** 可选候选译文：启动异步加载语言前，宿主可能已按其他语种渲染该导航行。 */
+  readonly fallbackLabels?: readonly string[];
   /** 把图标渲成内联 SVG 源码；由调用方注入，本模块因此不依赖 react / react-dom。 */
   renderSvg: () => string;
 }
@@ -192,9 +196,16 @@ export function installSectionNavIcon(target: SectionNavIcon): () => void {
       if (wanted === '') return;
       const list = panel.querySelector(LIST_SELECTOR);
       if (list === null) return;
+      const candidates = new Set<string>([wanted]);
+      if (target.fallbackLabels) {
+        for (const alt of target.fallbackLabels) {
+          if (alt !== '') candidates.add(alt);
+        }
+      }
       for (const cell of list.querySelectorAll(CELL_SELECTOR)) {
         if (cell.getAttribute(MARK) !== null) continue;
-        if (cell.querySelector(LABEL_SELECTOR)?.textContent === wanted) cell.setAttribute(MARK, '');
+        const text = cell.querySelector(LABEL_SELECTOR)?.textContent ?? '';
+        if (candidates.has(text)) cell.setAttribute(MARK, '');
       }
     } catch (error) {
       if (!warned) {
@@ -232,8 +243,10 @@ export function installSectionNavIcon(target: SectionNavIcon): () => void {
   sync();
   const bodyObserver = new Observer(sync);
   bodyObserver.observe(doc.body, { childList: true });
+  const unsubLang = subscribeLanguage(sync);
 
   return () => {
+    unsubLang();
     bodyObserver.disconnect();
     panelObserver?.disconnect();
   };
