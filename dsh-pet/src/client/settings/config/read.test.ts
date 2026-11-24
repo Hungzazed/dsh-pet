@@ -85,6 +85,14 @@ describe('readMainConfig —— 成品聚合 → 表单补丁', () => {
     assert.equal(readMainConfig({ main: { pets: [], chatImageLimit: 0 } })?.chatImageLimit, 0);
   });
 
+  test('language 字段只认合法值（vi/en/zh/auto），非法或缺失不进补丁', () => {
+    assert.equal(readMainConfig({ main: { pets: [], language: 'vi' } })?.language, 'vi');
+    assert.equal(readMainConfig({ main: { pets: [], language: 'en' } })?.language, 'en');
+    assert.equal(readMainConfig({ main: { pets: [], language: 'auto' } })?.language, 'auto');
+    assert.equal('language' in (readMainConfig({ main: { pets: [], language: 'fr' } }) ?? {}), false);
+    assert.equal('language' in (readMainConfig({ main: { pets: [] } }) ?? {}), false);
+  });
+
   test('布尔字段缺失就不进补丁，避免把默认值当用户选择写回去', () => {
     const patch = readMainConfig({ main: { pets: [] } });
     assert.equal('notificationsEnabled' in (patch ?? {}), false);

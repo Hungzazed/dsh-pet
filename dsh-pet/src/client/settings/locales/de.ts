@@ -6,6 +6,16 @@ import type { Key } from './zh.ts';
 export const de: Record<Key, string> = {
   nav: 'Desktop-Pet-Konfiguration',
   intro: 'Mehrere Pets verwalten: Jedes Pet hat eigene Größe und Position (gilt sofort nach dem Speichern).',
+  languageTitle: 'Sprache (Language)',
+  languageHint:
+    'Wähle die Anzeigesprache für das gesamte Plugin: Einstellungen, Chat-Panel, Kontextmenü, Aufgaben, System-Tray und Standard-KI-Prompts. Klicke auf „Speichern“, um sie sofort anzuwenden.',
+  languageLabel: 'Oberflächen- & KI-Sprache',
+  languageFieldHint:
+    'Vietnamesisch / Englisch / Chinesisch überschreibt direkt die gesamte Plugin-Oberfläche und Standard-Prompts; „DSH / System folgen (Auto)“ folgt der Host-Sprache.',
+  'language.vi': 'Tiếng Việt (Vietnamesisch)',
+  'language.en': 'English',
+  'language.zh': 'Chinesisch (Chinese)',
+  'language.auto': 'DSH / System folgen (Auto)',
   // 卡片标题与卡片级说明；说明统一进问号气泡。
   petCardTitle: 'Pet-Konfiguration',
   avatarLabel: 'Avatar',

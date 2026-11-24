@@ -141,7 +141,7 @@ describe('createChatMemory —— 图信息写入记忆文件', () => {
   });
 
   test('配图的一轮：assistant 记下表情包名，正文里的标记仍被剥离', async () => {
-    const ws = tempWorkspace({ chatImageEnabled: true, memes: { 可爱: '卖萌立绘' } });
+    const ws = tempWorkspace({ language: 'zh', chatImageEnabled: true, memes: { 可爱: '卖萌立绘' } });
     mkdirSync(ws.memeDir, { recursive: true });
     writeFileSync(join(ws.memeDir, '可爱.png'), '');
     try {
@@ -384,7 +384,7 @@ describe('createChatMemory —— 对话动作联动', () => {
 
 describe('createChatMemory —— 提示词注入（配图 / 动作各自独立）', () => {
   test('两个开关都开：user 正文同时带配图清单与动作清单', async () => {
-    const ws = tempWorkspace({ chatImageEnabled: true, memes: { 可爱: '卖萌立绘' } });
+    const ws = tempWorkspace({ language: 'zh', chatImageEnabled: true, memes: { 可爱: '卖萌立绘' } });
     mkdirSync(ws.memeDir, { recursive: true });
     writeFileSync(join(ws.memeDir, '可爱.png'), '');
     const captured: Record<string, unknown>[] = [];
@@ -397,6 +397,31 @@ describe('createChatMemory —— 提示词注入（配图 / 动作各自独立�
       assert.ok(text.includes('- 优雅女仆舞'), '动作清单要带上名字');
     } finally {
       rmSync(ws.dir, { recursive: true, force: true });
+    }
+  });
+
+  test('language=vi / en 注入对应语言的系统提示词与配图/动作指令', async () => {
+    for (const [lang, imgTag, actTag] of [
+      ['vi', '[Ảnh meme]', '[Động tác]'],
+      ['en', '[Meme]', '[Action]'],
+    ] as const) {
+      const ws = tempWorkspace({ language: lang, chatImageEnabled: true, memes: { 可爱: 'cute pose' } });
+      mkdirSync(ws.memeDir, { recursive: true });
+      writeFileSync(join(ws.memeDir, '可爱.png'), '');
+      const captured: Record<string, unknown>[] = [];
+      try {
+        await createMemory('ok', ws, ws.memeDir, undefined, captured).chatWithPet('main', 'hi');
+        const text = userTextOf(captured[0]);
+        const sys = String(captured[0].system ?? '');
+        assert.ok(text.includes(imgTag), `${lang} should inject ${imgTag}`);
+        assert.ok(text.includes(actTag), `${lang} should inject ${actTag}`);
+        assert.ok(
+          sys.includes(lang === 'vi' ? '[Hiện tại]' : '[Now]'),
+          `${lang} system prompt should use localized time context`,
+        );
+      } finally {
+        rmSync(ws.dir, { recursive: true, force: true });
+      }
     }
   });
 

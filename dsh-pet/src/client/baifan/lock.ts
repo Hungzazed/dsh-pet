@@ -6,6 +6,7 @@
  * 同一标签页刷新后还在，下次开演先拿它续期，续得上说明那本来就是我的。
  * @module dsh-pet/src/client/baifan/lock
  */
+import { uiText } from '../../shared/i18n/ui.ts';
 import { CFG } from './constants.ts';
 import type { Transport } from './transport.ts';
 
@@ -86,14 +87,14 @@ export function createLock(transport: Transport, petId: string, alive: () => boo
 
     const reason = created.reason;
     if (reason === 'pet-not-displayed') {
-      throw new Error('这只宠物没显示在网页里（display=' + String(created.display) + '）');
+      throw new Error(uiText('baifan.notInWeb', { display: String(created.display) }));
     }
-    if (reason !== 'locked') throw new Error('取锁失败：' + String(reason ?? 'unknown'));
+    if (reason !== 'locked') throw new Error(uiText('baifan.lockFailed', { reason: String(reason ?? 'unknown') }));
 
     // 3) 被占着：可能是上一场还没过期。等一等，别直接判死。
     const expiresAt = typeof created.expiresAt === 'number' ? created.expiresAt : 0;
     const waitMs = Math.min(CFG.lockWaitMs, Math.max(0, expiresAt - Date.now()) + 2000);
-    toast('上一场还没收干净，等它过期…');
+    toast(uiText('baifan.waitPrevious'));
     const deadline = performance.now() + waitMs;
     for (;;) {
       if (!alive()) throw new Halted();
@@ -107,9 +108,10 @@ export function createLock(transport: Transport, petId: string, alive: () => boo
         writeStored(petId, lockId);
         return;
       }
-      if (retry.reason !== 'locked') throw new Error('取锁失败：' + String(retry.reason ?? 'unknown'));
+      if (retry.reason !== 'locked')
+        throw new Error(uiText('baifan.lockFailed', { reason: String(retry.reason ?? 'unknown') }));
     }
-    throw new Error('宠物被别人占着，等会儿再试');
+    throw new Error(uiText('baifan.busy'));
   }
 
   /** 心跳：续期顺带探活；丢了置 lost，追击循环下一拍自然收场。 */

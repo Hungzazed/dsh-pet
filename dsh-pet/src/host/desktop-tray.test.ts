@@ -33,15 +33,19 @@ function harness(options: {
   appMode?: boolean;
   isBridge?: boolean;
   canQuit?: boolean;
+  language?: string;
   pets?: Array<Record<string, unknown>>;
 }) {
   const requests: string[] = [];
   const bodies: string[] = [];
   const quits: string[] = [];
   const menus: MenuItem[][] = [];
+  const tooltips: string[] = [];
 
   class FakeTray {
-    setToolTip(): void {}
+    setToolTip(tip: string): void {
+      tooltips.push(tip);
+    }
     setContextMenu(menu: unknown): void {
       menus.push((menu as { template: MenuItem[] }).template);
     }
@@ -61,7 +65,15 @@ function harness(options: {
       requests.push(method + ' ' + url);
       if (body !== undefined) bodies.push(body);
       if (url.endsWith('/config')) {
-        return { status: 200, body: JSON.stringify({ main: { pets: options.pets ?? [] } }) };
+        return {
+          status: 200,
+          body: JSON.stringify({
+            main: {
+              ...(options.language !== undefined ? { language: options.language } : {}),
+              pets: options.pets ?? [],
+            },
+          }),
+        };
       }
       if (url.endsWith('/quit')) {
         return { status: 200, body: JSON.stringify({ canQuit: options.canQuit === true }) };
@@ -77,7 +89,7 @@ function harness(options: {
   };
 
   const tray = createTray(deps);
-  return { tray, requests, bodies, quits, menus };
+  return { tray, requests, bodies, quits, menus, tooltips };
 }
 
 /** 取最后一次构建出来的菜单模板。 */
@@ -182,6 +194,18 @@ describe('createTray —— 重建后刷新', () => {
     await tray.refresh();
     assert.equal(menus.length, 2, 'refresh 应重新设置一次菜单');
     assert.equal(lastMenu(menus)[0].checked, false, '配置变了勾选要跟着变');
+  });
+
+  test('language=vi / en 本地化托盘退出项与提示文案', async () => {
+    const viH = harness({ appMode: true, language: 'vi', pets: [{ label: 'a', id: 'a', display: 'both' }] });
+    await viH.tray.start();
+    assert.ok(lastMenu(viH.menus).some((item) => item.label === 'Thoát'));
+    assert.equal(viH.tooltips[0], 'dsh-pet Thú cưng desktop');
+
+    const enH = harness({ appMode: true, language: 'en', pets: [{ label: 'a', id: 'a', display: 'both' }] });
+    await enH.tray.start();
+    assert.ok(lastMenu(enH.menus).some((item) => item.label === 'Quit'));
+    assert.equal(enH.tooltips[0], 'dsh-pet Desktop Pet');
   });
 
   test('没建托盘时 refresh 什么都不做（托盘开关关掉的情况）', async () => {

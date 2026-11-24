@@ -8,6 +8,7 @@
 import { ROUTE_PATH } from '../shared/constants.ts';
 import { avatarUrl } from '../shared/avatar.ts';
 import { DEFAULT_FONT } from '../shared/fonts.ts';
+import { DEFAULT_LANGUAGE, setActiveLanguage, subscribeLanguage, type PetLanguage } from '../shared/i18n/core.ts';
 import type { MemoryConfig } from '../shared/memory.ts';
 import { DEFAULT_PHYSICS } from '../shared/physics.ts';
 import type { FontConfig, ModelSelection, PhysicsParams, Weights } from '../shared/types.ts';
@@ -20,6 +21,7 @@ import { type MergedConfig, readConfigEntries, readMainConfig } from './settings
 import { type DialogState, makeDialog } from './settings/dialog.ts';
 import { makeEnvironmentCard } from './settings/environment-card.ts';
 import { makeFontCard } from './settings/font-card.ts';
+import { makeLanguageCard } from './settings/language-card.ts';
 import { makeGlobalCard, type GlobalFlagKey, type GlobalFlags } from './settings/global-card.ts';
 import { makeLoadStatus } from './settings/load-status.ts';
 import { makeMemoryCard } from './settings/memory-card.ts';
@@ -82,6 +84,7 @@ export function makePetConfigSection(
   const EnvironmentCard = makeEnvironmentCard(rt);
   const MemoryCard = makeMemoryCard(rt);
   const VoiceCard = makeVoiceCard(rt, VoicePicker);
+  const LanguageCard = makeLanguageCard(rt);
   const FontCard = makeFontCard(rt);
   const ModelCard = makeModelCard(rt, ModelPicker);
   const PhysicsCard = makePhysicsCard(rt);
@@ -221,6 +224,11 @@ export function makePetConfigSection(
     const [memoryProviders, setMemoryProviders] = useState<{ id: string; name: string }[]>([]);
     // 天气城市覆盖（全局，只读 main）：空串是有效值 = 跟随 IP 自动定位，所以初值就是空串。
     const [environmentCity, setEnvironmentCity] = useState('');
+    // 语言（全局默认）：只改本地状态，随「保存」整包写入并广播刷新全部已挂载界面。
+    const [language, setLanguage] = useState<PetLanguage>(DEFAULT_LANGUAGE);
+    // 订阅插件语言切换：保存或同步后立即触发本页重渲染，不必刷新页面。
+    const [, setLangTick] = useState(0);
+    useEffect(() => subscribeLanguage(() => setLangTick((n) => n + 1)), []);
     // 物理参数（全局）：只改本地状态，随「保存」整包写入；初值仅占位，成品加载成功后才允许编辑与保存。
     const [physics, setPhysics] = useState<PhysicsParams>({ ...DEFAULT_PHYSICS });
     // 字体（全局默认）：与 physics 同一套语义；初值仅占位，成品加载成功后才允许编辑与保存。
@@ -247,6 +255,10 @@ export function makePetConfigSection(
         const patch = readMainConfig(merged);
         if (entries === null || patch === null) throw new Error('Invalid config response');
         replace(entries);
+        if (patch.language !== undefined) {
+          setLanguage(patch.language);
+          setActiveLanguage(patch.language);
+        }
         if (patch.notificationsEnabled !== undefined) setNotifyEnabled(patch.notificationsEnabled);
         if (patch.notifyWhenFocused !== undefined) setNotifyWhenFocused(patch.notifyWhenFocused);
         if (patch.clickSoundEnabled !== undefined) setClickSound(patch.clickSoundEnabled);
@@ -372,6 +384,7 @@ export function makePetConfigSection(
       fields: () => ({
         // PUT /config 只写用户主配置：只能提交 main 层实例，pack 实例走 POST /pet-config。
         pets: mainPets,
+        language,
         notificationsEnabled: notifyEnabled,
         notifyWhenFocused,
         clickSoundEnabled: clickSound,
@@ -451,6 +464,7 @@ export function makePetConfigSection(
         }),
 
         h(LoadStatus, { loadState, onRetry: retry }),
+        h(LanguageCard, { busy, language, onChange: setLanguage }),
 
         h(KindTabs, { kinds, kind, busy, onSelect: selectKind }),
         h(PetTabs, { pets: visiblePets, selId, busy, onSelect: select, onAdd: add }),

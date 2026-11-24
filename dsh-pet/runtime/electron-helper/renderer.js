@@ -12,7 +12,7 @@
 function showError(message) {
   console.error('[dsh-pet] ' + message);
   window.__dshPetDebug.configOk = false;
-  errorEl.textContent = 'dsh-pet 配置错误：' + message;
+  errorEl.textContent = S.uiText('renderer.configError', { message });
   errorEl.classList.add('visible');
 }
 function hideError() {
@@ -42,6 +42,8 @@ async function loadConfig() {
   if (merged && merged.ok === false) throw new Error('config ' + String(merged.reason ?? 'failed'));
   return {
     pets: S.flattenConfigPets(merged),
+    // 插件语言（顶层全局，vi / en / zh / auto）
+    language: merged && merged.main ? merged.main.language : undefined,
     // 拖拽抛掷物理参数（顶层全局，所有宠物共用；合并器已填内置默认）
     physics: (merged && merged.main && merged.main.physics) || S.DEFAULT_PHYSICS,
     // 抛掷锁定在当前屏幕（根字段；合并器已填内置默认 false）
@@ -62,6 +64,7 @@ async function boot() {
   try {
     const cfg = await loadConfig();
     config = cfg;
+    S.setActiveLanguage(cfg.language);
     // 语音：本窗口固定是桌面端；音色、总开关与音量直接取成品配置，不走懒加载——
     // 懒加载要等第一次播放才去拉 /config，撞上 bridge 起步竞态就永远读不到开关（读失败只试一次）。
     S.setVoiceBase(BASE);
@@ -85,7 +88,7 @@ async function boot() {
     // 本窗口只承载一只宠物：petIndex 由主进程按 DSH_PET_PETS 顺序注入
     const pet = pets[CONFIG.petIndex];
     if (!pet) {
-      showError('petIndex=' + CONFIG.petIndex + ' 超出桌面宠物列表（共 ' + pets.length + ' 只），本窗口不创建宠物');
+      showError(S.uiText('renderer.petIndexOutOfRange', { index: CONFIG.petIndex, count: pets.length }));
       scheduleReboot();
       return;
     }
@@ -96,7 +99,7 @@ async function boot() {
     for (const s of sprites) s.playIdle();
     startLoops();
   } catch (e) {
-    const msg = '配置加载失败：' + (e && e.message ? String(e.message) : String(e));
+    const msg = S.uiText('renderer.configLoadFailed', { message: e && e.message ? String(e.message) : String(e) });
     // 首次失败先静默（多半是启动竞态，见 bootFailures 的说明），下一次 5s 重试仍失败才报。
     bootFailures += 1;
     if (bootFailures > 1) showError(msg);

@@ -6,6 +6,7 @@
  * @module dsh-pet/src/host/config/validate
  */
 import { FONT_SIZE_MAX, FONT_SIZE_MIN } from '../../shared/fonts.ts';
+import { isPetLanguage } from '../../shared/i18n/core.ts';
 import { VOICE_ID_PATTERN } from '../voice/types.ts';
 import { FONT_FAMILY_SET } from './constants.ts';
 
@@ -192,6 +193,8 @@ export function topFieldValid(key: string, value: unknown): boolean {
       const n = Number(value);
       return Number.isFinite(n) && n >= 0;
     }
+    case 'language':
+      return isPetLanguage(value);
     case 'notificationsEnabled':
       return typeof value === 'boolean';
     case 'notifyWhenFocused':

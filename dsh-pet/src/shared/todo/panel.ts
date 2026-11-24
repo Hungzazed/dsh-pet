@@ -4,6 +4,7 @@
  * 依赖 ./api 的 HTTP、./render 的骨架与 ./styles 的样式；清理只摘自己的节点与监听，不碰容器。
  * @module dsh-pet/src/shared/todo/panel
  */
+import { uiText } from '../i18n/ui.ts';
 import { TODOS_PATH, addTodo, loadTodos, patchTodo, removeTodo, type TodoResult } from './api.ts';
 import { parseDateTimeLocal } from './format.ts';
 import { createTodoPanelParts, renderTodoList, setTodoBusy, setTodoError, type TodoListHandlers } from './render.ts';
@@ -56,7 +57,7 @@ export function createTodoPanel(options: TodoPanelOptions = {}): TodoPanel {
     if (!result.ok) {
       setTodoError(parts, result.message);
       // 加载失败时别让空态一直停在「加载中…」。
-      parts.empty.textContent = '清单加载失败，关掉面板再开一次试试';
+      parts.empty.textContent = uiText('todo.loadFailed');
       parts.empty.hidden = false;
       return;
     }
@@ -96,7 +97,7 @@ export function createTodoPanel(options: TodoPanelOptions = {}): TodoPanel {
     parts.duePicker.close();
     // 过去的时刻建出来就是逾期，提醒一上线就会喊，等于让用户先错一次再改。
     if (dueAt !== null && dueAt < Date.now()) {
-      setTodoError(parts, '这个时间已经过去了，换一个吧');
+      setTodoError(parts, uiText('todo.pastTimeError'));
       return;
     }
     void mutate(async () => {
@@ -127,7 +128,7 @@ export function createTodoPanel(options: TodoPanelOptions = {}): TodoPanel {
   };
   document.addEventListener('mousedown', onDocMouseDown, true);
   parts.closeButton.addEventListener('click', () => options.onClose?.());
-  parts.empty.textContent = '加载中…';
+  parts.empty.textContent = uiText('todo.loading');
   parts.empty.hidden = false;
   // 不自动聚焦输入框：面板挂在宠物头顶，抢走 DSH 输入框的焦点比少一次点击更烦。
   void reload();

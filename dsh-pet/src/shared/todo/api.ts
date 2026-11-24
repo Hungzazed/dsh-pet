@@ -6,6 +6,7 @@
  * @module dsh-pet/src/shared/todo/api
  */
 import { ROUTE_PATH } from '../constants.ts';
+import { uiText } from '../i18n/ui.ts';
 import { parseTodoItem, parseTodoList, type TodoItem } from './types.ts';
 
 /** 待办接口的基址（与宿主路由同一前缀）。 */
@@ -29,22 +30,28 @@ async function send(url: string, method: string, body?: unknown): Promise<SendRe
       ...(body === undefined ? {} : { headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }),
     });
     const payload = (await response.json().catch(() => null)) as OkBody | null;
-    if (!response.ok) return { failed: true, message: `请求失败（HTTP ${response.status}）` };
-    if (payload === null) return { failed: true, message: '响应不是 JSON' };
+    if (!response.ok) return { failed: true, message: uiText('todo.apiHttpError', { status: response.status }) };
+    if (payload === null) return { failed: true, message: uiText('todo.apiNotJson') };
     if (payload.ok === false) {
       const reason = typeof payload.message === 'string' ? payload.message : payload.reason;
-      return { failed: true, message: typeof reason === 'string' && reason !== '' ? reason : '请求被拒绝' };
+      return {
+        failed: true,
+        message: typeof reason === 'string' && reason !== '' ? reason : uiText('todo.apiRejected'),
+      };
     }
     return { failed: false, body: payload };
   } catch (error) {
-    return { failed: true, message: '连不上桌宠服务：' + (error instanceof Error ? error.message : String(error)) };
+    return {
+      failed: true,
+      message: uiText('todo.apiConnectError', { message: error instanceof Error ? error.message : String(error) }),
+    };
   }
 }
 
 /** 单条响应 → 待办；形状不对时给出可展示的失败。 */
 function readTodo(body: OkBody): TodoResult<TodoItem> {
   const todo = parseTodoItem(body.todo);
-  return todo === null ? { ok: false, message: '响应里没有有效的待办' } : { ok: true, value: todo };
+  return todo === null ? { ok: false, message: uiText('todo.apiInvalidItem') } : { ok: true, value: todo };
 }
 
 /** 读整张清单。 */

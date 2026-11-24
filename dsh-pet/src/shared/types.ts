@@ -208,8 +208,12 @@ export interface FontConfig {
   followPet: boolean;
 }
 
+import type { PetLanguage } from './i18n/core.ts';
+
 /** config.jsonc 全集——运行时直接使用。 */
 export interface ClientConfig {
+  /** UI & AI prompt language (`vi` | `en` | `zh` | `auto`); defaults to `vi` in assets/config.jsonc. */
+  language?: PetLanguage;
   /** 系统通知总开关：true = 对话完成 / 生成失败 / 输出截断 / 权限申请 / 用户选择时弹出通知；缺失即配置错误 */
   notificationsEnabled: boolean;
   /** 前台聚焦时也提醒：true = 页面可见且持有焦点时照常弹通知、照常播报工作状态语音；

@@ -18,7 +18,8 @@ import { limitPool, matchMeme, pickMeme, readMemePool, type MemeEntry } from '..
 import { generateWhisper } from '../whisper.ts';
 import { createMemoryOrphans } from './memory-orphans.ts';
 import { configuredModel } from '../model-selection.ts';
-import { SLEEP_TALK_INSTRUCTION } from '../whisper.ts';
+import { resolvePetLanguage, type ResolvedLanguage } from '../../shared/i18n/core.ts';
+import { sleepTalkInstruction } from '../whisper.ts';
 import { pickVoiceSurface, type VoiceTarget } from '../surface.ts';
 import type { HostSetup } from './setup.ts';
 import type { HostContext } from './context.ts';
@@ -150,9 +151,12 @@ export function createChatMemory(deps: ChatMemoryInput) {
    *  `env` 是城市与天气：对话、碎碎念、梦话都传——它们说的是同一只宠物此刻的处境。
    *  收 `findPetInstance` 的命中结果而不是 (petId, cfg)：调用方都已解析过，再查只会多一处
    *  「查不到就兜底 main」的不可达分支。 */
+  const langOf = (cfg: Record<string, Record<string, unknown>>): ResolvedLanguage =>
+    resolvePetLanguage(cfg.main?.language, undefined, 'zh');
+
   const petSystemPrompt = (
     found: { conf: Record<string, unknown>; pet: Record<string, unknown> },
-    options: { historyTimes?: boolean; env?: EnvironmentFacts } = {},
+    options: { historyTimes?: boolean; env?: EnvironmentFacts; language?: ResolvedLanguage } = {},
   ): string =>
     composeSystemPrompt({
       prompt: petPersona(found.conf, found.pet),
@@ -161,6 +165,7 @@ export function createChatMemory(deps: ChatMemoryInput) {
       now: new Date(),
       ...(options.historyTimes === true ? { historyTimes: true } : {}),
       ...(options.env !== undefined ? { env: options.env } : {}),
+      ...(options.language !== undefined ? { language: options.language } : {}),
     });
 
   /** 对话记忆轮数（1 轮 = 1 问 1 答）：该宠物所属条目的 chatMemoryRounds（合并器已填默认）。
@@ -254,7 +259,8 @@ export function createChatMemory(deps: ChatMemoryInput) {
     const manualVoiceOn = cfg.main?.voiceEnabled === true;
     const voiceOff = kind === 'whisper' ? !whisperVoiceOn : !manualVoiceOn;
     const target = voiceOff ? undefined : (voiceTo ?? voiceTargetFor(found.pet));
-    const system = petSystemPrompt(found, { env: await currentEnvironment() });
+    const language = langOf(cfg);
+    const system = petSystemPrompt(found, { env: await currentEnvironment(), language });
     // 池只算一次：点名的图与随机抽图共用同一份（含文件存在性判定）。
     const pool = readMemePool(found.conf.memes, memeDirsFor(found.entry));
     // 点名了却没命中 = 配置写错或图已被删：明确失败，不静默换成另一张（点了 A 却看到 B 会以为坏了）。
@@ -268,6 +274,7 @@ export function createChatMemory(deps: ChatMemoryInput) {
       system,
       meme,
       preferred: configuredModel(found.conf, 'whisperModel'),
+      language,
     });
     if (!result.ok) {
       // 失败不写 S：静默跳过 + warn，不伪造文案、不弹错误气泡
@@ -303,11 +310,13 @@ export function createChatMemory(deps: ChatMemoryInput) {
     const cfg = readAllConfig(configPaths);
     const found = findPetInstance(cfg, petId);
     if (!found) return false;
-    const system = petSystemPrompt(found, { env: await currentEnvironment() });
+    const language = langOf(cfg);
+    const system = petSystemPrompt(found, { env: await currentEnvironment(), language });
     const result = await generateWhisper(ctx, {
       system,
       preferred: configuredModel(found.conf, 'whisperModel'),
-      instruction: SLEEP_TALK_INSTRUCTION,
+      instruction: sleepTalkInstruction(language),
+      language,
     });
     if (!result.ok) {
       log.warn(
@@ -351,7 +360,7 @@ export function createChatMemory(deps: ChatMemoryInput) {
         : [];
     // 人设：实例级 whisperPrompt 优先，没写回落所属条目（与碎碎念同一拼装）。
     // 有历史才追加【历史】段：没有历史时那段话在描述不存在的前缀，只会误导模型。
-    const system = petSystemPrompt(found, { historyTimes: list.length > 0, env });
+    const system = petSystemPrompt(found, { historyTimes: list.length > 0, env, language: langOf(cfg) });
     return { cfg, found, pool, actions, list, system };
   };
 
@@ -473,6 +482,7 @@ export function createChatMemory(deps: ChatMemoryInput) {
       actions,
       preferred: configuredModel(found.conf, 'chatModel'),
       image,
+      language: langOf(cfg),
     });
     if (!generated.ok) return generated;
     const now = Date.now();

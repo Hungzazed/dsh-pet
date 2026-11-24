@@ -5,6 +5,7 @@
  * react 能力由宿主注入（见 ./runtime）。
  * @module dsh-pet/src/client/chat/panel
  */
+import { subscribeLanguage } from '../../shared/i18n/core.ts';
 import { createPetChatState } from './state.ts';
 import { buildPanel } from './view.ts';
 import type { ChatPanelRuntime } from './runtime.ts';
@@ -20,6 +21,8 @@ export type { ChatPanelRuntime } from './runtime.ts';
 export function makePetChatPanel(rt: ChatPanelRuntime): () => unknown {
   const useChatState = createPetChatState(rt);
   return function PetChatPanel(): unknown {
+    const [, setLangTick] = rt.useState(0);
+    rt.useEffect(() => subscribeLanguage(() => setLangTick((n) => n + 1)), []);
     return buildPanel(rt, useChatState());
   };
 }

@@ -10,11 +10,23 @@
 export function globalsScript(): string {
   return `
 function globalCards() {
-  return [globalFlagsCard, voiceCard, fontCard, physicsCard, motionCard, modelCard, memoryCard, environmentCard, advancedCard];
+  return [languageCard, globalFlagsCard, voiceCard, fontCard, physicsCard, motionCard, modelCard, memoryCard, environmentCard, advancedCard];
 }
 
 function setGlobal(key, value) {
   state.globals[key] = value;
+}
+
+function languageCard() {
+  const g = state.globals;
+  return card('Language / Ngôn ngữ / 语言', 'Choose UI & default AI prompt language (vi / en / zh / auto). Save to apply.', [
+    selectField('g-language', 'Language / Ngôn ngữ', g.language || 'vi', [
+      { value: 'vi', label: 'Tiếng Việt' },
+      { value: 'en', label: 'English' },
+      { value: 'zh', label: '中文 (Chinese)' },
+      { value: 'auto', label: 'Auto (System)' },
+    ], (value) => setGlobal('language', value)),
+  ]);
 }
 
 function globalFlagsCard() {

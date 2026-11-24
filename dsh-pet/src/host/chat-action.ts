@@ -14,6 +14,8 @@
  * @param animations - 成品配置的 animations 段（形状非法 → 空名单）。
  * @returns 按配置顺序排列的动作名；没配 categories 时是空数组。
  */
+import type { ResolvedLanguage } from '../shared/i18n/core.ts';
+
 export function chatActionNames(animations: unknown): string[] {
   const a = (animations && typeof animations === 'object' ? animations : {}) as Record<string, unknown>;
   if (!Array.isArray(a.categories)) return [];
@@ -38,7 +40,21 @@ export function chatActionNames(animations: unknown): string[] {
  *
  * @param names - 可表演的动作名（{@link chatActionNames} 的结果）；空名单由调用方直接跳过。
  */
-export function actionInstruction(names: readonly string[]): string {
+export function actionInstruction(names: readonly string[], lang: ResolvedLanguage = 'zh'): string {
+  if (lang === 'en') {
+    return (
+      '\n\n[Action] Optionally perform one animation at the end of your reply by choosing the best fit from this list:\n' +
+      names.map((name) => '- ' + name).join('\n') +
+      '\nIf you pick one, append a new final line [action:EXACT_NAME] (copy the name verbatim). If none fits, omit the tag completely.'
+    );
+  }
+  if (lang === 'vi') {
+    return (
+      '\n\n[Động tác] Ở cuối câu trả lời bạn có thể chọn làm một động tác phù hợp nhất từ danh sách sau:\n' +
+      names.map((name) => '- ' + name).join('\n') +
+      '\nNếu chọn, thêm một dòng cuối [action:TÊN_CHÍNH_XÁC] (chép nguyên văn tên trong danh sách). Nếu không có động tác phù hợp thì đừng ghi thẻ này.'
+    );
+  }
   return (
     '\n\n[动作] 回复结尾可选做一个动作给用户看，从下列清单里挑最贴合当前语境的：\n' +
     names.map((name) => '- ' + name).join('\n') +
@@ -58,7 +74,7 @@ export function actionInstruction(names: readonly string[]): string {
  */
 export function extractChatAction(text: string, names: readonly string[]): { text: string; action?: string } {
   // 全局正则带 lastIndex，复用会漏匹配：每次新建一个。
-  const tag = /\[动作[:：]\s*([^\]\n]+?)\s*\]/g;
+  const tag = /\[(?:动作|action|động tác)[:：]\s*([^\]\n]+?)\s*\]/gi;
   let action: string | undefined;
   let tagged = false;
   const cleaned = text.replace(tag, (_tag, raw: string) => {

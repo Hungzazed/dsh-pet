@@ -54,7 +54,7 @@ export function matchMeme(pool: MemeEntry[], name: string): MemeEntry | undefine
 }
 
 /** 配图选择标记：`[图:名称]` 附在回复末尾（容忍全角冒号与前后空白）。 */
-const IMG_TAG = /\[图[:：]\s*([^\]\n]+?)\s*\]\s*$/;
+const IMG_TAG = /\[(?:图|img|image|ảnh)[:：]\s*([^\]\n]+?)\s*\]\s*$/i;
 
 /**
  * 从模型回复里取配图（对话选图的解析半侧；纯函数，无 LLM 依赖）。

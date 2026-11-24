@@ -5,6 +5,7 @@
  */
 import { isBareKey } from '../hotkey.ts';
 import type { HotkeyEvent } from '../hotkey.ts';
+import { uiText } from '../i18n/ui.ts';
 
 export { isTypingTarget } from '../hotkey.ts';
 export type { HotkeyEvent } from '../hotkey.ts';
@@ -12,8 +13,14 @@ export type { HotkeyEvent } from '../hotkey.ts';
 /** 快捷键的显示文案（菜单项右侧灰字）。与 {@link isChatHotkey} 的按键保持同一份事实。 */
 export const CHAT_HOTKEY_HINT = 'L 键';
 
+/** Localized chat hotkey hint. */
+export const chatHotkeyHint = (): string => uiText('hotkey.key', { key: 'L' });
+
 /** 截图的显示文案；没有菜单项，只给设置页那张卡用。 */
 export const CAPTURE_HOTKEY_HINT = 'S 键';
+
+/** Localized capture hotkey hint. */
+export const captureHotkeyHint = (): string => uiText('hotkey.key', { key: 'S' });
 
 /**
  * 这次按键该不该打开对话。

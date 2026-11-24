@@ -10,12 +10,16 @@
  */
 import { isBareKey } from '../hotkey.ts';
 import type { HotkeyEvent } from '../hotkey.ts';
+import { uiText } from '../i18n/ui.ts';
 
 /** 目标键的小写形式：判定与状态机共用这一份，避免两处各写一个字面量。 */
 const HEAR_KEY = 'm';
 
 /** 快捷键的显示文案（设置页用）。与 {@link isHearHotkey} 的按键保持同一份事实。 */
 export const HEAR_HOTKEY_HINT = 'M 键';
+
+/** Localized hold-to-talk hotkey hint. */
+export const hearHotkeyHint = (): string => uiText('hotkey.key', { key: 'M' });
 
 /**
  * 这次按下该不该被「按住说话」接走：与其他悬停键共用同一条判据。

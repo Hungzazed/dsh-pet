@@ -5,6 +5,7 @@
  * @module dsh-pet/src/client/settings/config/http
  */
 import { ROUTE_PATH } from '../../../shared/constants.ts';
+import type { PetLanguage } from '../../../shared/i18n/core.ts';
 import type { MemoryConfig } from '../../../shared/memory.ts';
 import type { FontConfig, ModelSelection, Pet, PhysicsParams, Weights } from '../../../shared/types.ts';
 import type { ModelCatalogGroup } from '../picker/index.ts';
@@ -30,6 +31,8 @@ export interface ConfigMeta {
 /** 保存要提交的全部字段；键名即宿主 `PUT /config` 的字段名。 */
 export interface SaveFields {
   pets: readonly Pet[];
+  /** 插件语言配置（vi / en / zh / auto）；缺省表示不提交这一项。 */
+  language?: PetLanguage;
   notificationsEnabled: boolean;
   /** 前台聚焦时也提醒：默认 false，只在 main 顶层生效。 */
   notifyWhenFocused: boolean;
@@ -84,6 +87,7 @@ export type SaveOutcome =
 export function buildSaveBody(fields: SaveFields): Record<string, unknown> {
   return {
     pets: fields.pets,
+    language: fields.language,
     notificationsEnabled: fields.notificationsEnabled,
     notifyWhenFocused: fields.notifyWhenFocused,
     clickSoundEnabled: fields.clickSoundEnabled,

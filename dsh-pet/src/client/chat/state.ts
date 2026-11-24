@@ -5,6 +5,7 @@
  * 用一个 state 对象装全部字段——切换宠物要同时清空消息与勾选，拆成多个 useState 会露出中间态。
  * @module dsh-pet/src/client/chat/state
  */
+import { uiText } from '../../shared/i18n/ui.ts';
 import { speakText } from '../../shared/voice.ts';
 import { createCompositionWatch, decideEnter } from '../../shared/chat/enter.ts';
 import type { CompositionWatch } from '../../shared/chat/enter.ts';
@@ -102,7 +103,7 @@ export function createPetChatState(rt: ChatPanelRuntime): () => ChatPanelState {
       ...shell,
       rounds,
       hasOlder: allRounds.length > rounds.length,
-      petName: pet?.name || '宠',
+      petName: pet?.name || uiText('pet.fallbackName'),
       assetRoot: pet?.assetRoot ?? '',
       memoryRounds,
       hasMemoryLine: memoryBoundaryIndex(allRounds.length, memoryRounds) !== null,

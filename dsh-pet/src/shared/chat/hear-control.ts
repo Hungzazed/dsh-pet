@@ -17,6 +17,7 @@ import {
   type HearOutcome,
   type HearRecorder,
 } from '../hear.ts';
+import { uiText } from '../i18n/ui.ts';
 
 /** 录音阶段的四态：`starting` 是等麦克风授权的那一小段，`transcribing` 是等识别结果。 */
 type HearState = 'idle' | 'starting' | 'recording' | 'transcribing';
@@ -79,8 +80,8 @@ export function createHearControl(opts: HearControlOptions): HearControl {
 
   /** 现在录不了的原因；能录时给空串。 */
   const blockedReason = (): string => {
-    if (!canRecord()) return '当前地址不支持录音：用 https 或 localhost 打开才有麦克风';
-    if (hearUrl === '') return '这个入口没有接上识别地址';
+    if (!canRecord()) return uiText('chat.micUnsupported');
+    if (hearUrl === '') return uiText('chat.hearNoUrl');
     return '';
   };
 
@@ -98,10 +99,10 @@ export function createHearControl(opts: HearControlOptions): HearControl {
 
   /** 失败原因翻成人话；宿主给的 message 有就附上，方便对着日志排查。 */
   const describeFailure = (outcome: Extract<HearOutcome, { ok: false }>): string => {
-    if (outcome.reason === 'unsupported') return '这个宿主没开语音识别';
-    if (outcome.reason === 'bad-request') return '音频没通过宿主校验';
-    if (outcome.reason === 'network') return '识别请求失败：' + outcome.message;
-    return '识别失败：' + (outcome.message || '未知原因');
+    if (outcome.reason === 'unsupported') return uiText('chat.hearUnsupported');
+    if (outcome.reason === 'bad-request') return uiText('chat.hearBadRequest');
+    if (outcome.reason === 'network') return uiText('chat.hearNetworkError', { message: outcome.message });
+    return uiText('chat.hearFailed', { message: outcome.message || uiText('chat.hearUnknown') });
   };
 
   /** 收尾：停采集 → 判误触 → 判静音 → 送宿主 → 文字落进输入框。失败只提示，不动已输入的文字。 */
@@ -121,16 +122,16 @@ export function createHearControl(opts: HearControlOptions): HearControl {
     }
     hearState = 'transcribing';
     paint();
-    hint.show('识别中…');
+    hint.show(uiText('chat.recognizing'));
     try {
       const clip = await current.stop();
       if (clip === null) {
-        hint.flash('没录到声音');
+        hint.flash(uiText('chat.noAudio'));
         return;
       }
       if (clip.peak < SILENCE_PEAK) {
         // 麦克风开着却没信号（设备静音 / 耳机没戴上）：不白送一次识别
-        hint.flash('没听到声音，检查一下麦克风');
+        hint.flash(uiText('chat.noMicSignal'));
         return;
       }
       if (!input.isConnected) return; // 等结果的这会儿弹窗被关了
@@ -169,13 +170,13 @@ export function createHearControl(opts: HearControlOptions): HearControl {
     hearState = 'starting';
     wasReleasedEarly = false;
     paint();
-    hint.show('正在打开麦克风…');
+    hint.show(uiText('chat.openingMic'));
     try {
       recorder = await startRecording();
     } catch (e) {
       hearState = 'idle';
       paint();
-      hint.flash('打不开麦克风：' + (e instanceof Error ? e.message : String(e)));
+      hint.flash(uiText('chat.micFailed', { message: e instanceof Error ? e.message : String(e) }));
       return;
     }
     if (wasReleasedEarly) {
@@ -192,7 +193,9 @@ export function createHearControl(opts: HearControlOptions): HearControl {
         return;
       }
       const total = Math.floor(rec.elapsedMs() / 1000);
-      hint.show('录音中 ' + Math.floor(total / 60) + ':' + String(total % 60).padStart(2, '0') + ' · 松开结束');
+      hint.show(
+        uiText('chat.recordingTime', { time: Math.floor(total / 60) + ':' + String(total % 60).padStart(2, '0') }),
+      );
     }, 200);
   };
 

@@ -107,11 +107,11 @@ describe('装配接线：宿主注入 → helper 解析 → 渲染端文案', ()
       "constants.js 必须从 query 读三态且默认 'web'",
     );
     assert.ok(
-      /\{ desktop: '打开软件', standalone: '打开 AI 设置', web: '打开网站' \}/.test(sprite),
-      '三种形态必须有三种文案，web 不得再显示「打开 AI 设置」',
+      /\{ desktop: 'menu\.openDesktop', standalone: 'menu\.openStandalone', web: 'menu\.openWeb' \}/.test(sprite),
+      '三种形态必须有三种文案键，web 不得再显示「打开 AI 设置」',
     );
     assert.ok(
-      /label: OPEN_LABEL\[OPEN_TARGET\],\s*action: 'open-site'/.test(sprite),
+      /label: S\.uiText\(OPEN_LABEL_KEY\[OPEN_TARGET\] \|\| 'menu\.openWeb'\),\s*action: 'open-site'/.test(sprite),
       '文案由查表决定，但 action 仍是 open-site（另一端只认这个动作名；hint 只是视觉提示，允许夹在中间换行）',
     );
   });

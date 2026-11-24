@@ -4,6 +4,7 @@
  * 不持有状态，反馈通过回调交给设置页（它才知道把红字放哪）。
  * @module dsh-pet/src/client/settings/notify-test
  */
+import { uiText } from '../../shared/i18n/ui.ts';
 import { NOTIFY_ICONS, requestNotificationPermission, wireNotificationClick } from '../notify.ts';
 import type { Feedback } from './actions.ts';
 
@@ -41,7 +42,7 @@ export async function runNotificationTest(deps: NotificationTestDeps): Promise<v
   try {
     // 绕过聚焦门直接发一条测试通知；点击行为与真实事件通知共用 wireNotificationClick。
     wireNotificationClick(
-      new Notification('测试通知', { body: '【dsh-pet】系统通知已就绪。', icon: NOTIFY_ICONS.test }),
+      new Notification(uiText('notify.testTitle'), { body: uiText('notify.testBody'), icon: NOTIFY_ICONS.test }),
     );
   } catch {
     /* 个别环境构造失败：仍按已授权提示。 */

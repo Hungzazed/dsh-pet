@@ -14,6 +14,7 @@ import { BlockAssembler, createUserMessage, ReasoningEffortId } from '@deepseek-
 import { PET_CALL_IDENTITY, noTextReason } from './llm-call.ts';
 import { supportsReasoningOff } from './llm-reasoning.ts';
 import { defaultLog } from './log-file.ts';
+import type { ResolvedLanguage } from '../shared/i18n/core.ts';
 import { modelCandidates, modelLabel, type ModelRef } from './model-selection.ts';
 
 /** 生成失败原因（与 shared/whisper.ts 的 WhisperState 失败分支同构）。 */
@@ -25,22 +26,43 @@ export type WhisperGenerateResult =
 const TIMEOUT_MS = 30_000;
 
 /** 碎碎念指令：纯文本（没有配图时的原样请求）。 */
-const USER_TEXT = '随便说一句日常碎碎念，一句就好，20 字以内。';
+const USER_TEXTS: Record<ResolvedLanguage, string> = {
+  zh: '随便说一句日常碎碎念，一句就好，20 字以内。',
+  en: 'Say one casual, short desktop-pet remark in English — one sentence only, under 20 words.',
+  vi: 'Nói một câu lẩm bẩm đời thường ngắn gọn bằng tiếng Việt — chỉ một câu, dưới 20 từ.',
+};
 
 /** 梦话指令：睡觉期间嘟囔一句。与碎碎念指令同属「功能指令」，不进配置（配置里只有人设）。 */
-const SLEEP_TALK_TEXT = '你正在睡觉，随便嘟囔一句梦话，一句就好，20 字以内；含糊、半梦半醒，不要清醒地回应任何人。';
+const SLEEP_TALK_TEXTS: Record<ResolvedLanguage, string> = {
+  zh: '你正在睡觉，随便嘟囔一句梦话，一句就好，20 字以内；含糊、半梦半醒，不要清醒地回应任何人。',
+  en: 'You are fast asleep. Mumble one dreamy, half-asleep line in English (under 20 words); drowsy and fuzzy, not awake or replying to anyone.',
+  vi: 'Bạn đang ngủ say. Hãy lẩm bẩm một câu nói mớ ngắn bằng tiếng Việt (dưới 20 từ), mơ màng nửa tỉnh nửa mê, không tỉnh táo trả lời ai cả.',
+};
 
 /** 梦话指令的对外出口：调用方传进 generateWhisper 的 instruction，避免再抄一份文案。 */
-export const SLEEP_TALK_INSTRUCTION = SLEEP_TALK_TEXT;
+export const SLEEP_TALK_INSTRUCTION = SLEEP_TALK_TEXTS.zh;
 
-/**
- * 碎碎念指令：带表情包时要求模型配合作画说一句。
- *
- * 明确「正文仍是一句话」：图是配图，不是让模型描述画面本身。
- * 图由调用方随机抽而不是让模型选：碎碎念没有上下文可依（人设固定、无用户输入），
- * 交模型选只能盲选，还多一层幻觉风险。
- */
-function userTextWithMeme(meme: { name: string; desc: string }): string {
+/** Localized sleep-talk instruction for the given language. */
+export function sleepTalkInstruction(lang: ResolvedLanguage = 'zh'): string {
+  return SLEEP_TALK_TEXTS[lang];
+}
+
+/** 带配图时的触发指令：只告诉模型这张图的画面/语义，让它说出契合的一句；不让模型选图。 */
+function userTextWithMeme(meme: { name: string; desc: string }, lang: ResolvedLanguage): string {
+  if (lang === 'en') {
+    return (
+      'Say one casual, short remark in English (under 20 words).\n' +
+      `It will be shown alongside a meme (${meme.name}: ${meme.desc}).\n` +
+      'Make your line naturally match the mood of that meme without literally describing the picture.'
+    );
+  }
+  if (lang === 'vi') {
+    return (
+      'Nói một câu lẩm bẩm ngắn gọn bằng tiếng Việt (dưới 20 từ).\n' +
+      `Câu này sẽ hiển thị kèm một ảnh meme (${meme.name}: ${meme.desc}).\n` +
+      'Hãy nói câu khớp tự nhiên với cảm xúc của bức ảnh, đừng mô tả trực tiếp bức ảnh.'
+    );
+  }
   return (
     '随便说一句日常碎碎念，一句就好，20 字以内。\n' +
     '这次会配一张表情包一起显示，图的内容是：' +
@@ -62,6 +84,8 @@ export interface WhisperRequest {
   preferred?: ModelRef;
   /** 功能指令（梦话传 SLEEP_TALK_INSTRUCTION）；缺省 = 碎碎念指令。 */
   instruction?: string;
+  /** Prompt language (`zh` default). */
+  language?: ResolvedLanguage;
 }
 
 /**
@@ -76,13 +100,24 @@ export async function generateWhisper(
 ): Promise<WhisperGenerateResult> {
   // 候选链：配置的模型优先 → 当前对话的模型兜底（whisperModel 留空时链上只有后者）
   const candidates = modelCandidates(ctx, request.preferred);
+  const lang: ResolvedLanguage = request.language ?? 'zh';
   if (candidates.length === 0) {
-    return { ok: false, reason: 'provider-missing', message: '当前对话未配置模型' };
+    return {
+      ok: false,
+      reason: 'provider-missing',
+      message:
+        lang === 'vi' ? 'Chưa cấu hình model AI' : lang === 'en' ? 'No AI model configured' : '当前对话未配置模型',
+    };
   }
   // ctx.llm 是核心服务但保持防御：缺失时显式失败（静默跳过由上层决定）
   const llm = (ctx as { llm?: { stream(o: unknown): AsyncIterable<unknown> } }).llm;
   if (!llm || typeof llm.stream !== 'function') {
-    return { ok: false, reason: 'generate-error', message: 'LLM 服务不可用' };
+    return {
+      ok: false,
+      reason: 'generate-error',
+      message:
+        lang === 'vi' ? 'Dịch vụ LLM không khả dụng' : lang === 'en' ? 'LLM service unavailable' : 'LLM 服务不可用',
+    };
   }
   // 依次尝试：配置的模型失败（凭据被删 / 模型下架 / 该服务商没配 key）时回落到当前对话的模型
   // 重试一次——那才是用户当前真正在用的模型，报错更有意义。
@@ -123,7 +158,14 @@ async function generateWith(
     messages: [
       createUserMessage({
         content: [
-          { type: 'text', text: request.instruction ?? (request.meme ? userTextWithMeme(request.meme) : USER_TEXT) },
+          {
+            type: 'text',
+            text:
+              request.instruction ??
+              (request.meme
+                ? userTextWithMeme(request.meme, request.language ?? 'zh')
+                : USER_TEXTS[request.language ?? 'zh']),
+          },
         ],
         source: { kind: 'user' },
       }),

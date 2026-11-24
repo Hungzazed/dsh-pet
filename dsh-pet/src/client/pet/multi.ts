@@ -27,6 +27,7 @@ import {
   takeChanged,
 } from '../../shared/state.ts';
 import { fontStackOf } from '../../shared/fonts.ts';
+import { setActiveLanguage } from '../../shared/i18n/core.ts';
 import type { Pet } from '../../shared/types.ts';
 import type { BalanceState } from '../../shared/balance/index.ts';
 import type {
@@ -126,6 +127,8 @@ export function createPetMulti(
         if (typeof main !== 'object' || main === null) {
           throw new Error('配置响应不是成品聚合（host 版本不匹配？）');
         }
+        // 同步语言配置：菜单、待办、悬浮对话、余额与天气气泡统一走共享 i18n 状态。
+        setActiveLanguage(main.language);
         // 点击音效开关只读 main 条目，非 true 一律静音。
         setClickSoundEnabled(main.clickSoundEnabled === true);
         // 本页就是网页端：按叶子播放时只认 voiceTo='web' 的那一句。

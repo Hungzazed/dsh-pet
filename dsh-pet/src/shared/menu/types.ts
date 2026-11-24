@@ -34,6 +34,8 @@ export interface MenuLeaf {
   /** third-party：注册它的 owner（身份键，只用于回传，不显示）；同一个 owner 的项收在同一分组下，
    *  只有一项时跳过这层直接平铺。 */
   owner?: string;
+  /** Original protocol label for third-party menu items when displayed label is localized. */
+  itemLabel?: string;
   /** 项目右侧的灰色小字（如快捷键）：纯视觉提示，不参与文本匹配也不影响动作分发，缺省不占位。 */
   hint?: string;
   /** 指定配图（表情包池内的名称）：与 action='whisper' 并用时表示「用这张图说一句」，

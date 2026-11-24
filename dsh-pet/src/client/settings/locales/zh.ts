@@ -5,6 +5,17 @@
 export const zh = {
   nav: '桌宠配置',
   intro: '管理多个桌宠：每个宠物可独立设置大小与位置（保存后即时生效）。',
+  // 语言设置卡片
+  languageTitle: '语言（Language）',
+  languageHint:
+    '切换整个插件的显示语言：设置页、对话面板、右键菜单、待办、系统托盘与默认 AI 提示词。点「保存」后网页端与桌面端立即生效。',
+  languageLabel: '界面与 AI 语言',
+  languageFieldHint:
+    '选 Tiếng Việt / English / 中文将直接覆盖整个插件界面与默认提示词；选「跟随 DSH / 系统」则自动跟随宿主语言。',
+  'language.vi': 'Tiếng Việt',
+  'language.en': 'English',
+  'language.zh': '中文',
+  'language.auto': '跟随 DSH / 系统（自动）',
   // 卡片标题与卡片级说明；说明统一进问号气泡。
   petCardTitle: '宠物配置',
   avatarLabel: '头像',

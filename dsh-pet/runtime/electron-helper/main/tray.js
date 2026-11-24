@@ -83,6 +83,30 @@ function createTray({
     }
   }
 
+  /** 按配置的 language 字段解析托盘文案（缺省保持 zh 兼容旧行为）。 */
+  function trayCopy(setting) {
+    let lang = 'zh';
+    if (setting === 'vi' || setting === 'en' || setting === 'zh') {
+      lang = setting;
+    } else if (setting === 'auto') {
+      let locale = '';
+      try {
+        locale = Intl.DateTimeFormat().resolvedOptions().locale || '';
+      } catch {
+        locale = '';
+      }
+      const norm = String(locale).toLowerCase();
+      if (norm === 'vi' || norm.startsWith('vi-') || norm.startsWith('vi_')) lang = 'vi';
+      else if (norm === 'zh' || norm.startsWith('zh-') || norm.startsWith('zh_')) lang = 'zh';
+      else lang = 'en';
+    }
+    if (lang === 'vi') return { quit: 'Thoát', tooltip: 'dsh-pet Thú cưng desktop' };
+    if (lang === 'en') return { quit: 'Quit', tooltip: 'dsh-pet Desktop Pet' };
+    return { quit: '退出', tooltip: 'dsh-pet 桌面宠物' };
+  }
+
+  let currentTrayCopy = trayCopy(undefined);
+
   /**
    * 按当前配置拼托盘菜单；返回 null 表示此时不该有托盘（开关关掉 / 配置里没有宠物）。
    *
@@ -95,6 +119,7 @@ function createTray({
     // 托盘开关（main 条目的 trayEnabled）：只有显式 false 才不建，缺失或写坏时保持建，
     // 免得一份老配置或一个错值让托盘无声消失。与下面的 pets 取自同一份成品配置。
     if (merged && merged.main && merged.main.trayEnabled === false) return null;
+    currentTrayCopy = trayCopy(merged && merged.main ? merged.main.language : undefined);
     // 成品聚合的形状是 { <条目>: <整份配置文档> }：顶层键不是宠物，宠物在各条目的 pets 数组里
     // （与渲染端同一契约）。托盘只要 id/name/display，所以不吹条目级字段。
     const pets = Object.values(merged)
@@ -124,7 +149,7 @@ function createTray({
         checked: isDesktopDisplay(pet.display),
         click: () => traySetPetDisplay(pet.id, toggleDisplay(pet.display)),
       })),
-      ...(canQuit ? [{ type: 'separator' }, { label: '退出', click: quitApp }] : []),
+      ...(canQuit ? [{ type: 'separator' }, { label: currentTrayCopy.quit, click: quitApp }] : []),
     ]);
   }
 
@@ -141,7 +166,7 @@ function createTray({
       const menu = await buildMenu();
       if (menu === null) return;
       tray = new Tray(trayIcon());
-      tray.setToolTip('dsh-pet 桌面宠物');
+      tray.setToolTip(currentTrayCopy.tooltip);
       tray.setContextMenu(menu);
       // Windows 上 setContextMenu 只接管右键，左键默认什么都不做（macOS 相反：左键即弹菜单）
       if (platform.leftClickPopsMenu) tray.on('click', () => tray.popUpContextMenu());
@@ -155,7 +180,10 @@ function createTray({
     if (!tray) return;
     try {
       const menu = await buildMenu();
-      if (menu !== null) tray.setContextMenu(menu);
+      if (menu !== null) {
+        tray.setToolTip(currentTrayCopy.tooltip);
+        tray.setContextMenu(menu);
+      }
     } catch (e) {
       console.error('[dsh-pet-desktop-helper] tray refresh failed:', String(e && e.message ? e.message : e));
     }

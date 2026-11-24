@@ -7,6 +7,7 @@
  * @module dsh-pet/src/host/plugin/todo-reminders
  */
 import { pickVoiceSurface } from '../surface.ts';
+import type { ResolvedLanguage } from '../../shared/i18n/core.ts';
 import { pickReminder, reminderText } from '../todo/policy.ts';
 import type { TodoStore } from '../todo/store.ts';
 import type { LockStore } from '../lock.ts';
@@ -42,6 +43,8 @@ export interface TodoReminderTickDeps {
   hasListener?: () => boolean;
   /** 待办播报开关（成品配置的 `main.voiceTodoEnabled`）：关着就不写 `voiceTo`，只弹气泡。 */
   isVoiceTodoEnabled: () => boolean;
+  /** Optional language reader for localized reminder bubbles. */
+  language?: () => ResolvedLanguage;
 }
 
 /** 提醒循环的输入。 */
@@ -52,7 +55,7 @@ export type TodoReminderInput = {
   waiterCount: () => number;
 } & Pick<PetLookup, 'lock'> &
   Pick<PetLookup, 'sleep'> &
-  Pick<TodoReminderTickDeps, 'todos' | 'effectivePetList' | 'state' | 'log' | 'isVoiceTodoEnabled'>;
+  Pick<TodoReminderTickDeps, 'todos' | 'effectivePetList' | 'state' | 'log' | 'isVoiceTodoEnabled' | 'language'>;
 /**
  * 挑一个承担这次提醒的宠物：优先网页端可见的，其次桌面端；被第三方占用的跳过。
  *
@@ -103,7 +106,7 @@ export async function tickTodoReminders(deps: TodoReminderTickDeps): Promise<voi
   const display = String(pets.find((pet) => String(pet.id ?? '') === speaker)?.display ?? '');
   const voiceTo = deps.isVoiceTodoEnabled() ? pickVoiceSurface(display) : null;
   deps.state.writePet(speaker, 'say', {
-    text: reminderText(due.todo, now),
+    text: reminderText(due.todo, now, deps.language?.()),
     duration: BUBBLE_DURATION_MS,
     ...(voiceTo ? { voiceTo } : {}),
   });
@@ -119,7 +122,7 @@ export async function tickTodoReminders(deps: TodoReminderTickDeps): Promise<voi
  * @param deps - 宿主上下文与一拍所需的能力。
  */
 export function registerTodoReminders(deps: TodoReminderInput): void {
-  const { ctx, effectivePetList, isVoiceTodoEnabled, lock, log, sleep, state, todos, waiterCount } = deps;
+  const { ctx, effectivePetList, isVoiceTodoEnabled, language, lock, log, sleep, state, todos, waiterCount } = deps;
 
   /** 一拍：失败只打日志，不让循环停摆。 */
   const tick = async (): Promise<void> => {
@@ -129,6 +132,7 @@ export function registerTodoReminders(deps: TodoReminderInput): void {
         hasListener: () => waiterCount() > 0,
         isSleeping: (petId) => sleep.sleeping(petId),
         isVoiceTodoEnabled,
+        language,
         lock,
         log,
         state,

@@ -10,7 +10,9 @@
 
 // 左键 + 修饰键 = 「呼出 DSH」的快捷键。Windows / Linux 用 Ctrl；macOS 上 Ctrl+左键是系统右键
 // （先触发 contextmenu、拿不到 click），所以改用 Cmd。快捷键文案按平台取，判定统一走 isOpenShortcut。
-const OPEN_SHORTCUT_HINT = /Mac/i.test(navigator.platform || navigator.userAgent) ? 'Cmd+左键' : 'Ctrl+左键';
+const IS_MAC_PLATFORM = /Mac/i.test(navigator.platform || navigator.userAgent);
+const OPEN_SHORTCUT_HINT = IS_MAC_PLATFORM ? 'Cmd+左键' : 'Ctrl+左键';
+const openShortcutHint = () => S.uiText(IS_MAC_PLATFORM ? 'menu.openHintMac' : 'menu.openHintWin');
 /** 本次点击是否按住了「呼出 DSH」的修饰键（Ctrl / Cmd） */
 const isOpenShortcut = (e) => !!(e && (e.ctrlKey || e.metaKey));
 

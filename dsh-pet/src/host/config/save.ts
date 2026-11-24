@@ -89,6 +89,8 @@ export function saveUserConfig(
     if (sizePercent !== undefined && sizePercent !== null) pet.sizePercent = sizePercent;
     out.push(pet);
   }
+  const lang = o.language;
+  if (lang !== undefined && !topFieldValid('language', lang)) return null;
   const ne = o.notificationsEnabled;
   if (ne !== undefined && typeof ne !== 'boolean') return null;
   // 前台聚焦时也提醒（全局布尔，与 notificationsEnabled 同语义）：传了必须是布尔，没传走透传保留
@@ -191,6 +193,7 @@ export function saveUserConfig(
   // 白名单可编辑字段：pets 来自请求体，其余（四个全局开关 / physics / 两个模型 /
   // 对话历史条数）同样只在请求体真的传了时才写（未传则走下面的透传保留，不凭空造值）
   const outConfig: { pets: unknown[]; [key: string]: unknown } = { pets: out };
+  if (lang !== undefined) outConfig.language = lang;
   if (ne !== undefined) outConfig.notificationsEnabled = ne;
   if (nwf !== undefined) outConfig.notifyWhenFocused = nwf;
   if (cse !== undefined) outConfig.clickSoundEnabled = cse;
@@ -221,6 +224,7 @@ export function saveUserConfig(
   // 白名单字段只在「请求体传了」时才算白名单（已由上方写入）；未传时走这里透传磁盘旧值——
   // 否则整包调用的调用方漏传一个字段，就会把用户既有设置悄悄抹成默认。
   const bodyOwned = new Set(['pets']);
+  if (lang !== undefined) bodyOwned.add('language');
   if (ne !== undefined) bodyOwned.add('notificationsEnabled');
   if (nwf !== undefined) bodyOwned.add('notifyWhenFocused');
   if (cse !== undefined) bodyOwned.add('clickSoundEnabled');

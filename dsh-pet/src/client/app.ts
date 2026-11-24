@@ -19,6 +19,9 @@ import { installSectionNavIcon } from './nav-icon.ts';
 import { registerPetChatTab, openPetChatTab } from './chat/register.ts';
 import { PET_CHAT_COMMAND_ID, registerPetChatShortcut } from './chat/shortcut.ts';
 import { dicts as chatDicts, NS as CHAT_NS } from './chat/locales/index.ts';
+import { ROUTE_PATH } from '../shared/constants.ts';
+import { setActiveLanguage, setHostLocale } from '../shared/i18n/core.ts';
+import { bindPluginLocale, detectHostLocale } from './i18n-bind.ts';
 import { registerPetCardShortcuts } from './pet/card/shortcut.ts';
 import type * as ReactNS from 'react';
 import type * as PrimitivesNS from '@deepseek-ai/dsh-client-ui-primitives';
@@ -72,12 +75,27 @@ export function makeFactory(): (require: (mod: string) => any) => any {
     const inject = ['slots', 'locale', 'connection', 'remote', 'remote.commands', 'commandUi'];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- DSH 注入的 ctx（locale/slots/webServer 等 service 无静态类型）
     function apply(ctx: any) {
-      // 设置页文案字典。
+      // 探测宿主语言供 language="auto" 回落，并在启动时异步读取用户配置的 language。
+      setHostLocale(detectHostLocale(ctx.locale));
+      ctx.effect(() => {
+        let alive = true;
+        void fetch(ROUTE_PATH + '/config', { cache: 'no-store' })
+          .then((r) => (r.ok ? r.json() : null))
+          .then((body: { ok?: unknown; main?: { language?: unknown } } | null) => {
+            if (!alive || !body || body.ok === false) return;
+            if (body.main && 'language' in body.main) setActiveLanguage(body.main.language);
+          })
+          .catch(() => undefined);
+        return () => {
+          alive = false;
+        };
+      }, 'dsh-pet: initial language');
+      // 设置页文案字典（注册到 DSH 并在显式配置 vi/en/zh 时直接覆盖宿主语言）。
       ctx.effect(() => ctx.locale.register(NS, dicts), 'dsh-pet: dictionaries');
-      const t = ctx.locale.bind(NS);
+      const t = bindPluginLocale(ctx.locale.bind(NS), dicts);
       // 侧栏对话的文案独立成命名空间：只覆盖对话面板，不与设置页字典混在一起。
       ctx.effect(() => ctx.locale.register(CHAT_NS, chatDicts), 'dsh-pet: chat dictionaries');
-      const chatT = ctx.locale.bind(CHAT_NS);
+      const chatT = bindPluginLocale(ctx.locale.bind(CHAT_NS), chatDicts);
 
       // 同页第三方插件可通过 Cordis 服务 petApi7340 读取本页宠物的实况、播放进度、最近一拍状态与菜单点击。
       // 只开读，控制仍走 HTTP，避免出现两条控制通道。

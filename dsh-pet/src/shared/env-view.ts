@@ -6,6 +6,7 @@
  * @module dsh-pet/src/shared/env-view
  */
 import { envIconShapes, type EnvIconShape } from './env-icon.ts';
+import { localizeWeatherSummary, uiText } from './i18n/ui.ts';
 import type { EnvState } from './state.ts';
 
 /** 一行键值：左标签右数值。 */
@@ -55,20 +56,20 @@ function observedTimeOf(raw: string): string | undefined {
 export function envBubbleView(state: EnvState): EnvBubbleView {
   // 省市分开给，这里按「省 + 市」拼标题；两段都没有时退回中性的「天气」
   const place = [state.region ?? '', state.city ?? ''].filter((part) => part !== '').join('');
-  const title = place === '' ? '天气' : place;
+  const title = place === '' ? uiText('env.title') : place;
   const weather = state.weather;
-  if (weather === undefined) return { title, rows: [], emptyText: '暂时查不到天气' };
+  if (weather === undefined) return { title, rows: [], emptyText: uiText('env.unavailable') };
   const observed = observedTimeOf(weather.observedAt);
   return {
     title,
     icon: envIconShapes(weather.code),
     temperature: numText(weather.temperatureC) + '°C',
-    summary: weather.summary,
+    summary: localizeWeatherSummary(weather.code, weather.summary),
     rows: [
-      { label: '体感', value: numText(weather.apparentC) + '°C' },
-      { label: '湿度', value: numText(weather.humidityPercent) + '%' },
-      { label: '风速', value: numText(weather.windKph) + ' km/h' },
+      { label: uiText('env.feelsLike'), value: numText(weather.apparentC) + '°C' },
+      { label: uiText('env.humidity'), value: numText(weather.humidityPercent) + '%' },
+      { label: uiText('env.wind'), value: numText(weather.windKph) + ' km/h' },
     ],
-    ...(observed === undefined ? {} : { footer: '观测 ' + observed }),
+    ...(observed === undefined ? {} : { footer: uiText('env.observed', { time: observed }) }),
   };
 }

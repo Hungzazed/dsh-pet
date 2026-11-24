@@ -3,6 +3,7 @@
  * 只建元素并把能力接上，不发送、不定位、不管关闭；录音的状态机在 chat/hear-control。
  * @module dsh-pet/src/shared/chat/dom
  */
+import { uiText } from '../i18n/ui.ts';
 import { type EncodedImage, encodeImageFile } from './encode.ts';
 import { createHearControl } from './hear-control.ts';
 import { IMAGE_ACCEPT, firstImageFromClipboard, isImageFile } from './image-pick.ts';
@@ -84,7 +85,7 @@ export function createChatDom(opts: { capture?: () => Promise<EncodedImage>; hea
 
   const input = document.createElement('textarea');
   input.className = 'dsh-pet-chat-input';
-  input.placeholder = '说点什么…';
+  input.placeholder = uiText('chat.placeholder');
   input.maxLength = 2000;
   input.rows = 1;
 
@@ -110,10 +111,10 @@ export function createChatDom(opts: { capture?: () => Promise<EncodedImage>; hea
     hintTimer = window.setTimeout(hideHint, HINT_MS);
   };
 
-  const pickBtn = iconButton('上传图片', pictureIcon());
-  const shotBtn = iconButton('截取当前屏幕', cameraIcon());
+  const pickBtn = iconButton(uiText('chat.uploadImage'), pictureIcon());
+  const shotBtn = iconButton(uiText('chat.captureScreen'), cameraIcon());
   const hearUrl = typeof opts.hearUrl === 'string' ? opts.hearUrl : '';
-  const micBtn = iconButton('按住说话', micIcon());
+  const micBtn = iconButton(uiText('chat.holdToTalk'), micIcon());
   const fileInput = document.createElement('input');
   fileInput.type = 'file';
   fileInput.accept = IMAGE_ACCEPT;
@@ -123,13 +124,14 @@ export function createChatDom(opts: { capture?: () => Promise<EncodedImage>; hea
   attach.className = 'dsh-pet-chat-attach';
   const thumb = document.createElement('img');
   thumb.className = 'dsh-pet-chat-thumb';
-  thumb.alt = '已选图片';
+  thumb.alt = uiText('chat.selectedImage');
   const attachX = document.createElement('button');
   attachX.type = 'button';
   attachX.className = 'dsh-pet-chat-attach-x';
   attachX.textContent = '✕';
-  attachX.title = '移除图片';
-  attachX.setAttribute('aria-label', '移除图片');
+  const removeLabel = uiText('chat.removeImage');
+  attachX.title = removeLabel;
+  attachX.setAttribute('aria-label', removeLabel);
   attach.append(thumb, attachX);
 
   const actions = document.createElement('div');
@@ -160,7 +162,7 @@ export function createChatDom(opts: { capture?: () => Promise<EncodedImage>; hea
   };
   const setImageFile = async (file: File): Promise<boolean> => {
     if (!isImageFile(file)) {
-      flash('只支持 PNG / JPEG / WebP / GIF');
+      flash(uiText('chat.onlyImageTypes'));
       return false;
     }
     encoding = true;
@@ -168,7 +170,7 @@ export function createChatDom(opts: { capture?: () => Promise<EncodedImage>; hea
     try {
       return applyEncoded(await encodeImageFile(file));
     } catch (e) {
-      flash('读图失败：' + (e instanceof Error ? e.message : String(e)));
+      flash(uiText('chat.imageReadFailed', { reason: e instanceof Error ? e.message : String(e) }));
       return false;
     } finally {
       encoding = false;
@@ -199,14 +201,14 @@ export function createChatDom(opts: { capture?: () => Promise<EncodedImage>; hea
       shotBtn.disabled = true;
       void capture()
         .then((encoded) => applyEncoded(encoded))
-        .catch((e) => flash('截屏失败：' + (e instanceof Error ? e.message : String(e))))
+        .catch((e) => flash(uiText('chat.captureFailed', { reason: e instanceof Error ? e.message : String(e) })))
         .finally(() => {
           capturing = false;
           shotBtn.disabled = false;
         });
     });
   } else {
-    shotBtn.addEventListener('click', () => flash('当前环境不支持截屏，先用上传试试'));
+    shotBtn.addEventListener('click', () => flash(uiText('chat.captureUnsupportedHint')));
   }
 
   // 按住说话：状态机、录音与结果落点都在 chat/hear-control，这里只把元素与提示行交过去。

@@ -16,6 +16,9 @@
 // 合并口径：所有顶层字段都是**整段替换**——写了就整段用自己的，缺的子键不会从本文件补回来
 //   （消费端各自兜底：余额周期读不到按 1800、碎碎念按 300）。
 {
+  // ===================== Language / Ngôn ngữ =====================
+  // "vi" = Tiếng Việt | "en" = English | "zh" = 中文 | "auto" = follow DSH / system locale
+  "language": "vi",
   // ===================== 碎碎念 / 对话的人设（系统提示词，条目级——每个种类一份；种类文件 pet/<名>-config.json 顶层可覆盖） =====================
   // 宠物开启碎碎念（pets[].whisperEnabled = true）时，按 eventsRefreshSec.whisper 周期
   // 用此提示词调用当前服务商生成一句话，气泡显示。说人话、不啰嗦、不解释自己、不提 AI。
@@ -25,7 +28,7 @@
   // 都有「人设」输入框，改那里等价（写的是用户层 main-config.jsonc 的 pets[].whisperPrompt）。
   // 只写正文：实际发给模型的 system = 这段 + 自动追加的「你的名字是“<宠物名>”。」+ 当前时间背景
   // （日期/星期/时刻/时段/工作日或周末/节日）——所以别在这里再写名字和日期。人设**没有长度上限**。
-  "whisperPrompt": "你是主人桌面上的Q版蓝发小女仆，会时不时碎碎念一句。说话要自然随意、短短一句（20字以内），温柔乖巧带点俏皮，说人话不啰嗦，不要解释你自己，不要提你是AI。",
+  "whisperPrompt": "Bạn là cô hầu gái tóc xanh chibi sống trên màn hình của chủ nhân, thỉnh thoảng lẩm bẩm một câu vui vui. Nói chuyện tự nhiên, ngắn gọn một câu (dưới 20 từ), dịu dàng ngoan ngoãn pha chút tinh nghịch, dùng tiếng Việt tự nhiên không dài dòng, không tự giải thích bản thân và không nhắc mình là AI.",
   // ===================== 说梦话（条目级——每个种类一份） =====================
   // 睡觉期间按 eventsRefreshSec.sleepTalk 周期说一句梦话：发给模型的 system 就是上面的 whisperPrompt（人设）。
   // 与碎碎念同一个开关：宠物关掉碎碎念（pets[].whisperEnabled = false）或配置上不显示时不说梦话。
@@ -34,15 +37,15 @@
   // 睡着期间用户或第三方想让它说话、聊天、查余额、播动画、弹气泡时，不执行，只随机挑一句下面的话弹气泡。
   // 非空字符串数组；整段缺失/非法则用内置三句（「我在睡觉，别烦我……」之类）。
   "sleepRefuseTexts": [
-    "我在睡觉，别烦我……",
-    "唔……让我再睡一会儿。",
-    "呼……呼……（装作没听见）"
+    "Em đang ngủ mà, đừng làm phiền…",
+    "Ưm… cho em ngủ thêm chút nữa đi.",
+    "Khò… khò… (giả vờ không nghe thấy)"
   ],
   // ===================== 入睡 / 醒来时说的话（条目级——每个种类一份） =====================
   // 播「开始」时随机挑一句弹气泡，播「起来」时同理。与拒绝台词同一套规则：非空字符串数组，
   // 整段缺失/非法则回落内置这份；台词只写在这里，代码里不再抄一份。
-  "sleepStartTexts": ["好困……我先睡一会儿。", "那我去睡啦，晚安。"],
-  "sleepEndTexts": ["唔……我醒了。", "睡饱啦，主人！"],
+  "sleepStartTexts": ["Buồn ngủ quá… em chợp mắt chút nha.", "Em đi ngủ đây, chúc ngủ ngon ạ."],
+  "sleepEndTexts": ["Ưm… em dậy rồi nè.", "Ngủ đã quá, chào chủ nhân!"],
   // ===================== 对话记忆轮数（全局默认；种类文件 pet/<名>-config.json 顶层可覆盖） =====================
   // 右键菜单「对话」弹窗与桌宠聊天时，每次请求携带的最近历史轮数（1 轮 = 1 问 1 答）。
   // memory.json 全存不删，此值只决定"每次请求截取多少进上下文"。非负数字；缺失默认 10，
@@ -208,12 +211,12 @@
   // 每档内是多个备选句，播放时随机抽一句（想固定单句就只写一个；想换文案只改这里）。
   // 省略整个字段 = 不弹工作状态气泡文本（仍播动画）；省略某档 = 该档不显示文本。
   "workStatusTexts": [
-    ["正在认真想下一步呢", "让我整理一下思路~", "正在梳理接下来要做什么"],
-    ["正在处理任务呢", "这一步正在进行中哦", "正在继续干活呢，别打扰我~"],
-    ["这一步处理好啦，接着看下一步", "搞定一步，继续看看哦~"],
-    ["需要你确认一下呢", "这里要等你看一下哦", "轮到你来决定啦，等你~"],
-    ["这一轮搞定啦，真棒！", "任务完成咯，可以摸鱼啦~"],
-    ["这一步好像没跑通呢", "刚才的操作遇到点问题哦", "这里卡了一下，再等等你呢"]
+    ["Đang suy nghĩ bước tiếp theo nè", "Để em sắp xếp lại ý tưởng chút~", "Đang tính xem làm gì tiếp theo"],
+    ["Đang xử lý tác vụ đây ạ", "Bước này đang chạy rồi nha", "Đang chăm chỉ làm việc, đợi em chút~"],
+    ["Xong bước này rồi, xem bước kế tiếp nha", "Gọn một bước, tiếp tục nào~"],
+    ["Cần chủ nhân xác nhận chút nè", "Chỗ này chờ bạn xem qua nha", "Tới lượt bạn quyết định đó, em chờ~"],
+    ["Xong lượt này rồi, giỏi quá!", "Hoàn thành rồi, xả hơi chút thôi~"],
+    ["Hình như bước này chưa chạy trơn tru", "Thao tác vừa rồi gặp trục trặc nhỏ ạ", "Bị khựng lại một chút, chờ bạn xử lý nhé"]
   ],
   // ===================== 宠物物理（拖拽抛掷手感，全局默认，所有宠物共用；种类文件顶层可覆盖） =====================
   // gravity：抛掷下落/反弹的基础重力（px/s²）。默认 1400（数值越大落得越快）；0 = 无重力（合法，
@@ -280,7 +283,7 @@
   // whisperPrompt（可选：这只宠物自己的人设，写了取代条目顶层那份；不写/留空 = 跟随条目）
   "pets": [
     {
-      "name": "蓝毛小女仆",
+      "name": "Chibi Maid",
       "id": "main",
       "size": 462,
       "balanceEnabled": true,

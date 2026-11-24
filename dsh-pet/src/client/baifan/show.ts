@@ -7,7 +7,9 @@
  * 所有等待都问回执或播放进度，不用「素材多长」的定时器——定时器在素材加载失败时照样会走到「播完」。
  * @module dsh-pet/src/client/baifan/show
  */
-import { CFG, LINES } from './constants.ts';
+import { getActiveLanguage } from '../../shared/i18n/core.ts';
+import { BAIFAN_LINES, uiText } from '../../shared/i18n/ui.ts';
+import { CFG } from './constants.ts';
 import type { ActivityAssets } from './assets.ts';
 import { bottomNormY, geometry, spriteBox, type Geometry, type Pose, type SpriteBox } from './geometry.ts';
 import { createLock, Halted, type Lock } from './lock.ts';
@@ -133,7 +135,7 @@ export function createShow(deps: ShowDeps): Show {
     const r = await transport.call('POST', '/anim?pet=' + enc(petId) + '&surface=web&lock=' + enc(lease), body);
     if (r.ok !== true) {
       lock?.noteFailure(r.reason);
-      throw new Error('点播失败：' + String(r.reason ?? 'unknown'));
+      throw new Error(uiText('baifan.playFailed', { reason: String(r.reason ?? 'unknown') }));
     }
     return typeof r.playbackId === 'string' ? r.playbackId : null;
   }
@@ -325,12 +327,12 @@ export function createShow(deps: ShowDeps): Show {
   async function phaseWalk(): Promise<void> {
     phase = 'walk';
     const geom = currentGeometry();
-    if (geom === null) throw new Error('这一页找不到这只宠物');
+    if (geom === null) throw new Error(uiText('baifan.petNotFound'));
     groundNormY = bottomNormY(geom);
     const margin = Math.max(60, geom.w / 2);
     const targetPx = margin + Math.random() * Math.max(10, window.innerWidth - margin * 2);
     facing = targetPx >= geom.cx ? 'right' : 'left';
-    say(pickLine(LINES.down), 2400);
+    say(pickLine(BAIFAN_LINES[getActiveLanguage()].down), 2400);
     await warmPosition();
     await playAnim(current.descend, facing);
     await sleep(CFG.prepMs);
@@ -343,7 +345,7 @@ export function createShow(deps: ShowDeps): Show {
   /** 二阶段：期待开饭；尾巴上就开始接侧身跑，免得播完站在那儿等。 */
   async function phaseExpect(): Promise<void> {
     phase = 'expect';
-    say(pickLine(LINES.expect), 3000);
+    say(pickLine(BAIFAN_LINES[getActiveLanguage()].expect), 3000);
     await keepWarm(await playAnim(current.expect, facing));
     if (!alive()) throw new Halted();
   }
@@ -377,9 +379,11 @@ export function createShow(deps: ShowDeps): Show {
 
     eaten += 1;
     scene.popScore(eaten, item.type, g);
-    say(pickLine(isBowl ? LINES.bowl : LINES.ball), 2400);
+    const lines = BAIFAN_LINES[getActiveLanguage()];
+    say(pickLine(isBowl ? lines.bowl : lines.ball), 2400);
     // 吃到一定数量才吹牛，不然每口都来一句会烦
-    if (eaten % FULL_EVERY === 0) window.setTimeout(() => say(pickLine(LINES.full), 2600), 1200);
+    if (eaten % FULL_EVERY === 0)
+      window.setTimeout(() => say(pickLine(BAIFAN_LINES[getActiveLanguage()].full), 2600), 1200);
     phase = 'chase';
   }
 
@@ -400,10 +404,10 @@ export function createShow(deps: ShowDeps): Show {
     phase = 'chase';
     startSpawning();
     startSideWatch();
-    say(pickLine(LINES.drop), 2200);
+    say(pickLine(BAIFAN_LINES[getActiveLanguage()].drop), 2200);
     while (alive() && gen === showGen) {
       const geom = currentGeometry();
-      if (geom === null) throw new Error('这一页找不到这只宠物');
+      if (geom === null) throw new Error(uiText('baifan.petNotFound'));
       groundNormY = bottomNormY(geom);
       const target = scene.nearest(geom.cx, facing);
       const eatPx = CFG.eatPx * (geom.w / CFG.refWidth);
@@ -441,7 +445,7 @@ export function createShow(deps: ShowDeps): Show {
     try {
       await lock?.acquire();
       lock?.startRenew();
-      say(pickLine(LINES.start), 2200);
+      say(pickLine(BAIFAN_LINES[getActiveLanguage()].start), 2200);
       await phaseWalk();
       await phaseExpect();
       await phaseChase(showGen);
@@ -449,13 +453,13 @@ export function createShow(deps: ShowDeps): Show {
       if (error instanceof Halted) {
         // 正常收场（丢锁 / 卸载）
       } else if (lock?.isLost() === true) {
-        scene.toast('锁丢了，表演结束');
+        scene.toast(uiText('baifan.lockLost'));
       } else {
         scene.toast(error instanceof Error ? error.message : String(error));
         console.warn('[dsh-pet] 吃白饭异常', error);
       }
     } finally {
-      await halt(lock?.isLost() === true ? '用户接管，已收场' : '');
+      await halt(lock?.isLost() === true ? uiText('baifan.preempted') : '');
     }
   }
 
@@ -483,7 +487,7 @@ export function createShow(deps: ShowDeps): Show {
   /** 开一场；先彻底收掉上一场（含放锁），再起新的。 */
   function start(nextPetId: string, assets: ActivityAssets): void {
     if (running || lock?.id() != null) {
-      void halt('重新开始').then(() => begin(nextPetId, assets));
+      void halt(uiText('baifan.restarting')).then(() => begin(nextPetId, assets));
       return;
     }
     begin(nextPetId, assets);
@@ -498,7 +502,7 @@ export function createShow(deps: ShowDeps): Show {
     lock?.stopRenew();
     lock = createLock(transport, petId, alive, scene.toast);
     transport.attach(new AbortController());
-    scene.toast('吃白饭 —— 开饭了');
+    scene.toast(uiText('baifan.started'));
     void runShow();
   }
 

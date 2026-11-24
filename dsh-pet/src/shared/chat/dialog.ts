@@ -6,6 +6,7 @@
  * @module dsh-pet/src/shared/chat/dialog
  */
 import { ROUTE_PATH } from '../constants.ts';
+import { uiText } from '../i18n/ui.ts';
 import { createChatDom } from './dom.ts';
 import { createCompositionWatch, decideEnter } from './enter.ts';
 import type { EncodedImage } from './encode.ts';
@@ -72,7 +73,7 @@ function bindSend(binding: SendBinding): void {
   const doSend = (): void => {
     if (binding.isClosed() || sending) return;
     if (binding.isEncoding()) {
-      binding.notify('图片还在处理，稍等一下');
+      binding.notify(uiText('chat.imageBusy'));
       return;
     }
     const text = binding.input.value.trim();
@@ -83,12 +84,12 @@ function bindSend(binding: SendBinding): void {
       .then((state) => {
         if (state.ok) binding.onOk();
         else {
-          binding.err.textContent = '对话失败：' + (state.message ?? state.reason);
+          binding.err.textContent = uiText('chat.failed', { reason: state.message ?? state.reason });
           binding.err.style.display = 'block';
         }
       })
       .catch((e) => {
-        binding.err.textContent = '对话异常：' + String(e && e.message ? e.message : e);
+        binding.err.textContent = uiText('chat.error', { reason: String(e && e.message ? e.message : e) });
         binding.err.style.display = 'block';
       })
       .finally(() => {

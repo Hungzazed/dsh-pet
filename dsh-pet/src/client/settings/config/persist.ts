@@ -6,6 +6,7 @@
  * 「保存即生效」的实现前提。结果归一成判别联合，弹窗与红字由设置页决定。
  * @module dsh-pet/src/client/settings/config/persist
  */
+import { setActiveLanguage } from '../../../shared/i18n/core.ts';
 import { reloadNotifications } from '../../notify.ts';
 import { petBridge } from '../bridge.ts';
 import { buildSaveBody, saveConfig, savePetLayer, syncConfig, type SaveFields } from './http.ts';
@@ -46,6 +47,7 @@ export async function persistSettings(
     if (result.kind === 'ok') merged = result.merged;
     else failed.push(write.entry);
   }
+  setActiveLanguage((merged as { main?: Record<string, unknown> })?.main?.language);
   petBridge.reload(merged);
   void reloadNotifications(); // 保存后即时生效，无需刷新。
   return failed.length > 0 ? { kind: 'partial', failed } : { kind: 'ok' };
@@ -59,6 +61,7 @@ export async function persistSettings(
 export async function syncSettings(): Promise<MergedConfig | null> {
   const merged = await syncConfig();
   if (merged === null) return null;
+  setActiveLanguage((merged as { main?: Record<string, unknown> })?.main?.language);
   petBridge.reload(merged);
   void reloadNotifications();
   return merged;

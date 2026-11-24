@@ -7,6 +7,16 @@ export const fr: Record<Key, string> = {
   nav: 'Configuration des compagnons',
   intro:
     "Gérez plusieurs compagnons : chacun a sa taille et sa position (appliquées immédiatement après l'enregistrement).",
+  languageTitle: 'Langue (Language)',
+  languageHint:
+    'Choisissez la langue de toute l’extension : paramètres, panneau de discussion, menu contextuel, tâches, barre système et invites IA par défaut. Cliquez sur « Enregistrer » pour appliquer immédiatement.',
+  languageLabel: 'Langue de l’interface et de l’IA',
+  languageFieldHint:
+    'Vietnamien / Anglais / Chinois remplace directement toute l’interface et les invites par défaut ; « Suivre DSH / Système (Auto) » suit la langue de l’hôte.',
+  'language.vi': 'Tiếng Việt (Vietnamien)',
+  'language.en': 'English',
+  'language.zh': 'Chinois (Chinese)',
+  'language.auto': 'Suivre DSH / Système (Auto)',
   // 卡片标题与卡片级说明；说明统一进问号气泡。
   petCardTitle: 'Compagnon',
   avatarLabel: 'Avatar',

@@ -10,9 +10,11 @@
 import { createElement, useEffect, useRef, useState, type FC } from 'react';
 import { createRoot } from 'react-dom/client';
 import { jsx } from 'react/jsx-runtime';
-import { zh } from '../../client/chat/locales/index.ts';
+import { dicts as chatDicts, zh } from '../../client/chat/locales/index.ts';
 import { makePetChatPanel } from '../../client/chat/panel.ts';
 import type { ChatPanelRuntime } from '../../client/chat/runtime.ts';
+import { ROUTE_PATH } from '../../shared/constants.ts';
+import { getActiveLanguage, setActiveLanguage } from '../../shared/i18n/core.ts';
 import { createTranslator } from './translate.ts';
 
 /** 设置页里对话面板的挂载点 id，与 chrome.ts 的容器一致。 */
@@ -24,12 +26,26 @@ const HOST_ID = 'pet-chat-root';
  * 只对 `h` 做断言：jsx 的参数类型是 `ElementType`，与运行时契约的 `unknown` 不兼容，
  * 但两者在运行时是同一个函数。其余字段保持类型检查，缺字段会在编译期直接报错。
  */
+const translators = {
+  zh: createTranslator(zh),
+  en: createTranslator(chatDicts.en),
+  vi: createTranslator(chatDicts.vi),
+};
+
+void fetch(ROUTE_PATH + '/config', { cache: 'no-store' })
+  .then((r) => (r.ok ? r.json() : null))
+  .then((body: { ok?: unknown; main?: { language?: unknown } } | null) => {
+    if (!body || body.ok === false || !body.main || !('language' in body.main)) return;
+    setActiveLanguage(body.main.language);
+  })
+  .catch(() => undefined);
+
 const runtime: ChatPanelRuntime = {
   h: jsx as ChatPanelRuntime['h'],
   useState,
   useEffect,
   useRef,
-  t: createTranslator(zh),
+  t: (key, params) => translators[getActiveLanguage()](key, params),
 };
 
 const host = document.getElementById(HOST_ID);

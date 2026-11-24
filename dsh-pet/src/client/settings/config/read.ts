@@ -5,6 +5,7 @@
  * @module dsh-pet/src/client/settings/config/read
  */
 import { DEFAULT_FONT } from '../../../shared/fonts.ts';
+import { isPetLanguage, type PetLanguage } from '../../../shared/i18n/core.ts';
 import type { MemoryConfig, PowerContextConfig } from '../../../shared/memory.ts';
 import { DEFAULT_PHYSICS } from '../../../shared/physics.ts';
 import type { FontConfig, ModelSelection, Pet, PhysicsParams, Weights } from '../../../shared/types.ts';
@@ -17,6 +18,8 @@ export type MergedConfig = Record<string, Record<string, unknown>>;
 export interface MainConfigPatch {
   /** main 条目的宠物列表（已深拷贝位置，可直接进编辑列表）。 */
   pets?: Pet[];
+  /** 插件界面与默认 AI 提示词语言；缺省表示这次响应里没有可信值。 */
+  language?: PetLanguage;
   /** 条目级人设正文，作为实例人设「留空时跟随什么」的预览。 */
   entryPrompt?: string;
   notificationsEnabled?: boolean;
@@ -103,6 +106,7 @@ export function readMainConfig(merged: MergedConfig): MainConfigPatch | null {
     // 位置深拷贝：编辑列表与容器手里的成品列表必须是两份数据。
     pets: pets.map((pet) => ({ ...pet, position: { ...pet.position } })),
   };
+  if (isPetLanguage(main.language)) patch.language = main.language;
   if (typeof main.whisperPrompt === 'string') patch.entryPrompt = main.whisperPrompt;
   if (typeof main.notificationsEnabled === 'boolean') patch.notificationsEnabled = main.notificationsEnabled;
   if (typeof main.notifyWhenFocused === 'boolean') patch.notifyWhenFocused = main.notifyWhenFocused;

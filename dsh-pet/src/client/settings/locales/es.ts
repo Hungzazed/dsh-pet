@@ -7,6 +7,16 @@ export const es: Record<Key, string> = {
   nav: 'Configuración de mascotas',
   intro:
     'Gestiona varias mascotas: cada una tiene su propio tamaño y posición (se aplica al instante después de guardar).',
+  languageTitle: 'Idioma (Language)',
+  languageHint:
+    'Elige el idioma de todo el complemento: ajustes, panel de chat, menú contextual, tareas, bandeja del sistema e indicaciones predeterminadas de IA. Pulsa "Guardar" para aplicar al instante.',
+  languageLabel: 'Idioma de interfaz e IA',
+  languageFieldHint:
+    'Vietnamita / Inglés / Chino sobrescribe toda la interfaz del complemento y las indicaciones predeterminadas; "Seguir a DSH / Sistema (Auto)" sigue el idioma del host.',
+  'language.vi': 'Tiếng Việt (Vietnamita)',
+  'language.en': 'English',
+  'language.zh': 'Chino (Chinese)',
+  'language.auto': 'Seguir a DSH / Sistema (Auto)',
   // 卡片标题与卡片级说明；说明统一进问号气泡。
   petCardTitle: 'Mascota',
   avatarLabel: 'Avatar',

@@ -6,6 +6,16 @@ import type { Key } from './zh.ts';
 export const ja: Record<Key, string> = {
   nav: 'デスクトップペット設定',
   intro: '複数のペットを管理できます。ペットごとにサイズと位置を個別に設定できます（保存するとすぐに反映されます）。',
+  languageTitle: '言語 (Language)',
+  languageHint:
+    'プラグイン全体の表示言語を選択します：設定ページ、チャットパネル、右クリックメニュー、ToDo、トレイ、既定のAIプロンプト。「保存」でWebとデスクトップに即時反映されます。',
+  languageLabel: 'UI・AI 言語',
+  languageFieldHint:
+    'Tiếng Việt / English / 中国語を選ぶとプラグイン全体と既定プロンプトを上書きします。「DSH / システムに従う」はホストの言語に従います。',
+  'language.vi': 'Tiếng Việt (ベトナム語)',
+  'language.en': 'English',
+  'language.zh': '中国語 (Chinese)',
+  'language.auto': 'DSH / システムに従う（自動）',
   // 卡片标题与卡片级说明；说明统一进问号气泡。
   petCardTitle: 'ペットの設定',
   avatarLabel: 'アバター',

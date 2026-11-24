@@ -34,6 +34,7 @@ import { createHearService } from './voice/hear.ts';
 import { listChatMemoryProviders } from './chat-memory-provider.ts';
 import { TODO_FILE_NAME, TodoStore } from './todo/store.ts';
 import { join } from 'node:path';
+import { resolvePetLanguage, type ResolvedLanguage } from '../shared/i18n/core.ts';
 import type { PetRouteDeps } from './routes/types.ts';
 
 /** 插件行 id（与 cordis.patch.yml 一致） */
@@ -42,8 +43,11 @@ export const name = 'pet';
 export const inject = ['webServer', 'agentDefaultModel', 'credentials', 'llm', 'commands', 'connection'];
 
 /** 检索查询的改写提示词：结合最近几轮还原指代，只要一条能拿去检索的查询，不要解释、不要多行。 */
-const REWRITE_QUERY_SYSTEM =
-  '把用户这句话改写成一条用于检索长期记忆的查询：结合最近几轮对话还原「它」「那个」「继续」这类指代，保留检索需要的名词与限定词，去掉寒暄、语气词与称呼，不要解释、不要引号、不要换行。只输出这条查询本身。';
+const REWRITE_QUERY_SYSTEMS: Record<ResolvedLanguage, string> = {
+  zh: '把用户这句话改写成一条用于检索长期记忆的查询：结合最近几轮对话还原「它」「那个」「继续」这类指代，保留检索需要的名词与限定词，去掉寒暄、语气词与称呼，不要解释、不要引号、不要换行。只输出这条查询本身。',
+  en: 'Rewrite the user message into a single concise long-term memory search query: resolve pronouns using recent turns, keep key nouns and qualifiers, drop greetings and filler, no explanation, no quotes, single line only.',
+  vi: 'Viết lại câu của người dùng thành một truy vấn ngắn gọn để tìm trong trí nhớ dài hạn: giải rõ đại từ dựa trên các lượt gần nhất, giữ danh từ và từ khóa chính, bỏ lời chào và từ đệm, không giải thích, không ngoặc kép, chỉ xuất đúng một dòng truy vấn.',
+};
 
 /** 宿主插件主体：注册 `/dsh-pet-7340` 前缀路由与斜杠命令（/balance /pet /chat）；ctx 暂用 any（peer 类型包本地不可解析）。 */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- DSH 注入的 ctx（webServer/locale 等 service 无静态类型）
@@ -94,6 +98,14 @@ export function apply(ctx: any): void {
     const city = readAllConfig(configPaths).main?.environmentCity;
     return typeof city === 'string' && city.trim() !== '' ? city.trim() : undefined;
   });
+  const configuredLanguage = (): ResolvedLanguage => {
+    try {
+      return resolvePetLanguage(readAllConfig(configPaths).main?.language, undefined, 'vi');
+    } catch {
+      return 'zh';
+    }
+  };
+
   const chatMemory = createChatMemory({ ctx, configPaths, log, memeDirsFor, playback, state, userRoot });
   const { lastWhisperAt, publishWhisper, publishSleepTalk, chatWithPet, getActivePetId, setActivePetId } = chatMemory;
 
@@ -157,7 +169,7 @@ export function apply(ctx: any): void {
       if (!enabled) return undefined;
       const result = await generateChat({
         ctx,
-        system: REWRITE_QUERY_SYSTEM,
+        system: REWRITE_QUERY_SYSTEMS[configuredLanguage()],
         history,
         userText,
         pool: [],
@@ -210,6 +222,7 @@ export function apply(ctx: any): void {
 
   registerSessionWatch({
     ctx,
+    language: configuredLanguage,
     cancelTerminalCleanup,
     lastTodoText,
     lastReplyText,
@@ -224,7 +237,14 @@ export function apply(ctx: any): void {
     workStatus,
   });
 
-  registerBalanceCommand({ ctx, effectivePetList, refreshBalance, sleep, sleepRefusalText });
+  registerBalanceCommand({
+    ctx,
+    effectivePetList,
+    language: configuredLanguage,
+    refreshBalance,
+    sleep,
+    sleepRefusalText,
+  });
 
   registerLoops({
     ctx,
@@ -241,9 +261,25 @@ export function apply(ctx: any): void {
     whisperPeriodSec,
   });
 
-  registerPetCommand({ ctx, effectivePetList, petDisplayName, resolveActivePetId, setActivePetId });
+  registerPetCommand({
+    ctx,
+    effectivePetList,
+    language: configuredLanguage,
+    petDisplayName,
+    resolveActivePetId,
+    setActivePetId,
+  });
 
-  registerChatCommand({ ctx, chatWithPet, log, publishWhisper, resolveActivePetId, sleep, sleepRefusalText });
+  registerChatCommand({
+    ctx,
+    chatWithPet,
+    language: configuredLanguage,
+    log,
+    publishWhisper,
+    resolveActivePetId,
+    sleep,
+    sleepRefusalText,
+  });
 
   // 待办提醒：随插件生命周期起停；锁被第三方持有时由 pickReminderSpeaker 跳过该宠物。
   // 播报开关现读现用：改配置后下一次提醒即生效，不必重启。
@@ -251,6 +287,7 @@ export function apply(ctx: any): void {
     ctx,
     effectivePetList,
     isVoiceTodoEnabled: () => readAllConfig(configPaths).main?.voiceTodoEnabled === true,
+    language: configuredLanguage,
     lock,
     log,
     sleep,

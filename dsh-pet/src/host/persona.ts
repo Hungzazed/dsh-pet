@@ -8,6 +8,7 @@
  * 必须始终成立：拼装点唯一——不给名字与时间开占位符配置，否则等于出现第二个拼装点。
  * @module dsh-pet/src/host/persona
  */
+import type { ResolvedLanguage } from '../shared/i18n/core.ts';
 import { timeContextOf, type TimeContextEnv } from './time-context.ts';
 
 /**
@@ -16,8 +17,11 @@ import { timeContextOf, type TimeContextEnv } from './time-context.ts';
  * 措辞把前缀限定为「对话记录里的时间标注」而不是「回复格式」；前缀只标在 user 消息上——
  * 标在 assistant 上时模型会照抄成自己的说话格式（出现过回复以 `[11:54]` 开头）。
  */
-const HISTORY_TIMES_LINE =
-  '【历史】对话记录里，主人的话前面标着 [月日 时:分]，那是那句话发生的时刻；它只是记录里的时间标注，不是你的说话格式。判断“多久以前”“隔了几天”时按它换算，别把隔了很久的话当成刚说过的。你的回复直接从正文开始，不要写时间、不要加方括号前缀。';
+const HISTORY_TIMES_LINES: Record<ResolvedLanguage, string> = {
+  zh: '【历史】对话记录里，主人的话前面标着 [月日 时:分]，那是那句话发生的时刻；它只是记录里的时间标注，不是你的说话格式。判断“多久以前”“隔了几天”时按它换算，别把隔了很久的话当成刚说过的。你的回复直接从正文开始，不要写时间、不要加方括号前缀。',
+  en: '[History] Past messages from your master may begin with [MM-DD HH:MM] showing when they were sent. That is only a log timestamp, not your reply format. Use it to judge how long ago something was said, and start your reply directly without any timestamp or bracket prefix.',
+  vi: '[Lịch sử] Tin nhắn cũ của chủ nhân có thể gắn nhãn [ngày/tháng giờ:phút] cho biết thời điểm gửi. Đó chỉ là dấu thời gian trong lịch sử, không phải định dạng câu trả lời của bạn. Dùng nó để biết chuyện đã qua bao lâu, và trả lời trực tiếp không kèm thời gian hay ngoặc vuông ở đầu.',
+};
 
 /**
  * 某宠物最终生效的人设正文（不含名字与时间）：实例 whisperPrompt → 条目 whisperPrompt → 空串。
@@ -46,6 +50,8 @@ export interface SystemPromptParts {
   historyTimes?: boolean;
   /** 时间行附带的环境事实（城市与天气）；缺省 = 只写时间，与加入环境前一致 */
   env?: TimeContextEnv;
+  /** Prompt language (`zh` default to keep legacy contract; host passes configured language). */
+  language?: ResolvedLanguage;
 }
 
 /**
@@ -56,14 +62,22 @@ export interface SystemPromptParts {
  * （宁缺，也不把 NaN 拼进提示词；没有时间背景时【历史】的“现在”无从对照，留着只会自相矛盾）。
  */
 export function composeSystemPrompt(parts: SystemPromptParts): string {
+  const lang: ResolvedLanguage = parts.language ?? 'zh';
   const name = String(parts.name || parts.id);
-  const nameLine = name ? '你的名字是“' + name + '”。' : '';
+  const nameLine =
+    name === ''
+      ? ''
+      : lang === 'vi'
+        ? `Tên của bạn là "${name}".`
+        : lang === 'en'
+          ? `Your name is "${name}".`
+          : '你的名字是“' + name + '”。';
   const lines = [parts.prompt, nameLine].filter((line) => line !== '');
-  const time = timeContextOf(parts.now, parts.env);
+  const time = timeContextOf(parts.now, parts.env, lang);
   if (time) {
     lines.push(time);
     // 【历史】跟着时间背景走：它整句都在引用“现在”，没有时间背景时不成立
-    if (parts.historyTimes === true) lines.push(HISTORY_TIMES_LINE);
+    if (parts.historyTimes === true) lines.push(HISTORY_TIMES_LINES[lang]);
   }
   return lines.join('\n');
 }

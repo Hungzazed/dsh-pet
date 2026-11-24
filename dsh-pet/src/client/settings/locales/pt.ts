@@ -6,6 +6,16 @@ import type { Key } from './zh.ts';
 export const pt: Record<Key, string> = {
   nav: 'Configuração do pet',
   intro: 'Gerencie vários pets: cada um tem tamanho e posição próprios (aplicado na hora após salvar).',
+  languageTitle: 'Idioma (Language)',
+  languageHint:
+    'Escolha o idioma de exibição de todo o plugin: configurações, painel de chat, menu de contexto, tarefas, bandeja do sistema e prompts padrão de IA. Clique em "Salvar" para aplicar na hora.',
+  languageLabel: 'Idioma da interface e IA',
+  languageFieldHint:
+    'Vietnamita / Inglês / Chinês substitui diretamente toda a interface do plugin e os prompts padrão; "Seguir DSH / Sistema (Auto)" segue o idioma do host.',
+  'language.vi': 'Tiếng Việt (Vietnamita)',
+  'language.en': 'English',
+  'language.zh': 'Chinês (Chinese)',
+  'language.auto': 'Seguir DSH / Sistema (Auto)',
   // 卡片标题与卡片级说明；说明统一进问号气泡。
   petCardTitle: 'Pet',
   avatarLabel: 'Avatar',

@@ -46,6 +46,7 @@ function pickGlobals(main) {
   const physics = source.physics && typeof source.physics === 'object' ? source.physics : null;
   physicsSource = physics;
   return {
+    language: typeof source.language === 'string' && ['vi', 'en', 'zh', 'auto'].includes(source.language) ? source.language : 'vi',
     notificationsEnabled: source.notificationsEnabled !== false,
     // 与 voiceNotifyEnabled 同理：本项默认关，字段缺失时不能显示成已勾选，
     // 否则设置页显示「开」而消费端拿到 undefined 当成「关」，两边打架。
@@ -141,6 +142,7 @@ function physicsBody() {
 
 function petsBody() {
   return Object.assign({ pets: state.pets.main }, {
+    language: state.globals.language,
     notificationsEnabled: state.globals.notificationsEnabled,
     notifyWhenFocused: state.globals.notifyWhenFocused,
     clickSoundEnabled: state.globals.clickSoundEnabled,

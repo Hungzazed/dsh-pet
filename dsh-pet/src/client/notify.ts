@@ -11,6 +11,7 @@
 
 import { frameToToast, truncate, NOTIFY_ICONS as ICON_NAMES, type NotifyFrame } from '../shared/notify.ts';
 import { ROUTE_PATH } from '../shared/constants.ts';
+import { uiText } from '../shared/i18n/ui.ts';
 
 let pageVisible = typeof document !== 'undefined' && !document.hidden;
 let pageFocused = typeof document !== 'undefined' && document.hasFocus();
@@ -192,7 +193,7 @@ export async function requestNotificationPermission(): Promise<PermissionResult>
     if (p === 'granted') return { ok: true };
     if (p === 'denied') return { ok: false, reason: 'rejected' };
     // 弹窗被直接关掉 / 未选择：浏览器仍是 default。
-    return { ok: false, reason: 'error', message: '权限未授予（' + p + '）' };
+    return { ok: false, reason: 'error', message: uiText('notify.permissionDenied', { status: p }) };
   } catch (e) {
     return { ok: false, reason: 'error', message: e instanceof Error ? e.message : String(e) };
   }

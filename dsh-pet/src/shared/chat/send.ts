@@ -4,6 +4,8 @@
  * @module dsh-pet/src/shared/chat/send
  */
 
+import { uiText } from '../i18n/ui.ts';
+
 /** 随消息发送的一张图片：`data` 是规范 base64（不带 data: 前缀）。 */
 export interface ChatAttachment {
   readonly mediaType: string;
@@ -37,7 +39,7 @@ export async function sendChat(baseUrl: string, text: string, attachment?: ChatA
   });
   const raw: unknown = await res.json().catch(() => null);
   if (!raw || typeof raw !== 'object') {
-    throw new Error('dsh-pet: 对话响应非法');
+    throw new Error(uiText('chat.invalidResponse'));
   }
   const o = raw as Record<string, unknown>;
   if (o.ok !== true) {

@@ -18,6 +18,7 @@ import { supportsReasoningOff } from './llm-reasoning.ts';
 import { defaultLog } from './log-file.ts';
 import { extractChatImage, memeCatalog, type MemeEntry } from './memes.ts';
 import { modelCandidates, modelLabel, type ModelRef } from './model-selection.ts';
+import type { ResolvedLanguage } from '../shared/i18n/core.ts';
 import { historyStampOf } from './time-context.ts';
 
 /** 生成失败原因（与 shared/whisper.ts 的 WhisperState 失败分支同构）。 */
@@ -55,11 +56,11 @@ const HISTORY_STAMP_GAP_MS = 30 * 60 * 1000;
  * @param nowMs - 本次生成时刻（毫秒），整批历史共用一个，避免逐条取时钟导致同批时间不一致。
  * @returns 需要前缀时返回 `[时:分] 原文`，否则原样返回 `content`。
  */
-function userHistoryTextOf(message: ChatMemoryMessage, nowMs: number): string {
+function userHistoryTextOf(message: ChatMemoryMessage, nowMs: number, lang: ResolvedLanguage): string {
   if (!Number.isFinite(message.ts)) return message.content;
   // 用 > 而不是 >=：恰好 30 分钟仍算连续对话；ts 在未来（时钟回拨）时差为负，自然不加
   if (!(nowMs - message.ts > HISTORY_STAMP_GAP_MS)) return message.content;
-  const stamp = historyStampOf(message.ts, new Date(nowMs));
+  const stamp = historyStampOf(message.ts, new Date(nowMs), lang);
   return stamp === '' ? message.content : '[' + stamp + '] ' + message.content;
 }
 
@@ -74,17 +75,32 @@ function userHistoryTextOf(message: ChatMemoryMessage, nowMs: number): string {
  * @param message - 历史消息。
  * @returns 需要回填时返回 `\n[动作:…]\n[图:…]`，否则空串。
  */
-function historyMarkersOf(message: ChatMemoryMessage): string {
+function historyMarkersOf(message: ChatMemoryMessage, lang: ResolvedLanguage): string {
   if (message.role !== 'assistant') return '';
   const lines: string[] = [];
-  if (typeof message.action === 'string' && message.action !== '') lines.push('[动作:' + message.action + ']');
-  if (typeof message.meme === 'string' && message.meme !== '') lines.push('[图:' + message.meme + ']');
+  const actionTag = lang === 'zh' ? '动作' : 'action';
+  const imgTag = lang === 'zh' ? '图' : 'img';
+  if (typeof message.action === 'string' && message.action !== '') lines.push(`[${actionTag}:${message.action}]`);
+  if (typeof message.meme === 'string' && message.meme !== '') lines.push(`[${imgTag}:${message.meme}]`);
   return lines.length === 0 ? '' : '\n' + lines.join('\n');
 }
 
-/** 配图指令：附在 user 正文之后（紧邻回答位置，模型更容易遵守）。
- *  交给模型选而不是随机抽：对话有真实上下文（用户输入 + 历史），按语境挑才贴合。 */
-function imageInstruction(pool: MemeEntry[]): string {
+/** 配图指令：附在 user 正文之后（紧邻回答位置，模型更容易遵守）。 */
+function imageInstruction(pool: MemeEntry[], lang: ResolvedLanguage): string {
+  if (lang === 'en') {
+    return (
+      '\n\n[Meme] Optionally attach one meme at the end of your reply from this list:\n' +
+      memeCatalog(pool) +
+      '\nIf you pick one, append a new final line [img:EXACT_NAME] (copy the key verbatim). If none fits, omit the tag completely.'
+    );
+  }
+  if (lang === 'vi') {
+    return (
+      '\n\n[Ảnh meme] Ở cuối câu trả lời bạn có thể đính kèm một ảnh meme từ danh sách sau:\n' +
+      memeCatalog(pool) +
+      '\nNếu chọn, thêm một dòng cuối [img:TÊN_CHÍNH_XÁC] (chép nguyên văn tên khóa). Nếu không có ảnh hợp thì đừng ghi thẻ này.'
+    );
+  }
   return (
     '\n\n[配图] 回复结尾可选附一张表情包给用户看，从下列清单里挑最贴合当前语境的：\n' +
     memeCatalog(pool) +
@@ -112,6 +128,8 @@ export interface ChatGenerateInput {
   readonly preferred?: ModelRef;
   /** 本轮附带的图片；缺省 = 纯文本请求，数据路径与加入图片前一致。 */
   readonly image?: PetImageRef;
+  /** Prompt language (`zh` default). */
+  readonly language?: ResolvedLanguage;
 }
 
 /**
@@ -122,6 +140,7 @@ export interface ChatGenerateInput {
  */
 export async function generateChat(input: ChatGenerateInput): Promise<ChatGenerateResult> {
   const { ctx, system, history, userText, preferred, image } = input;
+  const language: ResolvedLanguage = input.language ?? 'zh';
   // 表情包侧的读池 / 校验函数按可变数组签名；这里复制一份，避免把调用方数组的引用往下传
   const pool: MemeEntry[] = [...(input.pool ?? [])];
   // 动作名单同样是「空 = 关闭」：开关关掉或 categories 没配任何动作时，指令与解析都不介入。
@@ -129,18 +148,36 @@ export async function generateChat(input: ChatGenerateInput): Promise<ChatGenera
   // 候选链：配置的模型优先 → 当前对话的模型兜底（chatModel 留空时链上只有后者）
   const candidates = modelCandidates(ctx, preferred);
   if (candidates.length === 0) {
-    return { ok: false, reason: 'provider-missing', message: '当前对话未配置模型' };
+    return {
+      ok: false,
+      reason: 'provider-missing',
+      message:
+        language === 'vi'
+          ? 'Chưa cấu hình model AI'
+          : language === 'en'
+            ? 'No AI model configured'
+            : '当前对话未配置模型',
+    };
   }
   const llm = (ctx as { llm?: { stream(o: unknown): AsyncIterable<unknown> } }).llm;
   if (!llm || typeof llm.stream !== 'function') {
-    return { ok: false, reason: 'generate-error', message: 'LLM 服务不可用' };
+    return {
+      ok: false,
+      reason: 'generate-error',
+      message:
+        language === 'vi'
+          ? 'Dịch vụ LLM không khả dụng'
+          : language === 'en'
+            ? 'LLM service unavailable'
+            : 'LLM 服务不可用',
+    };
   }
   // 依次尝试：配置的模型失败（凭据被删 / 模型下架 / 该服务商没配 key）时回落到当前对话的模型
   // 重试一次——那才是用户当前真正在用的模型，报错更有意义。
   // 兜底文案与失败分支同源，避免两处字面量漂移
   let last: ChatGenerateResult = { ok: false, reason: 'generate-error', message: noTextReason(undefined) };
   for (const [i, sel] of candidates.entries()) {
-    const result = await generateWith(ctx, { llm, sel, system, history, userText, pool, actions, image });
+    const result = await generateWith(ctx, { llm, sel, system, history, userText, pool, actions, image, language });
     if (result.ok) return result;
     last = result;
     // 回落要留痕：配的模型没生效时能在日志里看到原因（否则「我明明配了 A，怎么还是用 B」没法查）
@@ -164,11 +201,12 @@ interface GenerateOnce {
   readonly pool: MemeEntry[];
   readonly actions: string[];
   readonly image?: PetImageRef;
+  readonly language: ResolvedLanguage;
 }
 
 /** 用一个确定的 provider/model 跑一次对话生成（失败原样返回结构化原因，不吞）。 */
 async function generateWith(ctx: { llm?: unknown }, once: GenerateOnce): Promise<ChatGenerateResult> {
-  const { llm, sel, system, history, userText, pool, actions, image } = once;
+  const { llm, sel, system, history, userText, pool, actions, image, language } = once;
   // 历史 → dsh-llm 消息：user 经 createUserMessage（plugin 来源），assistant 经 createAssistantMessage
   // （provider/model 只是消息的角色载体，不涉及适配器回放）。
   // 时间前缀只加在 user 上（模型会照抄 assistant 自己那侧的格式）；配图/动作标记只加在 assistant 上。
@@ -176,11 +214,11 @@ async function generateWith(ctx: { llm?: unknown }, once: GenerateOnce): Promise
   const historyMessages = history.map((m) =>
     m.role === 'user'
       ? createUserMessage({
-          content: [{ type: 'text', text: userHistoryTextOf(m, nowMs) }],
+          content: [{ type: 'text', text: userHistoryTextOf(m, nowMs, language) }],
           source: { kind: 'user' },
         })
       : createAssistantMessage({
-          content: [{ type: 'text', text: m.content + historyMarkersOf(m) }],
+          content: [{ type: 'text', text: m.content + historyMarkersOf(m, language) }],
           source: { provider: sel.provider, model: sel.model },
         }),
   );
@@ -194,7 +232,8 @@ async function generateWith(ctx: { llm?: unknown }, once: GenerateOnce): Promise
   // 顺序固定「配图在前、动作在后」：配图是既有行为，新增的动作排在它后面，不改既有提示词的位置。
   const wantImage = pool.length > 0;
   const wantAction = actions.length > 0;
-  const instruction = (wantImage ? imageInstruction(pool) : '') + (wantAction ? actionInstruction(actions) : '');
+  const instruction =
+    (wantImage ? imageInstruction(pool, language) : '') + (wantAction ? actionInstruction(actions, language) : '');
   const content: Record<string, unknown>[] = [
     { type: 'text', text: instruction === '' ? userText : userText + instruction },
   ];

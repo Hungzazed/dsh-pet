@@ -14,8 +14,8 @@ describe('对话面板字典 —— 键集与完整性', () => {
     assert.equal(NS, 'pet.chat');
   });
 
-  test('8 种语言齐全：zh / en / ja / es / fr / de / ru / pt', () => {
-    assert.deepEqual(Object.keys(dicts), ['zh', 'en', 'ja', 'es', 'fr', 'de', 'ru', 'pt']);
+  test('9 种语言齐全：zh / en / vi / ja / es / fr / de / ru / pt', () => {
+    assert.deepEqual(Object.keys(dicts), ['zh', 'en', 'vi', 'ja', 'es', 'fr', 'de', 'ru', 'pt']);
   });
 
   test('每种语言的键集与 zh 完全一致 → 漏翻或多余键都会被发现', () => {

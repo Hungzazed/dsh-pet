@@ -8,9 +8,13 @@
  */
 import { isBareKey } from './hotkey.ts';
 import type { HotkeyEvent } from './hotkey.ts';
+import { uiText } from './i18n/ui.ts';
 
 /** 快捷键的显示文案（菜单项右侧灰字）。与 {@link isSleepHotkey} 的按键保持同一份事实。 */
 export const SLEEP_HOTKEY_HINT = 'Z 键';
+
+/** Localized sleep hotkey hint. */
+export const sleepHotkeyHint = (): string => uiText('hotkey.key', { key: 'Z' });
 
 /**
  * 这次按键该不该切换睡觉状态。

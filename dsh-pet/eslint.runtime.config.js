@@ -25,6 +25,7 @@ const nodeGlobals = {
   clearTimeout: 'readonly',
   setInterval: 'readonly',
   clearInterval: 'readonly',
+  Intl: 'readonly',
 };
 
 /** 浏览器全局（渲染端与 preload）。 */
@@ -101,6 +102,7 @@ const scriptGlobals = {
   // sprite.js
   PetSprite: 'readonly',
   OPEN_SHORTCUT_HINT: 'readonly',
+  openShortcutHint: 'readonly',
   isOpenShortcut: 'readonly',
   playClickSound: 'readonly',
   // events.js

@@ -8,6 +8,12 @@
 import { CORNER_SET, GLOBAL_DEFAULT_KEYS, isValidPetId, PET_DISPLAY_SET, warnOnce } from './constants.ts';
 import { isValidSizePercent, SIZE_PERCENT_DEFAULT, SIZE_PERCENT_MIN } from '../../shared/pet-size.ts';
 import { topFieldValid } from './validate.ts';
+import { isPetLanguage, resolvePetLanguage } from '../../shared/i18n/core.ts';
+import {
+  resolveBuiltinSleepTexts,
+  resolveBuiltinWhisperPrompt,
+  resolveBuiltinWorkStatusTexts,
+} from '../../shared/i18n/defaults.ts';
 
 /**
  * 文件宠物条目的合并基座：内置默认 + 白名单字段改用用户层的值。这些字段是用户级成本/偏好/
@@ -56,6 +62,15 @@ export function mergeEntry(
       continue;
     }
     out[key] = own;
+  }
+  if (isPetLanguage(out.language)) {
+    const lang = resolvePetLanguage(out.language, undefined, 'vi');
+    if ('whisperPrompt' in out) out.whisperPrompt = resolveBuiltinWhisperPrompt(out.whisperPrompt, lang);
+    if ('sleepRefuseTexts' in out)
+      out.sleepRefuseTexts = resolveBuiltinSleepTexts('refuse', out.sleepRefuseTexts, lang);
+    if ('sleepStartTexts' in out) out.sleepStartTexts = resolveBuiltinSleepTexts('start', out.sleepStartTexts, lang);
+    if ('sleepEndTexts' in out) out.sleepEndTexts = resolveBuiltinSleepTexts('end', out.sleepEndTexts, lang);
+    if ('workStatusTexts' in out) out.workStatusTexts = resolveBuiltinWorkStatusTexts(out.workStatusTexts, lang);
   }
   return out;
 }

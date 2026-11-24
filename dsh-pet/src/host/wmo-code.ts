@@ -1,4 +1,6 @@
-/** WMO 天气码 → 中文短语；表里没有的码返回“未知天气”，不猜。 */
+/** WMO 天气码 → 多语言短语；表里没有的码返回兜底文案，不猜。 */
+import type { ResolvedLanguage } from '../shared/i18n/core.ts';
+import { wmoLabel } from '../shared/i18n/ui.ts';
 
 /** 码 → 中文；只收 Open-Meteo 的 current / daily 会用到的那些码。 */
 const TEXT_BY_CODE: Record<number, string> = {
@@ -37,6 +39,7 @@ const TEXT_BY_CODE: Record<number, string> = {
  * @param code - WMO 4677 天气码。
  * @returns 对应说法；未收录的码返回“未知天气”。
  */
-export function wmoText(code: number): string {
+export function wmoText(code: number, lang: ResolvedLanguage = 'zh'): string {
+  if (lang !== 'zh') return wmoLabel(code, lang);
   return TEXT_BY_CODE[code] ?? '未知天气';
 }

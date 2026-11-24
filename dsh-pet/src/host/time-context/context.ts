@@ -20,6 +20,8 @@ import {
   timeSlotOf,
 } from './constants.ts';
 import { dayOfYear, dayOfYearOf, entriesAt } from './lunar.ts';
+import type { ResolvedLanguage } from '../../shared/i18n/core.ts';
+import { localizeWeatherSummary } from '../../shared/i18n/ui.ts';
 
 /** 时间行里附带的环境事实（城市与天气）。 */
 export interface TimeContextEnv {
@@ -33,6 +35,8 @@ export interface TimeContextEnv {
 
 /** 天气事实：只用于拼一句口语，不承诺展示格式。 */
 export interface WeatherFacts {
+  /** Optional WMO code used for localized weather summaries. */
+  readonly code?: number;
   /** 天气短语（如“阴”）。 */
   readonly summary: string;
   /** 气温（°C）。 */
@@ -159,8 +163,71 @@ function placeTextOf(region: string | undefined, city: string | undefined): stri
   return /[\u4e00-\u9fa5]$/u.test(region) ? region + city : region + ' ' + city;
 }
 
+const EN_WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] as const;
+const VI_WEEKDAYS = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'] as const;
+const EN_SLOTS: Readonly<Record<string, string>> = {
+  凌晨: 'late night',
+  清晨: 'early morning',
+  早上: 'morning',
+  上午: 'late morning',
+  中午: 'noon',
+  下午: 'afternoon',
+  傍晚: 'early evening',
+  晚上: 'evening',
+  深夜: 'late night',
+};
+const VI_SLOTS: Readonly<Record<string, string>> = {
+  凌晨: 'rạng sáng',
+  清晨: 'sáng sớm',
+  早上: 'buổi sáng',
+  上午: 'gần trưa',
+  中午: 'buổi trưa',
+  下午: 'buổi chiều',
+  傍晚: 'chiều tối',
+  晚上: 'buổi tối',
+  深夜: 'đêm khuya',
+};
+
 /** 天气从句：有数据时拼一句口语，没有时给出“别编”的交代。 */
-function weatherClauseOf(weather: WeatherFacts | undefined): string {
+function weatherClauseOf(weather: WeatherFacts | undefined, lang: ResolvedLanguage): string {
+  if (lang === 'en') {
+    if (weather === undefined)
+      return "outside weather wasn't fetched this time — if asked, say you don't know rather than guessing";
+    const summary =
+      typeof weather.code === 'number' ? localizeWeatherSummary(weather.code, weather.summary, 'en') : weather.summary;
+    return (
+      'outside is ' +
+      summary +
+      ', temp ' +
+      numText(weather.temperatureC) +
+      '°C, feels like ' +
+      numText(weather.apparentC) +
+      '°C, humidity ' +
+      numText(weather.humidityPercent) +
+      '%, wind ' +
+      numText(weather.windKph) +
+      ' km/h'
+    );
+  }
+  if (lang === 'vi') {
+    if (weather === undefined)
+      return 'lần này chưa tra được thời tiết bên ngoài — nếu chủ nhân hỏi thì nói không rõ chứ đừng bịa';
+    const summary =
+      typeof weather.code === 'number' ? localizeWeatherSummary(weather.code, weather.summary, 'vi') : weather.summary;
+    return (
+      'ngoài trời ' +
+      summary +
+      ', nhiệt độ ' +
+      numText(weather.temperatureC) +
+      '°C, cảm giác ' +
+      numText(weather.apparentC) +
+      '°C, độ ẩm ' +
+      numText(weather.humidityPercent) +
+      '%, gió ' +
+      numText(weather.windKph) +
+      ' km/h'
+    );
+  }
   if (weather === undefined) return '外面的天气这次没查到，主人问起就说不知道、别编';
   return (
     '外面' +
@@ -181,20 +248,44 @@ function weatherClauseOf(weather: WeatherFacts | undefined): string {
  * 生成注入 system 末尾的时间背景（一行）。
  * @param date - 当前时刻（生产调用方传 new Date()；测试传固定日期）。
  * @param env - 可选的环境事实：传了就多写地点与天气，不传则与加入环境前逐字一致。
- * @returns 形如
- *   `【当下】你在江西省南昌市（按网络粗估，不一定准），现在是2026年10月8日星期四 21:32，晚上，工作日，外面阴，气温 13.1°C，体感 12.9°C，湿度 84%，风速 2 km/h。这只是背景，……`
- *   无节日时中间那一段省略；非法 Date → 空串（调用方据此不加这一行）。
+ * @param lang - 语言（默认 zh，保持既有契约；生产按配置传入 vi / en / zh）。
  */
-export function timeContextOf(date: Date, env?: TimeContextEnv): string {
+export function timeContextOf(date: Date, env?: TimeContextEnv, lang: ResolvedLanguage = 'zh'): string {
   // 非法 Date 的 getFullYear()/getDay() 都返回 NaN，直接拼会产出「NaN年NaN月」——显式挡掉
   if (Number.isNaN(date.getTime())) return '';
   const day = date.getDay();
   const hour = date.getHours();
+  const placeName = placeTextOf(env?.region, env?.city);
+  const clock = pad2(hour) + ':' + pad2(date.getMinutes());
+  const isWeekend = day === 0 || day === 6;
+
+  if (lang === 'en') {
+    const place = placeName === undefined ? '' : `You are in ${placeName} (rough IP estimate, may be inaccurate). `;
+    const weather = env === undefined ? '' : ', ' + weatherClauseOf(env.weather, 'en');
+    const slot = EN_SLOTS[timeSlotOf(hour)] ?? 'daytime';
+    const dayKind = isWeekend ? 'weekend' : 'workday';
+    return (
+      `[Now] ${place}It is ${EN_WEEKDAYS[day] ?? ''}, ${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())} ${clock}, ${slot}, ${dayKind}${weather}. ` +
+      'This is only background context — do not force-announce the time or mention weather unless it fits naturally; reply naturally in English.'
+    );
+  }
+
+  if (lang === 'vi') {
+    const place =
+      placeName === undefined ? '' : `Bạn đang ở ${placeName} (ước lượng theo IP, có thể không chính xác). `;
+    const weather = env === undefined ? '' : ', ' + weatherClauseOf(env.weather, 'vi');
+    const slot = VI_SLOTS[timeSlotOf(hour)] ?? 'trong ngày';
+    const dayKind = isWeekend ? 'cuối tuần' : 'ngày làm việc';
+    return (
+      `[Hiện tại] ${place}Bây giờ là ${VI_WEEKDAYS[day] ?? ''}, ${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()} ${clock}, ${slot}, ${dayKind}${weather}. ` +
+      'Đây chỉ là bối cảnh nền — không cần cố báo giờ hay nhắc thời tiết, chỉ nhắc khi thật sự hợp ngữ cảnh; hãy trả lời tự nhiên bằng tiếng Việt.'
+    );
+  }
+
   const holiday = holidayClauseOf(date);
   // 地点带“粗估”括号：城市来自 IP 而不是主人亲口说的，不说明的话模型会当成事实报出来
-  const placeName = placeTextOf(env?.region, env?.city);
   const place = placeName === undefined ? '' : '你在' + placeName + '（按网络粗估，不一定准），';
-  const weather = env === undefined ? '' : '，' + weatherClauseOf(env.weather);
+  const weather = env === undefined ? '' : '，' + weatherClauseOf(env.weather, 'zh');
   return (
     '【当下】' +
     place +
@@ -207,9 +298,7 @@ export function timeContextOf(date: Date, env?: TimeContextEnv): string {
     '日' +
     (WEEKDAYS[day] ?? '星期?') +
     ' ' +
-    pad2(hour) +
-    ':' +
-    pad2(date.getMinutes()) +
+    clock +
     '，' +
     timeSlotOf(hour) +
     '，' +
@@ -225,20 +314,33 @@ export function timeContextOf(date: Date, env?: TimeContextEnv): string {
 /**
  * 历史消息的时间前缀（对话历史专用）：`10月31日 22:53`，跨年时带年份。
  *
- * 不带方括号，由调用方决定怎么包；是否加前缀（阈值）也归调用方判断。
- *
  * @param ts - 那条消息的发送时刻（毫秒时间戳，`memory.json` 里每条都带）。
  * @param now - 当前时刻；与发送时刻不同年时前缀带年份，消掉“哪一年”的歧义。
+ * @param lang - 语言（默认 zh）。
  * @returns `ts` 或 `now` 非法时返回空串（调用方据此不加前缀，原样发送）。
  */
-export function historyStampOf(ts: number, now: Date): string {
+export function historyStampOf(ts: number, now: Date, lang: ResolvedLanguage = 'zh'): string {
   const at = new Date(ts);
   if (Number.isNaN(at.getTime()) || Number.isNaN(now.getTime())) return '';
+  const clock = pad2(at.getHours()) + ':' + pad2(at.getMinutes());
+  if (lang === 'en') {
+    const date =
+      (at.getFullYear() === now.getFullYear() ? '' : at.getFullYear() + '-') +
+      pad2(at.getMonth() + 1) +
+      '-' +
+      pad2(at.getDate());
+    return date + ' ' + clock;
+  }
+  if (lang === 'vi') {
+    const date =
+      at.getDate() + '/' + (at.getMonth() + 1) + (at.getFullYear() === now.getFullYear() ? '' : '/' + at.getFullYear());
+    return date + ' ' + clock;
+  }
   const date =
     (at.getFullYear() === now.getFullYear() ? '' : at.getFullYear() + '年') +
     (at.getMonth() + 1) +
     '月' +
     at.getDate() +
     '日';
-  return date + ' ' + pad2(at.getHours()) + ':' + pad2(at.getMinutes());
+  return date + ' ' + clock;
 }

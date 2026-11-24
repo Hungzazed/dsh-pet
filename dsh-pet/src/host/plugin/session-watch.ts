@@ -5,6 +5,7 @@
  * @module dsh-pet/src/host/plugin/session-watch
  */
 import { GOAL_UPDATE_TOOL, currentTaskFromTodo, goalUpdateAction, reduceWorkStatus } from '../work-status.ts';
+import type { ResolvedLanguage } from '../../shared/i18n/core.ts';
 import { toolDetailFromEvent } from '../tool-detail.ts';
 import {
   agentErrorFrame,
@@ -24,6 +25,8 @@ import type { HostContext } from './context.ts';
 export type SessionWatchInput = {
   /** 宿主上下文（apply 收到的那一个）。 */
   ctx: HostContext;
+  /** Optional language reader for localized tool activity bubbles. */
+  language?: () => ResolvedLanguage;
 } & Pick<SessionNotify, 'cancelTerminalCleanup'> &
   Pick<SessionNotify, 'lastTodoText'> &
   Pick<SessionNotify, 'lastReplyText'> &
@@ -231,7 +234,9 @@ export function registerSessionWatch(deps: SessionWatchInput): void {
       // 必须在 setState 之后写：setTask 要求会话条目已存在，而条目正是 setState 建出来的——
       // 顺序反了这一句会被静默丢弃（不报错，最难查的那种）。
       const detail =
-        type === 'tool/call' ? toolDetailFromEvent(event as { data?: { name?: unknown; arguments?: unknown } }) : null;
+        type === 'tool/call'
+          ? toolDetailFromEvent(event as { data?: { name?: unknown; arguments?: unknown } }, deps.language?.())
+          : null;
       const outcome = trackToolEvent(toolsInFlight, sessionId, {
         type,
         callId: toolCallIdOf(event),

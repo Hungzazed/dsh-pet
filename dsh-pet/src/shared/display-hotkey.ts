@@ -7,6 +7,7 @@
  */
 import { isBareKey } from './hotkey.ts';
 import type { HotkeyEvent } from './hotkey.ts';
+import { uiText } from './i18n/ui.ts';
 import type { PetDisplay } from './types.ts';
 
 /** 数字键对应的显示位置，下标从 1 起；改顺序等于改快捷键，必须同步菜单。 */
@@ -14,6 +15,10 @@ export const DISPLAY_ORDER = ['web', 'desktop', 'both', 'none'] as const satisfi
 
 /** 菜单项右侧的键帽文案；下标与 {@link DISPLAY_ORDER} 对齐。 */
 export const DISPLAY_HOTKEY_HINTS: readonly string[] = DISPLAY_ORDER.map((_, index) => String(index + 1) + ' 键');
+
+/** Localized hotkey hints for display positions 1–4. */
+export const displayHotkeyHints = (): readonly string[] =>
+  DISPLAY_ORDER.map((_, index) => uiText('hotkey.key', { key: String(index + 1) }));
 
 /**
  * 这次按键该切到哪个显示位置。
